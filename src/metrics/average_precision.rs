@@ -1,4 +1,4 @@
-use crate::Predicted;
+use crate::Relevance;
 use crate::RelevanceMap;
 
 use crate::metrics::precision::compute_precision;
@@ -12,10 +12,10 @@ use crate::metrics::precision::compute_precision;
 /// * `k` - Number of documents to consider.
 /// * `rel_lvl` - Relevance level to consider.
 pub fn compute_average_precision(
-    rels: &RelevanceMap,
-    preds: &[Predicted],
+    rels: &RelevanceMap<i32>,
+    preds: &[Relevance<f64>],
     k: usize,
-    rel_lvl: usize,
+    rel_lvl: i32,
 ) -> f64 {
     let k = if k == 0 { preds.len() } else { k };
     if k == 0 {

@@ -1,4 +1,4 @@
-use crate::Predicted;
+use crate::Relevance;
 use crate::RelevanceMap;
 
 use crate::metrics::hits::compute_hits;
@@ -11,7 +11,12 @@ use crate::metrics::hits::compute_hits;
 /// * `preds` - Slice of predicted documents with their scores.
 /// * `k` - Number of documents to consider.
 /// * `rel_lvl` - Relevance level to consider.
-pub fn compute_recall(rels: &RelevanceMap, preds: &[Predicted], k: usize, rel_lvl: usize) -> f64 {
+pub fn compute_recall(
+    rels: &RelevanceMap<i32>,
+    preds: &[Relevance<f64>],
+    k: usize,
+    rel_lvl: i32,
+) -> f64 {
     let k = if k == 0 { preds.len() } else { k };
     if k == 0 {
         return 0.0;
