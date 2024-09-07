@@ -1,4 +1,4 @@
-use hashbrown::HashMap;
+use std::collections::HashMap;
 
 use crate::EmirError;
 use crate::Relevance;
@@ -16,6 +16,14 @@ impl Run {
 
     pub fn get_preds(&self, query_id: &str) -> Option<&[Relevance<f64>]> {
         self.map.get(query_id).map(|v| v.as_slice())
+    }
+
+    pub fn query_ids(&self) -> impl Iterator<Item = &String> {
+        self.map.keys()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &[Relevance<f64>])> {
+        self.map.iter().map(|(k, v)| (k, v.as_slice()))
     }
 }
 

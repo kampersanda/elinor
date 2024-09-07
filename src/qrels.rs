@@ -1,7 +1,7 @@
 use crate::EmirError;
 use crate::RelevanceMap;
 
-use hashbrown::HashMap;
+use std::collections::HashMap;
 
 pub struct Qrels {
     map: HashMap<String, RelevanceMap<i32>>,
@@ -15,6 +15,10 @@ impl Qrels {
 
     pub fn get_rels(&self, query_id: &str) -> Option<&RelevanceMap<i32>> {
         self.map.get(query_id)
+    }
+
+    pub fn query_ids(&self) -> impl Iterator<Item = &String> {
+        self.map.keys()
     }
 }
 

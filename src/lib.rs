@@ -3,9 +3,13 @@ pub mod metrics;
 pub mod qrels;
 pub mod run;
 
-use hashbrown::HashMap;
+use std::collections::HashMap;
 
 use errors::EmirError;
+use qrels::Qrels;
+use qrels::QrelsBuilder;
+use run::Run;
+use run::RunBuilder;
 
 pub struct Relevance<T> {
     pub id: String,
