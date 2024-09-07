@@ -9,6 +9,16 @@ pub struct Run {
     name: Option<String>,
 }
 
+impl Run {
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    pub fn get_preds(&self, query_id: &str) -> Option<&[Relevance<f64>]> {
+        self.map.get(query_id).map(|v| v.as_slice())
+    }
+}
+
 pub struct RunBuilder {
     map: HashMap<String, RelevanceMap<f64>>,
     name: Option<String>,
