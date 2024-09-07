@@ -20,6 +20,10 @@ impl Qrels {
     pub fn query_ids(&self) -> impl Iterator<Item = &String> {
         self.map.keys()
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &RelevanceMap<i32>)> {
+        self.map.iter()
+    }
 }
 
 pub struct QrelsBuilder {
@@ -50,7 +54,7 @@ impl QrelsBuilder {
     ///
     /// # Errors
     ///
-    /// * [`EmirError::DuplicateEntry`] if the query and document identifiers already exist.
+    /// * [`EmirError::DuplicateQueryDoc`] if the query and document identifiers already exist.
     pub fn add_score(
         &mut self,
         query_id: String,
@@ -62,12 +66,20 @@ impl QrelsBuilder {
             .get(&query_id)
             .map_or(false, |m| m.contains_key(&doc_id))
         {
-            return Err(EmirError::DuplicateEntry(query_id, doc_id));
+            return Err(EmirError::DuplicateQueryDoc(query_id, doc_id));
         }
         self.map
             .entry(query_id)
             .or_insert_with(RelevanceMap::new)
             .insert(doc_id, score);
         Ok(())
+    }
+
+    /// Builds the qrels.
+    pub fn build(self) -> Qrels {
+        Qrels {
+            map: self.map,
+            name: self.name,
+        }
     }
 }

@@ -17,7 +17,7 @@ pub fn compute_hits(
 ) -> f64 {
     let mut hits = 0;
     for pred in &preds[..k] {
-        if let Some(&rel) = rels.get(&pred.id) {
+        if let Some(&rel) = rels.get(&pred.doc_id) {
             if rel >= rel_lvl {
                 hits += 1;
             }
@@ -45,23 +45,23 @@ mod tests {
         };
         let preds = vec![
             Relevance {
-                id: "doc1".to_string(),
+                doc_id: "doc1".to_string(),
                 score: 0.5,
             },
             Relevance {
-                id: "doc2".to_string(),
+                doc_id: "doc2".to_string(),
                 score: 0.4,
             },
             Relevance {
-                id: "doc3".to_string(),
+                doc_id: "doc3".to_string(),
                 score: 0.3,
             },
             Relevance {
-                id: "doc4".to_string(),
+                doc_id: "doc4".to_string(),
                 score: 0.2,
             },
             Relevance {
-                id: "doc5".to_string(),
+                doc_id: "doc5".to_string(),
                 score: 0.1,
             },
         ];

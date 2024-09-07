@@ -12,7 +12,7 @@ use run::Run;
 use run::RunBuilder;
 
 pub struct Relevance<T> {
-    pub id: String,
+    pub doc_id: String,
     pub score: T,
 }
 

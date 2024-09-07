@@ -33,6 +33,7 @@ pub struct RunBuilder {
 }
 
 impl RunBuilder {
+    /// Creates a new builder.
     pub fn new() -> Self {
         Self {
             map: HashMap::new(),
@@ -40,6 +41,7 @@ impl RunBuilder {
         }
     }
 
+    /// Sets the name of the run.
     pub fn name(mut self, name: String) -> Self {
         self.name = Some(name);
         self
@@ -55,7 +57,7 @@ impl RunBuilder {
     ///
     /// # Errors
     ///
-    /// * [`EmirError::DuplicateEntry`] if the query and document identifiers already exist.
+    /// * [`EmirError::DuplicateQueryDoc`]
     pub fn add_score(
         &mut self,
         query_id: String,
@@ -67,12 +69,27 @@ impl RunBuilder {
             .get(&query_id)
             .map_or(false, |m| m.contains_key(&doc_id))
         {
-            return Err(EmirError::DuplicateEntry(query_id, doc_id));
+            return Err(EmirError::DuplicateQueryDoc(query_id, doc_id));
         }
         self.map
             .entry(query_id)
             .or_insert_with(RelevanceMap::new)
             .insert(doc_id, score);
         Ok(())
+    }
+
+    /// Builds the run.
+    pub fn build(self) -> Run {
+        let mut map = HashMap::new();
+        for (query_id, rels) in self.map {
+            let mut rels = rels
+                .into_iter()
+                .map(|(doc_id, score)| Relevance { doc_id, score })
+                .collect::<Vec<_>>();
+            rels.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+            map.insert(query_id, rels);
+        }
+        let name = self.name;
+        Run { map, name }
     }
 }

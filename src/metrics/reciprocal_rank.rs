@@ -20,7 +20,7 @@ pub fn compute_reciprocal_rank(
         return 0.0;
     }
     for (i, pred) in preds.iter().enumerate().take(k) {
-        if let Some(&rel) = rels.get(&pred.id) {
+        if let Some(&rel) = rels.get(&pred.doc_id) {
             if rel >= rel_lvl {
                 return 1.0 / (i as f64 + 1.0);
             }

@@ -13,6 +13,18 @@ use crate::Run;
 pub enum Metric {
     /// Number of relevant documents retrieved.
     Hits(usize),
+
+    /// Precision at k.
+    Precision(usize),
+
+    /// Recall at k.
+    Recall(usize),
+
+    /// Average precision at k.
+    AveragePrecision(usize),
+
+    /// Reciprocal rank at k.
+    ReciprocalRank(usize),
 }
 
 pub fn evaluate(
@@ -31,8 +43,21 @@ pub fn evaluate(
         let rels = qrels.get_rels(query_id).unwrap();
         let score = match metric {
             Metric::Hits(k) => hits::compute_hits(rels, preds, k, rel_lvl),
+            Metric::Precision(k) => precision::compute_precision(rels, preds, k, rel_lvl),
+            Metric::Recall(k) => recall::compute_recall(rels, preds, k, rel_lvl),
+            Metric::AveragePrecision(k) => {
+                average_precision::compute_average_precision(rels, preds, k, rel_lvl)
+            }
+            Metric::ReciprocalRank(k) => {
+                reciprocal_rank::compute_reciprocal_rank(rels, preds, k, rel_lvl)
+            }
         };
         evaluated.insert(query_id.clone(), score);
     }
     Ok(evaluated)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 }

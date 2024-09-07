@@ -24,7 +24,7 @@ pub fn compute_average_precision(
     let mut sum = 0.0;
     let mut n_rels = 0;
     for (i, pred) in preds.iter().enumerate().take(k) {
-        if let Some(&rel) = rels.get(&pred.id) {
+        if let Some(&rel) = rels.get(&pred.doc_id) {
             if rel >= rel_lvl {
                 n_rels += 1;
                 sum += compute_precision(rels, preds, i + 1, rel_lvl);
