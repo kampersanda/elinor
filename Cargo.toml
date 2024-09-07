@@ -11,3 +11,5 @@ thiserror = "1.0.63"
 [dev-dependencies]
 approx = "0.5.1"
 rstest = "0.22.0"
+big_s = "1.0.2"
+maplit = "1.0.2"

@@ -5,8 +5,8 @@ use crate::Relevance;
 use crate::RelevanceMap;
 
 pub struct Run {
-    map: HashMap<String, Vec<Relevance<f64>>>,
     name: Option<String>,
+    map: HashMap<String, Vec<Relevance<f64>>>,
 }
 
 impl Run {
@@ -25,19 +25,24 @@ impl Run {
     pub fn iter(&self) -> impl Iterator<Item = (&String, &[Relevance<f64>])> {
         self.map.iter().map(|(k, v)| (k, v.as_slice()))
     }
+
+    pub fn from_map(name: Option<String>, map: HashMap<String, RelevanceMap<f64>>) -> Self {
+        let b = RunBuilder { name, map };
+        b.build()
+    }
 }
 
 pub struct RunBuilder {
-    map: HashMap<String, RelevanceMap<f64>>,
     name: Option<String>,
+    map: HashMap<String, RelevanceMap<f64>>,
 }
 
 impl RunBuilder {
     /// Creates a new builder.
     pub fn new() -> Self {
         Self {
-            map: HashMap::new(),
             name: None,
+            map: HashMap::new(),
         }
     }
 
@@ -80,6 +85,7 @@ impl RunBuilder {
 
     /// Builds the run.
     pub fn build(self) -> Run {
+        let name = self.name;
         let mut map = HashMap::new();
         for (query_id, rels) in self.map {
             let mut rels = rels
@@ -89,7 +95,6 @@ impl RunBuilder {
             rels.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
             map.insert(query_id, rels);
         }
-        let name = self.name;
-        Run { map, name }
+        Run { name, map }
     }
 }

@@ -38,7 +38,7 @@ pub fn evaluate(
             return Err(EmirError::MissingQueryId(query_id.clone()));
         }
     }
-    let mut evaluated = HashMap::new();
+    let mut scores = HashMap::new();
     for (query_id, preds) in run.iter() {
         let rels = qrels.get_rels(query_id).unwrap();
         let score = match metric {
@@ -52,12 +52,46 @@ pub fn evaluate(
                 reciprocal_rank::compute_reciprocal_rank(rels, preds, k, rel_lvl)
             }
         };
-        evaluated.insert(query_id.clone(), score);
+        scores.insert(query_id.clone(), score);
     }
-    Ok(evaluated)
+    Ok(scores)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_relative_eq;
+    use big_s::S;
+    use maplit::hashmap;
+    use rstest::*;
+
+    #[rstest]
+    #[case(0, 0, 0.0)]
+    fn test_evaluate_hits(#[case] k: usize, #[case] rel_lvl: i32, #[case] expected: f64) {
+        let qrels = Qrels::from_map(
+            None,
+            hashmap! {
+                S("q1") => hashmap! {
+                    S("d1") => 1,
+                    S("d2") => 2,
+                    S("d3") => 0,
+                    S("d4") => 1,
+                },
+            },
+        );
+        let run = Run::from_map(
+            None,
+            hashmap! {
+                S("q1") => hashmap! {
+                    S("d1") => 0.5,
+                    S("d2") => 0.4,
+                    S("d3") => 0.3,
+                    S("d4") => 0.2,
+                    S("d5") => 0.1,
+                },
+            },
+        );
+        let scores = evaluate(&qrels, &run, Metric::Hits(k), rel_lvl).unwrap();
+        assert_relative_eq!(scores["q1"], expected);
+    }
 }

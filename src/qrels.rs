@@ -4,8 +4,8 @@ use crate::RelevanceMap;
 use std::collections::HashMap;
 
 pub struct Qrels {
-    map: HashMap<String, RelevanceMap<i32>>,
     name: Option<String>,
+    map: HashMap<String, RelevanceMap<i32>>,
 }
 
 impl Qrels {
@@ -24,18 +24,22 @@ impl Qrels {
     pub fn iter(&self) -> impl Iterator<Item = (&String, &RelevanceMap<i32>)> {
         self.map.iter()
     }
+
+    pub fn from_map(name: Option<String>, map: HashMap<String, RelevanceMap<i32>>) -> Self {
+        Self { map, name }
+    }
 }
 
 pub struct QrelsBuilder {
-    map: HashMap<String, RelevanceMap<i32>>,
     name: Option<String>,
+    map: HashMap<String, RelevanceMap<i32>>,
 }
 
 impl QrelsBuilder {
     pub fn new() -> Self {
         Self {
-            map: HashMap::new(),
             name: None,
+            map: HashMap::new(),
         }
     }
 
@@ -78,8 +82,8 @@ impl QrelsBuilder {
     /// Builds the qrels.
     pub fn build(self) -> Qrels {
         Qrels {
-            map: self.map,
             name: self.name,
+            map: self.map,
         }
     }
 }
