@@ -8,7 +8,7 @@ use crate::metrics::DcgWeighting;
 fn weighted_score(rel: GoldScore, weighting: DcgWeighting) -> f64 {
     match weighting {
         DcgWeighting::Jarvelin => rel as f64,
-        DcgWeighting::Burges => 2.0_f64.powi(rel) - 1.0,
+        DcgWeighting::Burges => 2.0_f64.powi(rel as i32) - 1.0,
     }
 }
 

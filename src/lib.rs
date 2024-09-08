@@ -45,7 +45,7 @@ pub use metrics::Metric;
 pub use relevance::Relevance;
 pub use relevance::RelevanceMap;
 
-pub type GoldScore = i32;
+pub type GoldScore = u32;
 pub type PredScore = OrderedFloat<f64>;
 
 pub type Qrels<K> = relevance::RelevanceStore<K, GoldScore>;
