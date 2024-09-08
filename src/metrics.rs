@@ -55,20 +55,50 @@ pub enum Metric {
 impl std::fmt::Display for Metric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Metric::Hits(k, rel_lvl) => write!(f, "hits@{} (rel>={})", k, rel_lvl),
-            Metric::HitRate(k, rel_lvl) => write!(f, "hit_rate@{} (rel>={})", k, rel_lvl),
-            Metric::Precision(k, rel_lvl) => write!(f, "precision@{} (rel>={})", k, rel_lvl),
-            Metric::Recall(k, rel_lvl) => write!(f, "recall@{} (rel>={})", k, rel_lvl),
-            Metric::F1(k, rel_lvl) => write!(f, "f1@{} (rel>={})", k, rel_lvl),
+            Metric::Hits(k, rel_lvl) => {
+                write!(f, "{}", format_binary_metric("hits", *k, *rel_lvl))
+            }
+            Metric::HitRate(k, rel_lvl) => {
+                write!(f, "{}", format_binary_metric("hit_rate", *k, *rel_lvl))
+            }
+            Metric::Precision(k, rel_lvl) => {
+                write!(f, "{}", format_binary_metric("precision", *k, *rel_lvl))
+            }
+            Metric::Recall(k, rel_lvl) => {
+                write!(f, "{}", format_binary_metric("recall", *k, *rel_lvl))
+            }
+            Metric::F1(k, rel_lvl) => {
+                write!(f, "{}", format_binary_metric("f1", *k, *rel_lvl))
+            }
             Metric::AveragePrecision(k, rel_lvl) => {
-                write!(f, "map@{} (rel>={})", k, rel_lvl)
+                write!(f, "{}", format_binary_metric("map", *k, *rel_lvl))
             }
             Metric::ReciprocalRank(k, rel_lvl) => {
-                write!(f, "mrr@{} (rel>={})", k, rel_lvl)
+                write!(f, "{}", format_binary_metric("mrr", *k, *rel_lvl))
             }
-            Metric::Dcg(k, weighting) => write!(f, "dcg@{} ({:?})", k, weighting),
-            Metric::Ndcg(k, weighting) => write!(f, "ndcg@{} ({:?})", k, weighting),
+            Metric::Dcg(k, weighting) => {
+                write!(f, "{}", format_dcg_metric("dcg", *k, *weighting))
+            }
+            Metric::Ndcg(k, weighting) => {
+                write!(f, "{}", format_dcg_metric("ndcg", *k, *weighting))
+            }
         }
+    }
+}
+
+fn format_binary_metric(name: &str, k: usize, rel_lvl: GoldScore) -> String {
+    if k == 0 {
+        format!("{} (rel>={})", name, rel_lvl)
+    } else {
+        format!("{}@{} (rel>={})", name, k, rel_lvl)
+    }
+}
+
+fn format_dcg_metric(name: &str, k: usize, weighting: DcgWeighting) -> String {
+    if k == 0 {
+        format!("{}_{:?}", name, weighting)
+    } else {
+        format!("{}_{:?}@{}", name, weighting, k)
     }
 }
 
