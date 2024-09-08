@@ -61,8 +61,8 @@ where
     }
 
     /// Creates a relevance store from a map of query identifiers to relevance maps.
-    pub fn from_map(name: Option<String>, map: HashMap<K, RelevanceMap<K, T>>) -> Self {
-        let b = RelevanceStoreBuilder { name, map };
+    pub fn from_map(map: HashMap<K, RelevanceMap<K, T>>) -> Self {
+        let b = RelevanceStoreBuilder { name: None, map };
         b.build()
     }
 }

@@ -15,10 +15,10 @@ use crate::Run;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DcgWeighting {
-    /// https://dl.acm.org/doi/10.1145/582415.582418
+    /// <https://dl.acm.org/doi/10.1145/582415.582418>
     Jarvelin,
 
-    /// https://dl.acm.org/doi/10.1145/1102351.1102363
+    /// <https://dl.acm.org/doi/10.1145/1102351.1102363>
     Burges,
 }
 
@@ -289,27 +289,21 @@ mod tests {
     #[case::ndcg_k_4_burges(Metric::Ndcg(4, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_5_burges(Metric::Ndcg(5, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<String, f64>) {
-        let qrels = Qrels::from_map(
-            None,
-            hashmap! {
-                S("q1") => hashmap! {
-                    S("d1") => 1,
-                    S("d2") => 0,
-                    S("d3") => 2,
-                },
+        let qrels = Qrels::from_map(hashmap! {
+            S("q1") => hashmap! {
+                S("d1") => 1,
+                S("d2") => 0,
+                S("d3") => 2,
             },
-        );
-        let run = Run::from_map(
-            None,
-            hashmap! {
-                S("q1") => hashmap! {
-                    S("d1") => PredScore::from(0.5),
-                    S("d2") => PredScore::from(0.4),
-                    S("d3") => PredScore::from(0.3),
-                    S("d4") => PredScore::from(0.2),
-                },
+        });
+        let run = Run::from_map(hashmap! {
+            S("q1") => hashmap! {
+                S("d1") => PredScore::from(0.5),
+                S("d2") => PredScore::from(0.4),
+                S("d3") => PredScore::from(0.3),
+                S("d4") => PredScore::from(0.2),
             },
-        );
+        });
         let results = compute_metric(&qrels, &run, metric).unwrap();
         compare_hashmaps(&results, &expected);
     }
