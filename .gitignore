@@ -25,3 +25,4 @@ Cargo.lock
 
 # Added by me
 .vscode/
+data/

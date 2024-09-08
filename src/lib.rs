@@ -1,6 +1,7 @@
 pub mod errors;
 pub mod metrics;
 pub mod relevance;
+pub mod trec;
 
 use ordered_float::OrderedFloat;
 use std::collections::HashMap;
