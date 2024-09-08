@@ -51,13 +51,13 @@ pub fn evaluate(
     metric: Metric,
 ) -> Result<HashMap<String, f64>, EmirError> {
     for query_id in run.query_ids() {
-        if qrels.get_rels(query_id).is_none() {
+        if qrels.get_rel_map(query_id).is_none() {
             return Err(EmirError::MissingQueryId(query_id.clone()));
         }
     }
     let mut scores = HashMap::new();
-    for (query_id, preds) in run.iter() {
-        let rels = qrels.get_rels(query_id).unwrap();
+    for (query_id, preds) in run.query_ids_and_sorted_rels() {
+        let rels = qrels.get_rel_map(query_id).unwrap();
         let score = match metric {
             Metric::Hits(k, rel_lvl) => hits::compute_hits(rels, preds, k, rel_lvl),
             Metric::Precision(k, rel_lvl) => precision::compute_precision(rels, preds, k, rel_lvl),

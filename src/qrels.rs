@@ -110,7 +110,10 @@ impl QrelsBuilder {
         for (query_id, rels) in self.map {
             let mut sorted = rels
                 .iter()
-                .map(|(&doc_id, &score)| Relevance { doc_id, score })
+                .map(|(doc_id, &score)| Relevance {
+                    doc_id: doc_id.clone(),
+                    score,
+                })
                 .collect::<Vec<_>>();
             sorted.sort_by(|a, b| b.score.cmp(&a.score));
             map.insert(query_id, (sorted, rels));
