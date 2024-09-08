@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let evaluated = emir::evaluate(&qrels, &run, metrics)?;
     for (metric, score) in evaluated.mean_scores.iter() {
-        println!("{}:\t{:.4}", metric, score);
+        println!("{metric}: {score:.4}");
     }
 
     Ok(())

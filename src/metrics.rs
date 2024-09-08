@@ -60,7 +60,7 @@ impl std::fmt::Display for Metric {
                 write!(f, "{}", format_binary_metric("Hits", *k))
             }
             Metric::HitRate(k) => {
-                write!(f, "{}", format_binary_metric("Hit Rate", *k))
+                write!(f, "{}", format_binary_metric("HitRate", *k))
             }
             Metric::Precision(k) => {
                 write!(f, "{}", format_binary_metric("Precision", *k))
