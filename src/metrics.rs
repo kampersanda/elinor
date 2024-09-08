@@ -145,7 +145,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::PredScore;
     use approx::assert_relative_eq;
     use big_s::S;
     use maplit::hashmap;
@@ -250,10 +249,10 @@ mod tests {
         });
         let run = Run::from_map(hashmap! {
             S("q1") => hashmap! {
-                S("d1") => PredScore::from(0.5),
-                S("d2") => PredScore::from(0.4),
-                S("d3") => PredScore::from(0.3),
-                S("d4") => PredScore::from(0.2),
+                S("d1") => 0.5.into(),
+                S("d2") => 0.4.into(),
+                S("d3") => 0.3.into(),
+                S("d4") => 0.2.into(),
             },
         });
         let results = compute_metric(&qrels, &run, metric).unwrap();
