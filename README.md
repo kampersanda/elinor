@@ -1,6 +1,4 @@
-# emir
-
-Evaluation Measures in Information Retrieval
+# emir: Evaluation Measures in Information Retrieval
 
 ## References
 

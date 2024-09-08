@@ -56,31 +56,31 @@ impl std::fmt::Display for Metric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Metric::Hits(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("hits", *k, *rel_lvl))
+                write!(f, "{}", format_binary_metric("Hits", *k, *rel_lvl))
             }
             Metric::HitRate(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("hit_rate", *k, *rel_lvl))
+                write!(f, "{}", format_binary_metric("Hit Rate", *k, *rel_lvl))
             }
             Metric::Precision(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("precision", *k, *rel_lvl))
+                write!(f, "{}", format_binary_metric("Precision", *k, *rel_lvl))
             }
             Metric::Recall(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("recall", *k, *rel_lvl))
+                write!(f, "{}", format_binary_metric("Recall", *k, *rel_lvl))
             }
             Metric::F1(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("f1", *k, *rel_lvl))
+                write!(f, "{}", format_binary_metric("F1", *k, *rel_lvl))
             }
             Metric::AveragePrecision(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("map", *k, *rel_lvl))
+                write!(f, "{}", format_binary_metric("MAP", *k, *rel_lvl))
             }
             Metric::ReciprocalRank(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("mrr", *k, *rel_lvl))
+                write!(f, "{}", format_binary_metric("MRR", *k, *rel_lvl))
             }
             Metric::Dcg(k, weighting) => {
-                write!(f, "{}", format_dcg_metric("dcg", *k, *weighting))
+                write!(f, "{}", format_dcg_metric("DCG", *k, *weighting))
             }
             Metric::Ndcg(k, weighting) => {
-                write!(f, "{}", format_dcg_metric("ndcg", *k, *weighting))
+                write!(f, "{}", format_dcg_metric("nDCG", *k, *weighting))
             }
         }
     }
