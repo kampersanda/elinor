@@ -134,6 +134,20 @@ mod tests {
     #[case::f1_k_3_rel_lvl_2(Metric::F1(3), 2, hashmap! { S("q1") => 2.0 * (1.0 / 3.0) * (1.0 / 1.0) / ((1.0 / 3.0) + (1.0 / 1.0)) })]
     #[case::f1_k_4_rel_lvl_2(Metric::F1(4), 2, hashmap! { S("q1") => 2.0 * (1.0 / 4.0) * (1.0 / 1.0) / ((1.0 / 4.0) + (1.0 / 1.0)) })]
     #[case::f1_k_5_rel_lvl_2(Metric::F1(5), 2, hashmap! { S("q1") => 2.0 * (1.0 / 5.0) * (1.0 / 1.0) / ((1.0 / 5.0) + (1.0 / 1.0)) })]
+    // Average precision (relevance >= 1)
+    #[case::average_precision_k_0_rel_lvl_1(Metric::AveragePrecision(0), 1, hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_1_rel_lvl_1(Metric::AveragePrecision(1), 1, hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
+    #[case::average_precision_k_2_rel_lvl_1(Metric::AveragePrecision(2), 1, hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
+    #[case::average_precision_k_3_rel_lvl_1(Metric::AveragePrecision(3), 1, hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_4_rel_lvl_1(Metric::AveragePrecision(4), 1, hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_5_rel_lvl_1(Metric::AveragePrecision(5), 1, hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    // Average precision (relevance >= 2)
+    #[case::average_precision_k_0_rel_lvl_2(Metric::AveragePrecision(0), 2, hashmap! { S("q1") => (1.0 / 3.0) / 1.0 })]
+    #[case::average_precision_k_1_rel_lvl_2(Metric::AveragePrecision(1), 2, hashmap! { S("q1") => 0.0 })]
+    #[case::average_precision_k_2_rel_lvl_2(Metric::AveragePrecision(2), 2, hashmap! { S("q1") => 0.0 })]
+    #[case::average_precision_k_3_rel_lvl_2(Metric::AveragePrecision(3), 2, hashmap! { S("q1") => (1.0 / 3.0) / 1.0 })]
+    #[case::average_precision_k_4_rel_lvl_2(Metric::AveragePrecision(4), 2, hashmap! { S("q1") => (1.0 / 3.0) / 1.0 })]
+    #[case::average_precision_k_5_rel_lvl_2(Metric::AveragePrecision(5), 2, hashmap! { S("q1") => (1.0 / 3.0) / 1.0 })]
     fn test_evaluate(
         #[case] metric: Metric,
         #[case] rel_lvl: i32,
