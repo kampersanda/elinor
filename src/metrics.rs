@@ -89,17 +89,17 @@ impl std::fmt::Display for Metric {
 
 fn format_binary_metric(name: &str, k: usize) -> String {
     if k == 0 {
-        format!("{}", name)
+        format!("{name}")
     } else {
-        format!("{}@{}", name, k)
+        format!("{name}@{k}")
     }
 }
 
 fn format_dcg_metric(name: &str, k: usize, weighting: DcgWeighting) -> String {
     if k == 0 {
-        format!("{}_{:?}", name, weighting)
+        format!("{name}_{weighting:?}")
     } else {
-        format!("{}_{:?}@{}", name, weighting, k)
+        format!("{name}_{weighting:?}@{k}")
     }
 }
 
