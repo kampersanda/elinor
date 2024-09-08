@@ -52,7 +52,7 @@ pub enum Metric {
     Ndcg(usize, DcgWeighting),
 }
 
-pub fn evaluate<K>(
+pub fn compute_metric<K>(
     qrels: &Qrels<K>,
     run: &Run<K>,
     metric: Metric,
@@ -65,7 +65,7 @@ where
             return Err(EmirError::MissingQueryId(query_id.clone()));
         }
     }
-    let mut scores = HashMap::new();
+    let mut results = HashMap::new();
     for (query_id, preds) in run.query_ids_and_sorted() {
         let rels = qrels.get_map(query_id).unwrap();
         let score = match metric {
@@ -86,9 +86,9 @@ where
                 ndcg::compute_ndcg(rels, golds, preds, k, weighting)
             }
         };
-        scores.insert(query_id.clone(), score);
+        results.insert(query_id.clone(), score);
     }
-    Ok(scores)
+    Ok(results)
 }
 
 #[cfg(test)]
@@ -238,7 +238,7 @@ mod tests {
     #[case::ndcg_k_3_burges(Metric::Ndcg(3, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_4_burges(Metric::Ndcg(4, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_5_burges(Metric::Ndcg(5, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    fn test_evaluate(#[case] metric: Metric, #[case] expected: HashMap<String, f64>) {
+    fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<String, f64>) {
         let qrels = Qrels::from_map(
             None,
             hashmap! {
@@ -260,7 +260,7 @@ mod tests {
                 },
             },
         );
-        let scores = evaluate(&qrels, &run, metric).unwrap();
-        compare_hashmaps(&scores, &expected);
+        let results = compute_metric(&qrels, &run, metric).unwrap();
+        compare_hashmaps(&results, &expected);
     }
 }
