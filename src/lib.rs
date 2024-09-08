@@ -1,6 +1,6 @@
-//! # emir: Evaluation Measures in Information Retrieval
+//! # Emir: Evaluation Measures in Information Retrieval
 //!
-//! `emir` is a library for evaluating information retrieval systems.
+//! Emir is a library for evaluating information retrieval systems.
 //!
 //! ## Examples
 //!
