@@ -1,4 +1,4 @@
-use crate::EmirError;
+use crate::errors::EmirError;
 use crate::RelevanceMap;
 
 use std::collections::HashMap;

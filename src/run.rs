@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::EmirError;
+use crate::errors::EmirError;
 use crate::Relevance;
 use crate::RelevanceMap;
 

@@ -6,9 +6,9 @@ pub(crate) mod reciprocal_rank;
 
 use std::collections::HashMap;
 
-use crate::EmirError;
-use crate::Qrels;
-use crate::Run;
+use crate::errors::EmirError;
+use crate::qrels::Qrels;
+use crate::run::Run;
 
 pub enum Metric {
     /// Number of relevant documents retrieved.
