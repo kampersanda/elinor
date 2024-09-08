@@ -44,6 +44,9 @@ pub enum Metric {
 
     /// Discounted cumulative gain at k.
     Dcg(usize, DcgWeighting),
+
+    /// Normalized discounted cumulative gain at k.
+    Ndcg(usize, DcgWeighting),
 }
 
 pub fn evaluate<K>(
@@ -74,6 +77,10 @@ where
                 reciprocal_rank::compute_reciprocal_rank(rels, preds, k, rel_lvl)
             }
             Metric::Dcg(k, weighting) => ndcg::compute_dcg(rels, preds, k, weighting),
+            Metric::Ndcg(k, weighting) => {
+                let golds = qrels.get_sorted(query_id).unwrap();
+                ndcg::compute_ndcg(rels, golds, preds, k, weighting)
+            }
         };
         scores.insert(query_id.clone(), score);
     }
@@ -186,19 +193,33 @@ mod tests {
     #[case::reciprocal_rank_k_4_rel_lvl_2(Metric::ReciprocalRank(4, 2), hashmap! { S("q1") => 1.0 / 3.0 })]
     #[case::reciprocal_rank_k_5_rel_lvl_2(Metric::ReciprocalRank(5, 2), hashmap! { S("q1") => 1.0 / 3.0 })]
     // DCG (Jarvelin)
-    #[case::dcg_k_0_jarvelin(Metric::Dcg(0, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_0_jarvelin(Metric::Dcg(0, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
     #[case::dcg_k_1_jarvelin(Metric::Dcg(1, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_2_jarvelin(Metric::Dcg(2, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 })]
-    #[case::dcg_k_3_jarvelin(Metric::Dcg(3, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_4_jarvelin(Metric::Dcg(4, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_5_jarvelin(Metric::Dcg(5, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_2_jarvelin(Metric::Dcg(2, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_3_jarvelin(Metric::Dcg(3, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_4_jarvelin(Metric::Dcg(4, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_5_jarvelin(Metric::Dcg(5, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
     // DCG (Burges)
-    #[case::dcg_k_0_burges(Metric::Dcg(0, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_0_burges(Metric::Dcg(0, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
     #[case::dcg_k_1_burges(Metric::Dcg(1, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_2_burges(Metric::Dcg(2, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 })]
-    #[case::dcg_k_3_burges(Metric::Dcg(3, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_4_burges(Metric::Dcg(4, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_5_burges(Metric::Dcg(5, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_2_burges(Metric::Dcg(2, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_3_burges(Metric::Dcg(3, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_4_burges(Metric::Dcg(4, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_5_burges(Metric::Dcg(5, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    // NDCG (Jarvelin)
+    #[case::ndcg_k_0_jarvelin(Metric::Ndcg(0, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_1_jarvelin(Metric::Ndcg(1, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2) / (2.0 / LOG_2_2) })]
+    #[case::ndcg_k_2_jarvelin(Metric::Ndcg(2, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_3_jarvelin(Metric::Ndcg(3, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_4_jarvelin(Metric::Ndcg(4, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_5_jarvelin(Metric::Ndcg(5, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    // NDCG (Burges)
+    #[case::ndcg_k_0_burges(Metric::Ndcg(0, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_1_burges(Metric::Ndcg(1, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2) / (3.0 / LOG_2_2) })]
+    #[case::ndcg_k_2_burges(Metric::Ndcg(2, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_3_burges(Metric::Ndcg(3, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_4_burges(Metric::Ndcg(4, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_5_burges(Metric::Ndcg(5, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     fn test_evaluate(#[case] metric: Metric, #[case] expected: HashMap<String, f64>) {
         let qrels = Qrels::from_map(
             None,

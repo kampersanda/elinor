@@ -38,3 +38,38 @@ where
     }
     dcg
 }
+
+/// Computes the NDCG at k for a given relevance level.
+///
+/// # Arguments
+///
+/// * `rels` - Map of relevance levels for each document.
+/// * `golds` - Slice of gold documents with their scores.
+/// * `preds` - Slice of predicted documents with their scores.
+/// * `k` - Number of documents to consider.
+/// * `weighting` - Weighting scheme to use.
+pub fn compute_ndcg<K>(
+    rels: &RelevanceMap<K, GoldScore>,
+    golds: &[Relevance<K, GoldScore>],
+    preds: &[Relevance<K, PredScore>],
+    k: usize,
+    weighting: DcgWeighting,
+) -> f64
+where
+    K: Eq + std::hash::Hash + Clone,
+{
+    let golds = golds
+        .iter()
+        .map(|r| Relevance {
+            doc_id: r.doc_id.clone(),
+            score: PredScore::from(r.score),
+        })
+        .collect::<Vec<_>>();
+    let dcg = compute_dcg(rels, preds, k, weighting);
+    let idcg = compute_dcg(rels, &golds, k, weighting);
+    if idcg == 0.0 {
+        1.0
+    } else {
+        dcg / idcg
+    }
+}
