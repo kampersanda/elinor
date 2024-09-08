@@ -73,21 +73,26 @@ mod tests {
     }
 
     #[rstest]
-    // Hits
-    #[case::hits_k_0_rel_lvl_1(Metric::Hits(0), 1, hashmap! { S("q1") => 3.0 })]
+    // Hits (relevance >= 1)
+    #[case::hits_k_0_rel_lvl_1(Metric::Hits(0), 1, hashmap! { S("q1") => 2.0 })]
     #[case::hits_k_1_rel_lvl_1(Metric::Hits(1), 1, hashmap! { S("q1") => 1.0 })]
-    #[case::hits_k_2_rel_lvl_1(Metric::Hits(2), 1, hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_2_rel_lvl_1(Metric::Hits(2), 1, hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_3_rel_lvl_1(Metric::Hits(3), 1, hashmap! { S("q1") => 2.0 })]
-    #[case::hits_k_4_rel_lvl_1(Metric::Hits(4), 1, hashmap! { S("q1") => 3.0 })]
-    #[case::hits_k_5_rel_lvl_1(Metric::Hits(5), 1, hashmap! { S("q1") => 3.0 })]
+    #[case::hits_k_4_rel_lvl_1(Metric::Hits(4), 1, hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_5_rel_lvl_1(Metric::Hits(5), 1, hashmap! { S("q1") => 2.0 })]
+    // Hits (relevance >= 2)
     #[case::hits_k_0_rel_lvl_2(Metric::Hits(0), 2, hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_1_rel_lvl_2(Metric::Hits(1), 2, hashmap! { S("q1") => 0.0 })]
-    #[case::hits_k_2_rel_lvl_2(Metric::Hits(2), 2, hashmap! { S("q1") => 1.0 })]
+    #[case::hits_k_2_rel_lvl_2(Metric::Hits(2), 2, hashmap! { S("q1") => 0.0 })]
     #[case::hits_k_3_rel_lvl_2(Metric::Hits(3), 2, hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_4_rel_lvl_2(Metric::Hits(4), 2, hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_5_rel_lvl_2(Metric::Hits(5), 2, hashmap! { S("q1") => 1.0 })]
-    // Precision
-    #[case::precision_k_0_rel_lvl_1(Metric::Precision(0), 1, hashmap! { S("q1") => 0.6 })]
+    // Precision (relevance >= 1)
+    #[case::precision_k_0_rel_lvl_1(Metric::Precision(0), 1, hashmap! { S("q1") => 2.0 / 4.0 })]
+    #[case::precision_k_1_rel_lvl_1(Metric::Precision(1), 1, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::precision_k_2_rel_lvl_1(Metric::Precision(2), 1, hashmap! { S("q1") => 1.0 / 2.0 })]
+    #[case::precision_k_3_rel_lvl_1(Metric::Precision(3), 1, hashmap! { S("q1") => 2.0 / 3.0 })]
+    #[case::precision_k_4_rel_lvl_1(Metric::Precision(4), 1, hashmap! { S("q1") => 2.0 / 4.0 })]
     fn test_evaluate(
         #[case] metric: Metric,
         #[case] rel_lvl: i32,
@@ -98,9 +103,8 @@ mod tests {
             hashmap! {
                 S("q1") => hashmap! {
                     S("d1") => 1,
-                    S("d2") => 2,
-                    S("d3") => 0,
-                    S("d4") => 1,
+                    S("d2") => 0,
+                    S("d3") => 2,
                 },
             },
         );
@@ -112,7 +116,6 @@ mod tests {
                     S("d2") => 0.4,
                     S("d3") => 0.3,
                     S("d4") => 0.2,
-                    S("d5") => 0.1,
                 },
             },
         );

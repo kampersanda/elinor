@@ -17,7 +17,7 @@ pub fn compute_hits(
 ) -> f64 {
     let k = if k == 0 { preds.len() } else { k };
     let mut hits = 0;
-    for pred in &preds[..k] {
+    for pred in preds.iter().take(k) {
         if let Some(&rel) = rels.get(&pred.doc_id) {
             if rel >= rel_lvl {
                 hits += 1;
