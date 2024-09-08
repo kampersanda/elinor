@@ -5,27 +5,35 @@ use crate::Relevance;
 use crate::RelevanceMap;
 
 pub struct Run {
+    // Name of the run.
     name: Option<String>,
+
+    // Mapping from query identifiers to sorted list of relevance scores in descending order.
     map: HashMap<String, Vec<Relevance<f64>>>,
 }
 
 impl Run {
+    /// Returns the name of the run.
     pub fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }
 
-    pub fn get_preds(&self, query_id: &str) -> Option<&[Relevance<f64>]> {
+    /// Returns the sorted list of relevance scores in descending order for a given query identifier.
+    pub fn get_sorted_rels(&self, query_id: &str) -> Option<&[Relevance<f64>]> {
         self.map.get(query_id).map(|v| v.as_slice())
     }
 
+    /// Returns an iterator over the query identifiers in random order.
     pub fn query_ids(&self) -> impl Iterator<Item = &String> {
         self.map.keys()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &[Relevance<f64>])> {
+    /// Returns an iterator over the query identifiers and their sorted relevance scores.
+    pub fn query_ids_and_sorted_rels(&self) -> impl Iterator<Item = (&String, &[Relevance<f64>])> {
         self.map.iter().map(|(k, v)| (k, v.as_slice()))
     }
 
+    /// Creates a run from a map of query identifiers to relevance maps.
     pub fn from_map(name: Option<String>, map: HashMap<String, RelevanceMap<f64>>) -> Self {
         let b = RunBuilder { name, map };
         b.build()
@@ -88,12 +96,12 @@ impl RunBuilder {
         let name = self.name;
         let mut map = HashMap::new();
         for (query_id, rels) in self.map {
-            let mut rels = rels
+            let mut sorted = rels
                 .into_iter()
                 .map(|(doc_id, score)| Relevance { doc_id, score })
                 .collect::<Vec<_>>();
-            rels.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
-            map.insert(query_id, rels);
+            sorted.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+            map.insert(query_id, sorted);
         }
         Run { name, map }
     }
