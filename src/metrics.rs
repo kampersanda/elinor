@@ -52,6 +52,26 @@ pub enum Metric {
     Ndcg(usize, DcgWeighting),
 }
 
+impl std::fmt::Display for Metric {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Metric::Hits(k, rel_lvl) => write!(f, "hits@{} (rel>={})", k, rel_lvl),
+            Metric::HitRate(k, rel_lvl) => write!(f, "hit_rate@{} (rel>={})", k, rel_lvl),
+            Metric::Precision(k, rel_lvl) => write!(f, "precision@{} (rel>={})", k, rel_lvl),
+            Metric::Recall(k, rel_lvl) => write!(f, "recall@{} (rel>={})", k, rel_lvl),
+            Metric::F1(k, rel_lvl) => write!(f, "f1@{} (rel>={})", k, rel_lvl),
+            Metric::AveragePrecision(k, rel_lvl) => {
+                write!(f, "map@{} (rel>={})", k, rel_lvl)
+            }
+            Metric::ReciprocalRank(k, rel_lvl) => {
+                write!(f, "mrr@{} (rel>={})", k, rel_lvl)
+            }
+            Metric::Dcg(k, weighting) => write!(f, "dcg@{} ({:?})", k, weighting),
+            Metric::Ndcg(k, weighting) => write!(f, "ndcg@{} ({:?})", k, weighting),
+        }
+    }
+}
+
 pub fn compute_metric<K>(
     qrels: &Qrels<K>,
     run: &Run<K>,

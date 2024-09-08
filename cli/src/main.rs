@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use emir::trec;
 use emir::DcgWeighting;
+use emir::GoldScore;
 use emir::Metric;
 
 #[derive(Parser, Debug)]
@@ -18,24 +19,36 @@ struct Args {
 
     #[arg(short, long)]
     run_file: PathBuf,
+
+    #[arg(short, long, default_value_t = 0)]
+    k: usize,
+
+    #[arg(long, default_value_t = 1)]
+    rel_lvl: GoldScore,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
+
     let qrels = trec::parse_qrels_from_trec(load_lines(&args.qrels_file)?.into_iter())?;
     let run = trec::parse_run_from_trec(load_lines(&args.run_file)?.into_iter())?;
     let metrics = HashSet::from_iter([
-        Metric::Hits(0, 1),
-        Metric::Precision(0, 1),
-        Metric::Recall(0, 1),
-        Metric::F1(0, 1),
-        Metric::AveragePrecision(0, 1),
-        Metric::ReciprocalRank(0, 1),
-        Metric::Ndcg(0, DcgWeighting::Jarvelin),
-        Metric::Ndcg(0, DcgWeighting::Burges),
+        Metric::Hits(args.k, args.rel_lvl),
+        Metric::HitRate(args.k, args.rel_lvl),
+        Metric::Precision(args.k, args.rel_lvl),
+        Metric::Recall(args.k, args.rel_lvl),
+        Metric::F1(args.k, args.rel_lvl),
+        Metric::AveragePrecision(args.k, args.rel_lvl),
+        Metric::ReciprocalRank(args.k, args.rel_lvl),
+        Metric::Ndcg(args.k, DcgWeighting::Jarvelin),
+        Metric::Ndcg(args.k, DcgWeighting::Burges),
     ]);
+
     let evaluated = emir::evaluate(&qrels, &run, metrics)?;
-    println!("{:#?}", evaluated.mean_scores);
+    for (metric, score) in evaluated.mean_scores.iter() {
+        println!("{}: {:.4}", metric, score);
+    }
+
     Ok(())
 }
 
