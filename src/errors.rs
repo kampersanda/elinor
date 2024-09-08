@@ -6,7 +6,7 @@ where
     K: std::fmt::Display,
 {
     #[error("Error: QueryID {0}, DocID {1}")]
-    DuplicateQueryDoc(K, K),
+    DuplicateDocId(K, K),
 
     #[error("Error: {0}")]
     MissingQueryId(K),

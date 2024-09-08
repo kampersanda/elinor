@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::hash::Hash;
 
+use crate::errors::EmirError;
+
 /// Data to store a relevance score for a document.
 #[derive(Debug, Clone)]
 pub struct Relevance<K, T> {
@@ -24,7 +26,7 @@ pub struct RelevanceStore<K, T> {
 
 impl<K, T> RelevanceStore<K, T>
 where
-    K: Eq + PartialEq + Hash + Clone,
+    K: Eq + PartialEq + Hash + Clone + std::fmt::Display,
     T: Ord + PartialOrd + Clone,
 {
     /// Returns the name of the relevance store.
@@ -73,7 +75,7 @@ pub struct RelevanceStoreBuilder<K, T> {
 
 impl<K, T> RelevanceStoreBuilder<K, T>
 where
-    K: Eq + PartialEq + Hash + Clone,
+    K: Eq + PartialEq + Hash + Clone + std::fmt::Display,
     T: Ord + PartialOrd + Clone,
 {
     /// Creates a new builder.
@@ -88,6 +90,29 @@ where
     pub fn name(mut self, name: String) -> Self {
         self.name = Some(name);
         self
+    }
+
+    /// Adds a relevance score to the store.
+    ///
+    /// # Arguments
+    ///
+    /// * `query_id` - Query identifier.
+    /// * `doc_id` - Document identifier.
+    /// * `score` - Relevance score.
+    ///
+    /// # Errors
+    ///
+    /// * [`EmirError::DuplicateDocId`] if the document identifier already exists for the query.
+    pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), EmirError<K>> {
+        let rels = self
+            .map
+            .entry(query_id.clone())
+            .or_insert_with(HashMap::new);
+        if rels.contains_key(&doc_id) {
+            return Err(EmirError::DuplicateDocId(query_id, doc_id));
+        }
+        rels.insert(doc_id, score);
+        Ok(())
     }
 
     /// Builds the relevance store.
