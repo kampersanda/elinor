@@ -13,7 +13,7 @@ use crate::GoldScore;
 use crate::Qrels;
 use crate::Run;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DcgWeighting {
     /// https://dl.acm.org/doi/10.1145/582415.582418
     Jarvelin,
@@ -22,7 +22,7 @@ pub enum DcgWeighting {
     Burges,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Metric {
     /// Number of relevant documents retrieved.
     Hits(usize, GoldScore),
