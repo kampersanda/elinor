@@ -5,11 +5,9 @@ pub mod run;
 
 use std::collections::HashMap;
 
-use errors::EmirError;
-use qrels::Qrels;
-use qrels::QrelsBuilder;
-use run::Run;
-use run::RunBuilder;
+pub use errors::EmirError;
+pub use qrels::Qrels;
+pub use run::Run;
 
 pub struct Relevance<T> {
     pub doc_id: String,

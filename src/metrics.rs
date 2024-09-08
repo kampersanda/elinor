@@ -65,6 +65,13 @@ mod tests {
     use maplit::hashmap;
     use rstest::*;
 
+    fn compare_hashmaps(a: &HashMap<String, f64>, b: &HashMap<String, f64>) {
+        assert_eq!(a.len(), b.len());
+        for (k, v) in a.iter() {
+            assert_relative_eq!(v, b.get(k).unwrap());
+        }
+    }
+
     #[rstest]
     #[case::hits_k_0_rel_lvl_1(Metric::Hits(0), 1, hashmap! { S("q1") => 0.0 })]
     #[case::hits_k_1_rel_lvl_1(Metric::Hits(1), 1, hashmap! { S("q1") => 1.0 })]
@@ -107,6 +114,6 @@ mod tests {
             },
         );
         let scores = evaluate(&qrels, &run, metric, rel_lvl).unwrap();
-        assert_relative_eq!(scores["q1"], expected["q1"]);
+        compare_hashmaps(&scores, &expected);
     }
 }
