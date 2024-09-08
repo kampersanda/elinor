@@ -1,3 +1,5 @@
+use crate::GoldScore;
+use crate::PredScore;
 use crate::Relevance;
 use crate::RelevanceMap;
 
@@ -9,12 +11,15 @@ use crate::RelevanceMap;
 /// * `preds` - Sorted slice of predicted documents with their scores.
 /// * `k` - Number of documents to consider.
 /// * `rel_lvl` - Relevance level to consider.
-pub fn compute_hits(
-    rels: &RelevanceMap<i32>,
-    preds: &[Relevance<f64>],
+pub fn compute_hits<K>(
+    rels: &RelevanceMap<K, GoldScore>,
+    preds: &[Relevance<K, PredScore>],
     k: usize,
-    rel_lvl: i32,
-) -> f64 {
+    rel_lvl: GoldScore,
+) -> f64
+where
+    K: Eq + std::hash::Hash,
+{
     let k = if k == 0 { preds.len() } else { k };
     let mut hits = 0;
     for pred in preds.iter().take(k) {

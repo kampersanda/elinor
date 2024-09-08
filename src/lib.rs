@@ -1,14 +1,17 @@
 pub mod errors;
 pub mod metrics;
-pub mod qrels;
-pub mod run;
+pub mod relevance;
 
-use std::collections::HashMap;
+use ordered_float::OrderedFloat;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Relevance<T> {
-    pub doc_id: String,
-    pub score: T,
-}
+pub use relevance::Relevance;
+pub use relevance::RelevanceMap;
 
-pub type RelevanceMap<T> = HashMap<String, T>;
+pub type GoldScore = i32;
+pub type PredScore = OrderedFloat<f64>;
+
+pub type Qrels<K> = relevance::RelevanceStore<K, GoldScore>;
+pub type QrelsBuilder<K> = relevance::RelevanceStoreBuilder<K, GoldScore>;
+
+pub type Run<K> = relevance::RelevanceStore<K, PredScore>;
+pub type RunBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;

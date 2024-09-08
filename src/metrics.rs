@@ -9,8 +9,9 @@ pub(crate) mod reciprocal_rank;
 use std::collections::HashMap;
 
 use crate::errors::EmirError;
-use crate::qrels::Qrels;
-use crate::run::Run;
+use crate::GoldScore;
+use crate::Qrels;
+use crate::Run;
 
 #[derive(Debug, Clone, Copy)]
 pub enum DcgWeighting {
@@ -24,40 +25,43 @@ pub enum DcgWeighting {
 #[derive(Debug, Clone, Copy)]
 pub enum Metric {
     /// Number of relevant documents retrieved.
-    Hits(usize, i32),
+    Hits(usize, GoldScore),
 
     /// Precision at k.
-    Precision(usize, i32),
+    Precision(usize, GoldScore),
 
     /// Recall at k.
-    Recall(usize, i32),
+    Recall(usize, GoldScore),
 
     /// F1 score at k.
-    F1(usize, i32),
+    F1(usize, GoldScore),
 
     /// Average precision at k.
-    AveragePrecision(usize, i32),
+    AveragePrecision(usize, GoldScore),
 
     /// Reciprocal rank at k.
-    ReciprocalRank(usize, i32),
+    ReciprocalRank(usize, GoldScore),
 
     /// Discounted cumulative gain at k.
     Dcg(usize, DcgWeighting),
 }
 
-pub fn evaluate(
-    qrels: &Qrels,
-    run: &Run,
+pub fn evaluate<K>(
+    qrels: &Qrels<K>,
+    run: &Run<K>,
     metric: Metric,
-) -> Result<HashMap<String, f64>, EmirError> {
+) -> Result<HashMap<K, f64>, EmirError<K>>
+where
+    K: Clone + Eq + std::hash::Hash + std::fmt::Display,
+{
     for query_id in run.query_ids() {
-        if qrels.get_rel_map(query_id).is_none() {
+        if qrels.get_map(query_id).is_none() {
             return Err(EmirError::MissingQueryId(query_id.clone()));
         }
     }
     let mut scores = HashMap::new();
-    for (query_id, preds) in run.query_ids_and_sorted_rels() {
-        let rels = qrels.get_rel_map(query_id).unwrap();
+    for (query_id, preds) in run.query_ids_and_sorted() {
+        let rels = qrels.get_map(query_id).unwrap();
         let score = match metric {
             Metric::Hits(k, rel_lvl) => hits::compute_hits(rels, preds, k, rel_lvl),
             Metric::Precision(k, rel_lvl) => precision::compute_precision(rels, preds, k, rel_lvl),
@@ -79,6 +83,7 @@ pub fn evaluate(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::PredScore;
     use approx::assert_relative_eq;
     use big_s::S;
     use maplit::hashmap;
@@ -209,10 +214,10 @@ mod tests {
             None,
             hashmap! {
                 S("q1") => hashmap! {
-                    S("d1") => 0.5,
-                    S("d2") => 0.4,
-                    S("d3") => 0.3,
-                    S("d4") => 0.2,
+                    S("d1") => PredScore::from(0.5),
+                    S("d2") => PredScore::from(0.4),
+                    S("d3") => PredScore::from(0.3),
+                    S("d4") => PredScore::from(0.2),
                 },
             },
         );
