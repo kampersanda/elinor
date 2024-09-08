@@ -27,6 +27,9 @@ pub enum Metric {
     /// Number of relevant documents retrieved.
     Hits(usize, GoldScore),
 
+    /// Fraction of queries for which at least one relevant document is retrieved.
+    HitRate(usize, GoldScore),
+
     /// Precision at k.
     Precision(usize, GoldScore),
 
@@ -67,6 +70,7 @@ where
         let rels = qrels.get_map(query_id).unwrap();
         let score = match metric {
             Metric::Hits(k, rel_lvl) => hits::compute_hits(rels, preds, k, rel_lvl),
+            Metric::HitRate(k, rel_lvl) => hits::compute_if_hit(rels, preds, k, rel_lvl),
             Metric::Precision(k, rel_lvl) => precision::compute_precision(rels, preds, k, rel_lvl),
             Metric::Recall(k, rel_lvl) => recall::compute_recall(rels, preds, k, rel_lvl),
             Metric::F1(k, rel_lvl) => f1::compute_f1(rels, preds, k, rel_lvl),
@@ -122,6 +126,20 @@ mod tests {
     #[case::hits_k_3_rel_lvl_2(Metric::Hits(3, 2), hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_4_rel_lvl_2(Metric::Hits(4, 2), hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_5_rel_lvl_2(Metric::Hits(5, 2), hashmap! { S("q1") => 1.0 })]
+    // Hit rate (relevance >= 1)
+    #[case::hit_rate_k_0_rel_lvl_1(Metric::HitRate(0, 1), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_1_rel_lvl_1(Metric::HitRate(1, 1), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_2_rel_lvl_1(Metric::HitRate(2, 1), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_3_rel_lvl_1(Metric::HitRate(3, 1), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_4_rel_lvl_1(Metric::HitRate(4, 1), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_5_rel_lvl_1(Metric::HitRate(5, 1), hashmap! { S("q1") => 1.0 })]
+    // Hit rate (relevance >= 2)
+    #[case::hit_rate_k_0_rel_lvl_2(Metric::HitRate(0, 2), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_1_rel_lvl_2(Metric::HitRate(1, 2), hashmap! { S("q1") => 0.0 })]
+    #[case::hit_rate_k_2_rel_lvl_2(Metric::HitRate(2, 2), hashmap! { S("q1") => 0.0 })]
+    #[case::hit_rate_k_3_rel_lvl_2(Metric::HitRate(3, 2), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_4_rel_lvl_2(Metric::HitRate(4, 2), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_5_rel_lvl_2(Metric::HitRate(5, 2), hashmap! { S("q1") => 1.0 })]
     // Precision (relevance >= 1)
     #[case::precision_k_0_rel_lvl_1(Metric::Precision(0, 1), hashmap! { S("q1") => 2.0 / 4.0 })]
     #[case::precision_k_1_rel_lvl_1(Metric::Precision(1, 1), hashmap! { S("q1") => 1.0 / 1.0 })]
