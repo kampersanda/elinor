@@ -73,18 +73,21 @@ mod tests {
     }
 
     #[rstest]
-    #[case::hits_k_0_rel_lvl_1(Metric::Hits(0), 1, hashmap! { S("q1") => 0.0 })]
+    // Hits
+    #[case::hits_k_0_rel_lvl_1(Metric::Hits(0), 1, hashmap! { S("q1") => 3.0 })]
     #[case::hits_k_1_rel_lvl_1(Metric::Hits(1), 1, hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_2_rel_lvl_1(Metric::Hits(2), 1, hashmap! { S("q1") => 2.0 })]
     #[case::hits_k_3_rel_lvl_1(Metric::Hits(3), 1, hashmap! { S("q1") => 2.0 })]
     #[case::hits_k_4_rel_lvl_1(Metric::Hits(4), 1, hashmap! { S("q1") => 3.0 })]
     #[case::hits_k_5_rel_lvl_1(Metric::Hits(5), 1, hashmap! { S("q1") => 3.0 })]
-    #[case::hits_k_0_rel_lvl_2(Metric::Hits(0), 2, hashmap! { S("q1") => 0.0 })]
+    #[case::hits_k_0_rel_lvl_2(Metric::Hits(0), 2, hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_1_rel_lvl_2(Metric::Hits(1), 2, hashmap! { S("q1") => 0.0 })]
     #[case::hits_k_2_rel_lvl_2(Metric::Hits(2), 2, hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_3_rel_lvl_2(Metric::Hits(3), 2, hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_4_rel_lvl_2(Metric::Hits(4), 2, hashmap! { S("q1") => 1.0 })]
     #[case::hits_k_5_rel_lvl_2(Metric::Hits(5), 2, hashmap! { S("q1") => 1.0 })]
+    // Precision
+    #[case::precision_k_0_rel_lvl_1(Metric::Precision(0), 1, hashmap! { S("q1") => 0.6 })]
     fn test_evaluate(
         #[case] metric: Metric,
         #[case] rel_lvl: i32,
