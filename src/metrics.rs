@@ -66,8 +66,23 @@ mod tests {
     use rstest::*;
 
     #[rstest]
-    #[case(0, 0, 0.0)]
-    fn test_evaluate_hits(#[case] k: usize, #[case] rel_lvl: i32, #[case] expected: f64) {
+    #[case::hits_k_0_rel_lvl_1(Metric::Hits(0), 1, hashmap! { S("q1") => 0.0 })]
+    #[case::hits_k_1_rel_lvl_1(Metric::Hits(1), 1, hashmap! { S("q1") => 1.0 })]
+    #[case::hits_k_2_rel_lvl_1(Metric::Hits(2), 1, hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_3_rel_lvl_1(Metric::Hits(3), 1, hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_4_rel_lvl_1(Metric::Hits(4), 1, hashmap! { S("q1") => 3.0 })]
+    #[case::hits_k_5_rel_lvl_1(Metric::Hits(5), 1, hashmap! { S("q1") => 3.0 })]
+    #[case::hits_k_0_rel_lvl_2(Metric::Hits(0), 2, hashmap! { S("q1") => 0.0 })]
+    #[case::hits_k_1_rel_lvl_2(Metric::Hits(1), 2, hashmap! { S("q1") => 0.0 })]
+    #[case::hits_k_2_rel_lvl_2(Metric::Hits(2), 2, hashmap! { S("q1") => 1.0 })]
+    #[case::hits_k_3_rel_lvl_2(Metric::Hits(3), 2, hashmap! { S("q1") => 1.0 })]
+    #[case::hits_k_4_rel_lvl_2(Metric::Hits(4), 2, hashmap! { S("q1") => 1.0 })]
+    #[case::hits_k_5_rel_lvl_2(Metric::Hits(5), 2, hashmap! { S("q1") => 1.0 })]
+    fn test_evaluate(
+        #[case] metric: Metric,
+        #[case] rel_lvl: i32,
+        #[case] expected: HashMap<String, f64>,
+    ) {
         let qrels = Qrels::from_map(
             None,
             hashmap! {
@@ -91,7 +106,7 @@ mod tests {
                 },
             },
         );
-        let scores = evaluate(&qrels, &run, Metric::Hits(k), rel_lvl).unwrap();
-        assert_relative_eq!(scores["q1"], expected);
+        let scores = evaluate(&qrels, &run, metric, rel_lvl).unwrap();
+        assert_relative_eq!(scores["q1"], expected["q1"]);
     }
 }
