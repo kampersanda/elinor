@@ -16,6 +16,9 @@ use crate::run::Run;
 pub enum DcgWeighting {
     /// https://dl.acm.org/doi/10.1145/582415.582418
     Jarvelin,
+
+    /// https://dl.acm.org/doi/10.1145/1102351.1102363
+    Burges,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -184,6 +187,13 @@ mod tests {
     #[case::dcg_k_3_jarvelin(Metric::Dcg(3, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 2.0 / LOG_2_4 })]
     #[case::dcg_k_4_jarvelin(Metric::Dcg(4, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 2.0 / LOG_2_4 })]
     #[case::dcg_k_5_jarvelin(Metric::Dcg(5, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 2.0 / LOG_2_4 })]
+    // DCG (Burges)
+    #[case::dcg_k_0_burges(Metric::Dcg(0, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_1_burges(Metric::Dcg(1, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_2_burges(Metric::Dcg(2, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 })]
+    #[case::dcg_k_3_burges(Metric::Dcg(3, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_4_burges(Metric::Dcg(4, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_5_burges(Metric::Dcg(5, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 0.0 / LOG_2_3 + 3.0 / LOG_2_4 })]
     fn test_evaluate(#[case] metric: Metric, #[case] expected: HashMap<String, f64>) {
         let qrels = Qrels::from_map(
             None,

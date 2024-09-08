@@ -6,6 +6,7 @@ use crate::metrics::DcgWeighting;
 fn weighted_score(rel: i32, weighting: DcgWeighting) -> f64 {
     match weighting {
         DcgWeighting::Jarvelin => rel as f64,
+        DcgWeighting::Burges => 2.0_f64.powi(rel) - 1.0,
     }
 }
 
