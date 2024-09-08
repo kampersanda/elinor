@@ -9,9 +9,10 @@ pub(crate) mod reciprocal_rank;
 use std::collections::HashMap;
 
 use crate::errors::EmirError;
-use crate::GoldScore;
 use crate::Qrels;
 use crate::Run;
+
+use crate::RELEVANT_LEVEL;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DcgWeighting {
@@ -25,25 +26,25 @@ pub enum DcgWeighting {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Metric {
     /// Number of relevant documents retrieved.
-    Hits(usize, GoldScore),
+    Hits(usize),
 
     /// Fraction of queries for which at least one relevant document is retrieved.
-    HitRate(usize, GoldScore),
+    HitRate(usize),
 
     /// Precision at k.
-    Precision(usize, GoldScore),
+    Precision(usize),
 
     /// Recall at k.
-    Recall(usize, GoldScore),
+    Recall(usize),
 
     /// F1 score at k.
-    F1(usize, GoldScore),
+    F1(usize),
 
     /// Average precision at k.
-    AveragePrecision(usize, GoldScore),
+    AveragePrecision(usize),
 
     /// Reciprocal rank at k.
-    ReciprocalRank(usize, GoldScore),
+    ReciprocalRank(usize),
 
     /// Discounted cumulative gain at k.
     Dcg(usize, DcgWeighting),
@@ -55,26 +56,26 @@ pub enum Metric {
 impl std::fmt::Display for Metric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Metric::Hits(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("Hits", *k, *rel_lvl))
+            Metric::Hits(k) => {
+                write!(f, "{}", format_binary_metric("Hits", *k))
             }
-            Metric::HitRate(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("Hit Rate", *k, *rel_lvl))
+            Metric::HitRate(k) => {
+                write!(f, "{}", format_binary_metric("Hit Rate", *k))
             }
-            Metric::Precision(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("Precision", *k, *rel_lvl))
+            Metric::Precision(k) => {
+                write!(f, "{}", format_binary_metric("Precision", *k))
             }
-            Metric::Recall(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("Recall", *k, *rel_lvl))
+            Metric::Recall(k) => {
+                write!(f, "{}", format_binary_metric("Recall", *k))
             }
-            Metric::F1(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("F1", *k, *rel_lvl))
+            Metric::F1(k) => {
+                write!(f, "{}", format_binary_metric("F1", *k))
             }
-            Metric::AveragePrecision(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("MAP", *k, *rel_lvl))
+            Metric::AveragePrecision(k) => {
+                write!(f, "{}", format_binary_metric("MAP", *k))
             }
-            Metric::ReciprocalRank(k, rel_lvl) => {
-                write!(f, "{}", format_binary_metric("MRR", *k, *rel_lvl))
+            Metric::ReciprocalRank(k) => {
+                write!(f, "{}", format_binary_metric("MRR", *k))
             }
             Metric::Dcg(k, weighting) => {
                 write!(f, "{}", format_dcg_metric("DCG", *k, *weighting))
@@ -86,11 +87,11 @@ impl std::fmt::Display for Metric {
     }
 }
 
-fn format_binary_metric(name: &str, k: usize, rel_lvl: GoldScore) -> String {
+fn format_binary_metric(name: &str, k: usize) -> String {
     if k == 0 {
-        format!("{} (rel>={})", name, rel_lvl)
+        format!("{}", name)
     } else {
-        format!("{}@{} (rel>={})", name, k, rel_lvl)
+        format!("{}@{}", name, k)
     }
 }
 
@@ -119,16 +120,16 @@ where
     for (query_id, preds) in run.query_ids_and_sorted() {
         let rels = qrels.get_map(query_id).unwrap();
         let score = match metric {
-            Metric::Hits(k, rel_lvl) => hits::compute_hits(rels, preds, k, rel_lvl),
-            Metric::HitRate(k, rel_lvl) => hits::compute_if_hit(rels, preds, k, rel_lvl),
-            Metric::Precision(k, rel_lvl) => precision::compute_precision(rels, preds, k, rel_lvl),
-            Metric::Recall(k, rel_lvl) => recall::compute_recall(rels, preds, k, rel_lvl),
-            Metric::F1(k, rel_lvl) => f1::compute_f1(rels, preds, k, rel_lvl),
-            Metric::AveragePrecision(k, rel_lvl) => {
-                average_precision::compute_average_precision(rels, preds, k, rel_lvl)
+            Metric::Hits(k) => hits::compute_hits(rels, preds, k, RELEVANT_LEVEL),
+            Metric::HitRate(k) => hits::compute_if_hit(rels, preds, k, RELEVANT_LEVEL),
+            Metric::Precision(k) => precision::compute_precision(rels, preds, k, RELEVANT_LEVEL),
+            Metric::Recall(k) => recall::compute_recall(rels, preds, k, RELEVANT_LEVEL),
+            Metric::F1(k) => f1::compute_f1(rels, preds, k, RELEVANT_LEVEL),
+            Metric::AveragePrecision(k) => {
+                average_precision::compute_average_precision(rels, preds, k, RELEVANT_LEVEL)
             }
-            Metric::ReciprocalRank(k, rel_lvl) => {
-                reciprocal_rank::compute_reciprocal_rank(rels, preds, k, rel_lvl)
+            Metric::ReciprocalRank(k) => {
+                reciprocal_rank::compute_reciprocal_rank(rels, preds, k, RELEVANT_LEVEL)
             }
             Metric::Dcg(k, weighting) => ndcg::compute_dcg(rels, preds, k, weighting),
             Metric::Ndcg(k, weighting) => {
@@ -162,104 +163,55 @@ mod tests {
     }
 
     #[rstest]
-    // Hits (relevance >= 1)
-    #[case::hits_k_0_rel_lvl_1(Metric::Hits(0, 1), hashmap! { S("q1") => 2.0 })]
-    #[case::hits_k_1_rel_lvl_1(Metric::Hits(1, 1), hashmap! { S("q1") => 1.0 })]
-    #[case::hits_k_2_rel_lvl_1(Metric::Hits(2, 1), hashmap! { S("q1") => 1.0 })]
-    #[case::hits_k_3_rel_lvl_1(Metric::Hits(3, 1), hashmap! { S("q1") => 2.0 })]
-    #[case::hits_k_4_rel_lvl_1(Metric::Hits(4, 1), hashmap! { S("q1") => 2.0 })]
-    #[case::hits_k_5_rel_lvl_1(Metric::Hits(5, 1), hashmap! { S("q1") => 2.0 })]
-    // Hits (relevance >= 2)
-    #[case::hits_k_0_rel_lvl_2(Metric::Hits(0, 2), hashmap! { S("q1") => 1.0 })]
-    #[case::hits_k_1_rel_lvl_2(Metric::Hits(1, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::hits_k_2_rel_lvl_2(Metric::Hits(2, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::hits_k_3_rel_lvl_2(Metric::Hits(3, 2), hashmap! { S("q1") => 1.0 })]
-    #[case::hits_k_4_rel_lvl_2(Metric::Hits(4, 2), hashmap! { S("q1") => 1.0 })]
-    #[case::hits_k_5_rel_lvl_2(Metric::Hits(5, 2), hashmap! { S("q1") => 1.0 })]
-    // Hit rate (relevance >= 1)
-    #[case::hit_rate_k_0_rel_lvl_1(Metric::HitRate(0, 1), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_1_rel_lvl_1(Metric::HitRate(1, 1), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_2_rel_lvl_1(Metric::HitRate(2, 1), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_3_rel_lvl_1(Metric::HitRate(3, 1), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_4_rel_lvl_1(Metric::HitRate(4, 1), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_5_rel_lvl_1(Metric::HitRate(5, 1), hashmap! { S("q1") => 1.0 })]
-    // Hit rate (relevance >= 2)
-    #[case::hit_rate_k_0_rel_lvl_2(Metric::HitRate(0, 2), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_1_rel_lvl_2(Metric::HitRate(1, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::hit_rate_k_2_rel_lvl_2(Metric::HitRate(2, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::hit_rate_k_3_rel_lvl_2(Metric::HitRate(3, 2), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_4_rel_lvl_2(Metric::HitRate(4, 2), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_5_rel_lvl_2(Metric::HitRate(5, 2), hashmap! { S("q1") => 1.0 })]
-    // Precision (relevance >= 1)
-    #[case::precision_k_0_rel_lvl_1(Metric::Precision(0, 1), hashmap! { S("q1") => 2.0 / 4.0 })]
-    #[case::precision_k_1_rel_lvl_1(Metric::Precision(1, 1), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::precision_k_2_rel_lvl_1(Metric::Precision(2, 1), hashmap! { S("q1") => 1.0 / 2.0 })]
-    #[case::precision_k_3_rel_lvl_1(Metric::Precision(3, 1), hashmap! { S("q1") => 2.0 / 3.0 })]
-    #[case::precision_k_4_rel_lvl_1(Metric::Precision(4, 1), hashmap! { S("q1") => 2.0 / 4.0 })]
-    #[case::precision_k_5_rel_lvl_1(Metric::Precision(5, 1), hashmap! { S("q1") => 2.0 / 5.0 })]
-    // Precision (relevance >= 2)
-    #[case::precision_k_0_rel_lvl_2(Metric::Precision(0, 2), hashmap! { S("q1") => 1.0 / 4.0 })]
-    #[case::precision_k_1_rel_lvl_2(Metric::Precision(1, 2), hashmap! { S("q1") => 0.0 / 1.0 })]
-    #[case::precision_k_2_rel_lvl_2(Metric::Precision(2, 2), hashmap! { S("q1") => 0.0 / 2.0 })]
-    #[case::precision_k_3_rel_lvl_2(Metric::Precision(3, 2), hashmap! { S("q1") => 1.0 / 3.0 })]
-    #[case::precision_k_4_rel_lvl_2(Metric::Precision(4, 2), hashmap! { S("q1") => 1.0 / 4.0 })]
-    #[case::precision_k_5_rel_lvl_2(Metric::Precision(5, 2), hashmap! { S("q1") => 1.0 / 5.0 })]
-    // Recall (relevance >= 1)
-    #[case::recall_k_0_rel_lvl_1(Metric::Recall(0, 1), hashmap! { S("q1") => 2.0 / 2.0 })]
-    #[case::recall_k_1_rel_lvl_1(Metric::Recall(1, 1), hashmap! { S("q1") => 1.0 / 2.0 })]
-    #[case::recall_k_2_rel_lvl_1(Metric::Recall(2, 1), hashmap! { S("q1") => 1.0 / 2.0 })]
-    #[case::recall_k_3_rel_lvl_1(Metric::Recall(3, 1), hashmap! { S("q1") => 2.0 / 2.0 })]
-    #[case::recall_k_4_rel_lvl_1(Metric::Recall(4, 1), hashmap! { S("q1") => 2.0 / 2.0 })]
-    #[case::recall_k_5_rel_lvl_1(Metric::Recall(5, 1), hashmap! { S("q1") => 2.0 / 2.0 })]
-    // Recall (relevance >= 2)
-    #[case::recall_k_0_rel_lvl_2(Metric::Recall(0, 2), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::recall_k_1_rel_lvl_2(Metric::Recall(1, 2), hashmap! { S("q1") => 0.0 / 1.0 })]
-    #[case::recall_k_2_rel_lvl_2(Metric::Recall(2, 2), hashmap! { S("q1") => 0.0 / 1.0 })]
-    #[case::recall_k_3_rel_lvl_2(Metric::Recall(3, 2), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::recall_k_4_rel_lvl_2(Metric::Recall(4, 2), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::recall_k_5_rel_lvl_2(Metric::Recall(5, 2), hashmap! { S("q1") => 1.0 / 1.0 })]
-    // F1 (relevance >= 1)
-    #[case::f1_k_0_rel_lvl_1(Metric::F1(0, 1), hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_1_rel_lvl_1(Metric::F1(1, 1), hashmap! { S("q1") => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_2_rel_lvl_1(Metric::F1(2, 1), hashmap! { S("q1") => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_3_rel_lvl_1(Metric::F1(3, 1), hashmap! { S("q1") => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_4_rel_lvl_1(Metric::F1(4, 1), hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_5_rel_lvl_1(Metric::F1(5, 1), hashmap! { S("q1") => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
-    // F1 (relevance >= 2)
-    #[case::f1_k_0_rel_lvl_2(Metric::F1(0, 2), hashmap! { S("q1") => 2.0 * (1.0 / 4.0) * (1.0 / 1.0) / ((1.0 / 4.0) + (1.0 / 1.0)) })]
-    #[case::f1_k_1_rel_lvl_2(Metric::F1(1, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::f1_k_2_rel_lvl_2(Metric::F1(2, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::f1_k_3_rel_lvl_2(Metric::F1(3, 2), hashmap! { S("q1") => 2.0 * (1.0 / 3.0) * (1.0 / 1.0) / ((1.0 / 3.0) + (1.0 / 1.0)) })]
-    #[case::f1_k_4_rel_lvl_2(Metric::F1(4, 2), hashmap! { S("q1") => 2.0 * (1.0 / 4.0) * (1.0 / 1.0) / ((1.0 / 4.0) + (1.0 / 1.0)) })]
-    #[case::f1_k_5_rel_lvl_2(Metric::F1(5, 2), hashmap! { S("q1") => 2.0 * (1.0 / 5.0) * (1.0 / 1.0) / ((1.0 / 5.0) + (1.0 / 1.0)) })]
-    // Average precision (relevance >= 1)
-    #[case::average_precision_k_0_rel_lvl_1(Metric::AveragePrecision(0, 1), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_1_rel_lvl_1(Metric::AveragePrecision(1, 1), hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
-    #[case::average_precision_k_2_rel_lvl_1(Metric::AveragePrecision(2, 1), hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
-    #[case::average_precision_k_3_rel_lvl_1(Metric::AveragePrecision(3, 1), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_4_rel_lvl_1(Metric::AveragePrecision(4, 1), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_5_rel_lvl_1(Metric::AveragePrecision(5, 1), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    // Average precision (relevance >= 2)
-    #[case::average_precision_k_0_rel_lvl_2(Metric::AveragePrecision(0, 2), hashmap! { S("q1") => (1.0 / 3.0) / 1.0 })]
-    #[case::average_precision_k_1_rel_lvl_2(Metric::AveragePrecision(1, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::average_precision_k_2_rel_lvl_2(Metric::AveragePrecision(2, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::average_precision_k_3_rel_lvl_2(Metric::AveragePrecision(3, 2), hashmap! { S("q1") => (1.0 / 3.0) / 1.0 })]
-    #[case::average_precision_k_4_rel_lvl_2(Metric::AveragePrecision(4, 2), hashmap! { S("q1") => (1.0 / 3.0) / 1.0 })]
-    #[case::average_precision_k_5_rel_lvl_2(Metric::AveragePrecision(5, 2), hashmap! { S("q1") => (1.0 / 3.0) / 1.0 })]
-    // Reciprocal rank (relevance >= 1)
-    #[case::reciprocal_rank_k_0_rel_lvl_1(Metric::ReciprocalRank(0, 1), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_1_rel_lvl_1(Metric::ReciprocalRank(1, 1), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_2_rel_lvl_1(Metric::ReciprocalRank(2, 1), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_3_rel_lvl_1(Metric::ReciprocalRank(3, 1), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_4_rel_lvl_1(Metric::ReciprocalRank(4, 1), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_5_rel_lvl_1(Metric::ReciprocalRank(5, 1), hashmap! { S("q1") => 1.0 / 1.0 })]
-    // Reciprocal rank (relevance >= 2)
-    #[case::reciprocal_rank_k_0_rel_lvl_2(Metric::ReciprocalRank(0, 2), hashmap! { S("q1") => 1.0 / 3.0 })]
-    #[case::reciprocal_rank_k_1_rel_lvl_2(Metric::ReciprocalRank(1, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::reciprocal_rank_k_2_rel_lvl_2(Metric::ReciprocalRank(2, 2), hashmap! { S("q1") => 0.0 })]
-    #[case::reciprocal_rank_k_3_rel_lvl_2(Metric::ReciprocalRank(3, 2), hashmap! { S("q1") => 1.0 / 3.0 })]
-    #[case::reciprocal_rank_k_4_rel_lvl_2(Metric::ReciprocalRank(4, 2), hashmap! { S("q1") => 1.0 / 3.0 })]
-    #[case::reciprocal_rank_k_5_rel_lvl_2(Metric::ReciprocalRank(5, 2), hashmap! { S("q1") => 1.0 / 3.0 })]
+    // Hits
+    #[case::hits_k_0_rel_lvl_1(Metric::Hits(0), hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_1_rel_lvl_1(Metric::Hits(1), hashmap! { S("q1") => 1.0 })]
+    #[case::hits_k_2_rel_lvl_1(Metric::Hits(2), hashmap! { S("q1") => 1.0 })]
+    #[case::hits_k_3_rel_lvl_1(Metric::Hits(3), hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_4_rel_lvl_1(Metric::Hits(4), hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_5_rel_lvl_1(Metric::Hits(5), hashmap! { S("q1") => 2.0 })]
+    // Hit rate
+    #[case::hit_rate_k_0_rel_lvl_1(Metric::HitRate(0), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_1_rel_lvl_1(Metric::HitRate(1), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_2_rel_lvl_1(Metric::HitRate(2), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_3_rel_lvl_1(Metric::HitRate(3), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_4_rel_lvl_1(Metric::HitRate(4), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_5_rel_lvl_1(Metric::HitRate(5), hashmap! { S("q1") => 1.0 })]
+    // Precision
+    #[case::precision_k_0_rel_lvl_1(Metric::Precision(0), hashmap! { S("q1") => 2.0 / 4.0 })]
+    #[case::precision_k_1_rel_lvl_1(Metric::Precision(1), hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::precision_k_2_rel_lvl_1(Metric::Precision(2), hashmap! { S("q1") => 1.0 / 2.0 })]
+    #[case::precision_k_3_rel_lvl_1(Metric::Precision(3), hashmap! { S("q1") => 2.0 / 3.0 })]
+    #[case::precision_k_4_rel_lvl_1(Metric::Precision(4), hashmap! { S("q1") => 2.0 / 4.0 })]
+    #[case::precision_k_5_rel_lvl_1(Metric::Precision(5), hashmap! { S("q1") => 2.0 / 5.0 })]
+    // Recall
+    #[case::recall_k_0_rel_lvl_1(Metric::Recall(0), hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_1_rel_lvl_1(Metric::Recall(1), hashmap! { S("q1") => 1.0 / 2.0 })]
+    #[case::recall_k_2_rel_lvl_1(Metric::Recall(2), hashmap! { S("q1") => 1.0 / 2.0 })]
+    #[case::recall_k_3_rel_lvl_1(Metric::Recall(3), hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_4_rel_lvl_1(Metric::Recall(4), hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_5_rel_lvl_1(Metric::Recall(5), hashmap! { S("q1") => 2.0 / 2.0 })]
+    // F1
+    #[case::f1_k_0_rel_lvl_1(Metric::F1(0), hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_1_rel_lvl_1(Metric::F1(1), hashmap! { S("q1") => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_2_rel_lvl_1(Metric::F1(2), hashmap! { S("q1") => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_3_rel_lvl_1(Metric::F1(3), hashmap! { S("q1") => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_4_rel_lvl_1(Metric::F1(4), hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_5_rel_lvl_1(Metric::F1(5), hashmap! { S("q1") => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
+    // Average precision
+    #[case::average_precision_k_0_rel_lvl_1(Metric::AveragePrecision(0), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_1_rel_lvl_1(Metric::AveragePrecision(1), hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
+    #[case::average_precision_k_2_rel_lvl_1(Metric::AveragePrecision(2), hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
+    #[case::average_precision_k_3_rel_lvl_1(Metric::AveragePrecision(3), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_4_rel_lvl_1(Metric::AveragePrecision(4), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_5_rel_lvl_1(Metric::AveragePrecision(5), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    // Reciprocal rank
+    #[case::reciprocal_rank_k_0_rel_lvl_1(Metric::ReciprocalRank(0), hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_1_rel_lvl_1(Metric::ReciprocalRank(1), hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_2_rel_lvl_1(Metric::ReciprocalRank(2), hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_3_rel_lvl_1(Metric::ReciprocalRank(3), hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_4_rel_lvl_1(Metric::ReciprocalRank(4), hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_5_rel_lvl_1(Metric::ReciprocalRank(5), hashmap! { S("q1") => 1.0 / 1.0 })]
     // DCG (Jarvelin)
     #[case::dcg_k_0_jarvelin(Metric::Dcg(0, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
     #[case::dcg_k_1_jarvelin(Metric::Dcg(1, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 })]

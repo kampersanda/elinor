@@ -27,7 +27,7 @@
 //!
 //! let qrels = Qrels::from_map(qrels_map);
 //! let run = Run::from_map(run_map);
-//! let metrics = vec![Metric::Precision(1, 1)];
+//! let metrics = vec![Metric::Precision(1)];
 //!
 //! let evaluated = emir::evaluate(&qrels, &run, metrics).unwrap();
 //! ```
@@ -53,6 +53,8 @@ pub type QrelsBuilder<K> = relevance::RelevanceStoreBuilder<K, GoldScore>;
 
 pub type Run<K> = relevance::RelevanceStore<K, PredScore>;
 pub type RunBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
+
+pub const RELEVANT_LEVEL: GoldScore = 1;
 
 pub struct Evaluated<K> {
     pub mean_scores: HashMap<Metric, f64>,

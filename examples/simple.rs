@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let qrels = Qrels::from_map(qrels_map);
     let run = Run::from_map(run_map);
-    let metrics = vec![Metric::Precision(1, 1)];
+    let metrics = vec![Metric::Precision(1)];
 
     let evaluated = emir::evaluate(&qrels, &run, metrics)?;
     for (metric, score) in evaluated.mean_scores.iter() {
