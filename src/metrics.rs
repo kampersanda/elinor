@@ -93,6 +93,28 @@ mod tests {
     #[case::precision_k_2_rel_lvl_1(Metric::Precision(2), 1, hashmap! { S("q1") => 1.0 / 2.0 })]
     #[case::precision_k_3_rel_lvl_1(Metric::Precision(3), 1, hashmap! { S("q1") => 2.0 / 3.0 })]
     #[case::precision_k_4_rel_lvl_1(Metric::Precision(4), 1, hashmap! { S("q1") => 2.0 / 4.0 })]
+    #[case::precision_k_5_rel_lvl_1(Metric::Precision(5), 1, hashmap! { S("q1") => 2.0 / 5.0 })]
+    // Precision (relevance >= 2)
+    #[case::precision_k_0_rel_lvl_2(Metric::Precision(0), 2, hashmap! { S("q1") => 1.0 / 4.0 })]
+    #[case::precision_k_1_rel_lvl_2(Metric::Precision(1), 2, hashmap! { S("q1") => 0.0 / 1.0 })]
+    #[case::precision_k_2_rel_lvl_2(Metric::Precision(2), 2, hashmap! { S("q1") => 0.0 / 2.0 })]
+    #[case::precision_k_3_rel_lvl_2(Metric::Precision(3), 2, hashmap! { S("q1") => 1.0 / 3.0 })]
+    #[case::precision_k_4_rel_lvl_2(Metric::Precision(4), 2, hashmap! { S("q1") => 1.0 / 4.0 })]
+    #[case::precision_k_5_rel_lvl_2(Metric::Precision(5), 2, hashmap! { S("q1") => 1.0 / 5.0 })]
+    // Recall (relevance >= 1)
+    #[case::recall_k_0_rel_lvl_1(Metric::Recall(0), 1, hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_1_rel_lvl_1(Metric::Recall(1), 1, hashmap! { S("q1") => 1.0 / 2.0 })]
+    #[case::recall_k_2_rel_lvl_1(Metric::Recall(2), 1, hashmap! { S("q1") => 1.0 / 2.0 })]
+    #[case::recall_k_3_rel_lvl_1(Metric::Recall(3), 1, hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_4_rel_lvl_1(Metric::Recall(4), 1, hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_5_rel_lvl_1(Metric::Recall(5), 1, hashmap! { S("q1") => 2.0 / 2.0 })]
+    // Recall (relevance >= 2)
+    #[case::recall_k_0_rel_lvl_2(Metric::Recall(0), 2, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::recall_k_1_rel_lvl_2(Metric::Recall(1), 2, hashmap! { S("q1") => 0.0 / 1.0 })]
+    #[case::recall_k_2_rel_lvl_2(Metric::Recall(2), 2, hashmap! { S("q1") => 0.0 / 1.0 })]
+    #[case::recall_k_3_rel_lvl_2(Metric::Recall(3), 2, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::recall_k_4_rel_lvl_2(Metric::Recall(4), 2, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::recall_k_5_rel_lvl_2(Metric::Recall(5), 2, hashmap! { S("q1") => 1.0 / 1.0 })]
     fn test_evaluate(
         #[case] metric: Metric,
         #[case] rel_lvl: i32,
