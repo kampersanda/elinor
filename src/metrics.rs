@@ -1,4 +1,5 @@
 pub(crate) mod average_precision;
+pub(crate) mod f1;
 pub(crate) mod hits;
 pub(crate) mod precision;
 pub(crate) mod recall;
@@ -19,6 +20,9 @@ pub enum Metric {
 
     /// Recall at k.
     Recall(usize),
+
+    /// F1 score at k.
+    F1(usize),
 
     /// Average precision at k.
     AveragePrecision(usize),
@@ -45,6 +49,7 @@ pub fn evaluate(
             Metric::Hits(k) => hits::compute_hits(rels, preds, k, rel_lvl),
             Metric::Precision(k) => precision::compute_precision(rels, preds, k, rel_lvl),
             Metric::Recall(k) => recall::compute_recall(rels, preds, k, rel_lvl),
+            Metric::F1(k) => f1::compute_f1(rels, preds, k, rel_lvl),
             Metric::AveragePrecision(k) => {
                 average_precision::compute_average_precision(rels, preds, k, rel_lvl)
             }
@@ -115,6 +120,20 @@ mod tests {
     #[case::recall_k_3_rel_lvl_2(Metric::Recall(3), 2, hashmap! { S("q1") => 1.0 / 1.0 })]
     #[case::recall_k_4_rel_lvl_2(Metric::Recall(4), 2, hashmap! { S("q1") => 1.0 / 1.0 })]
     #[case::recall_k_5_rel_lvl_2(Metric::Recall(5), 2, hashmap! { S("q1") => 1.0 / 1.0 })]
+    // F1 (relevance >= 1)
+    #[case::f1_k_0_rel_lvl_1(Metric::F1(0), 1, hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_1_rel_lvl_1(Metric::F1(1), 1, hashmap! { S("q1") => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_2_rel_lvl_1(Metric::F1(2), 1, hashmap! { S("q1") => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_3_rel_lvl_1(Metric::F1(3), 1, hashmap! { S("q1") => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_4_rel_lvl_1(Metric::F1(4), 1, hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_5_rel_lvl_1(Metric::F1(5), 1, hashmap! { S("q1") => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
+    // F1 (relevance >= 2)
+    #[case::f1_k_0_rel_lvl_2(Metric::F1(0), 2, hashmap! { S("q1") => 2.0 * (1.0 / 4.0) * (1.0 / 1.0) / ((1.0 / 4.0) + (1.0 / 1.0)) })]
+    #[case::f1_k_1_rel_lvl_2(Metric::F1(1), 2, hashmap! { S("q1") => 0.0 })]
+    #[case::f1_k_2_rel_lvl_2(Metric::F1(2), 2, hashmap! { S("q1") => 0.0 })]
+    #[case::f1_k_3_rel_lvl_2(Metric::F1(3), 2, hashmap! { S("q1") => 2.0 * (1.0 / 3.0) * (1.0 / 1.0) / ((1.0 / 3.0) + (1.0 / 1.0)) })]
+    #[case::f1_k_4_rel_lvl_2(Metric::F1(4), 2, hashmap! { S("q1") => 2.0 * (1.0 / 4.0) * (1.0 / 1.0) / ((1.0 / 4.0) + (1.0 / 1.0)) })]
+    #[case::f1_k_5_rel_lvl_2(Metric::F1(5), 2, hashmap! { S("q1") => 2.0 * (1.0 / 5.0) * (1.0 / 1.0) / ((1.0 / 5.0) + (1.0 / 1.0)) })]
     fn test_evaluate(
         #[case] metric: Metric,
         #[case] rel_lvl: i32,
