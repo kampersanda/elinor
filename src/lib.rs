@@ -5,6 +5,7 @@
 //! ## Getting started
 //!
 //! ```
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use std::collections::HashMap;
 //! use emir::{Qrels, Run, Metric, DcgWeighting};
 //!
@@ -52,7 +53,7 @@
 //!     Metric::AveragePrecision(3),
 //!     Metric::Ndcg(3, DcgWeighting::Jarvelin),
 //! ];
-//! let evaluated = emir::evaluate(&qrels, &run, metrics).unwrap();
+//! let evaluated = emir::evaluate(&qrels, &run, metrics)?;
 //!
 //! // Macro-averaged scores.
 //! for (metric, score) in evaluated.mean_scores.iter() {
@@ -74,7 +75,11 @@
 //! // => nDCG_Jarvelin@3
 //! // => - q_1: 0.7602
 //! // => - q_2: 0.1900
+//! # Ok(())
+//! # }
 //! ```
+// #![deny(missing_docs)]
+
 pub mod errors;
 pub mod metrics;
 pub mod relevance;
