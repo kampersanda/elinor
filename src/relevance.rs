@@ -34,6 +34,14 @@ where
         self.name.as_deref()
     }
 
+    /// Sets the name of the relevance store.
+    pub fn with_name(self, name: &str) -> Self {
+        Self {
+            name: Some(name.to_string()),
+            ..self
+        }
+    }
+
     /// Returns the relevance map for a given query identifier.
     pub fn get_map(&self, query_id: &K) -> Option<&RelevanceMap<K, T>> {
         self.map.get(query_id).map(|(_, rels)| rels)
@@ -62,14 +70,13 @@ where
 
     /// Creates a relevance store from a map of query identifiers to relevance maps.
     pub fn from_map(map: HashMap<K, RelevanceMap<K, T>>) -> Self {
-        let b = RelevanceStoreBuilder { name: None, map };
+        let b = RelevanceStoreBuilder { map };
         b.build()
     }
 }
 
 /// Builder for creating a relevance store.
 pub struct RelevanceStoreBuilder<K, T> {
-    name: Option<String>,
     map: HashMap<K, RelevanceMap<K, T>>,
 }
 
@@ -81,15 +88,8 @@ where
     /// Creates a new builder.
     pub fn new() -> Self {
         Self {
-            name: None,
             map: HashMap::new(),
         }
-    }
-
-    /// Sets the name of the relevance store.
-    pub fn name(mut self, name: String) -> Self {
-        self.name = Some(name);
-        self
     }
 
     /// Adds a relevance score to the store.
@@ -117,7 +117,6 @@ where
 
     /// Builds the relevance store.
     pub fn build(self) -> RelevanceStore<K, T> {
-        let name = self.name;
         let mut map = HashMap::new();
         for (query_id, rels) in self.map {
             let mut sorted = rels
@@ -130,6 +129,6 @@ where
             sorted.sort_by(|a, b| b.score.cmp(&a.score));
             map.insert(query_id, (sorted, rels));
         }
-        RelevanceStore { name, map }
+        RelevanceStore { name: None, map }
     }
 }

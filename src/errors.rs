@@ -10,4 +10,7 @@ where
 
     #[error("Error: {0}")]
     MissingQueryId(K),
+
+    #[error("Empty input")]
+    EmptyLines,
 }

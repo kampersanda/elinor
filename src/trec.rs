@@ -28,17 +28,22 @@ where
     I: Iterator<Item = S>,
     S: AsRef<str>,
 {
+    let mut name = None;
     let mut b = RunBuilder::new();
-    for (i, line) in lines.enumerate() {
+    for line in lines {
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
         let score = rows[4].parse::<PredScore>().unwrap();
         b.add_score(query_id, doc_id, score)?;
-        if i == 0 {
-            b = b.name(rows[5].to_string());
+        if name.is_none() {
+            name = Some(rows[5].to_string());
         }
     }
-    Ok(b.build())
+    if let Some(name) = name {
+        Ok(b.build().with_name(name.as_str()))
+    } else {
+        Err(EmirError::EmptyLines)
+    }
 }
