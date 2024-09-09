@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
+use anyhow::Result;
 use emir::DcgWeighting;
 use emir::Metric;
 use emir::Qrels;
 use emir::Run;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
     let qrels_map = HashMap::from([
         (
             "q_1".to_string(),

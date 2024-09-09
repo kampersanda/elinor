@@ -2,7 +2,7 @@
 //!
 //! Emir is a library for evaluating information retrieval systems.
 //!
-//! ## Examples
+//! ## Getting started
 //!
 //! ```
 //! use std::collections::HashMap;
