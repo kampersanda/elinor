@@ -69,16 +69,33 @@ pub enum Metric {
     /// ```
     F1 { k: usize },
 
-    /// Average precision at k.
+    /// Average of the Precision scores computed after each relevant document is retrieved:
+    ///
+    /// ```math
+    /// \text{AP} = \frac{1}{| \text{Rel} |} \sum_{i=1}^{| \text{Res} |} \text{Precision}@i \times
+    /// \left\{ \begin{array}{ll} 1 & \text{if the } i \text{-th document is relevant} \\ 0 & \text{otherwise} \end{array} \right.
+    /// ```
     AveragePrecision { k: usize },
 
-    /// Reciprocal rank at k.
+    /// Multiplicative inverse of the rank of the first retrieved relevant document:
+    ///
+    /// ```math
+    /// \text{RR} = \frac{1}{\text{the rank of the first retrieved relevant document}}
+    /// ```
     ReciprocalRank { k: usize },
 
     /// Discounted cumulative gain at k.
+    ///
+    /// ```math
+    /// \text{DCG}@k = \sum_{i=1}^k \frac{G(\text{rel}_i)}{\log_2(i + 1)}
+    /// ```
     Dcg { k: usize, w: DcgWeighting },
 
     /// Normalized discounted cumulative gain at k.
+    ///
+    /// ```math
+    /// \text{nDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
+    /// ```
     Ndcg { k: usize, w: DcgWeighting },
 }
 
