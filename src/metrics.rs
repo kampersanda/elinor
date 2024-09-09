@@ -25,21 +25,48 @@ pub enum DcgWeighting {
 }
 
 /// Metrics for evaluating information retrieval systems.
+///
+/// # Arguments
+///
+/// * `k` - Number of top documents to consider.
+/// * `w` - Weighting scheme to use (only for DCG and nDCG).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Metric {
     /// Number of relevant documents retrieved.
+    ///
     Hits { k: usize },
 
     /// Fraction of queries for which at least one relevant document is retrieved.
     HitRate { k: usize },
 
-    /// Precision at k.
+    /// Proportion of the retrieved documents that are relevant:
+    ///
+    /// ```math
+    /// \text{Precision} = \frac{| \text{Res} \cap \text{Rel} |}{| \text{Res} |}
+    /// ```
+    ///
+    /// ```math
+    /// \text{Precision}@k = \frac{| \text{Res}@k \cap \text{Rel} |}{k}
+    /// ```
     Precision { k: usize },
 
-    /// Recall at k.
+    /// Ratio between the retrieved documents that are relevant and
+    /// the total number of relevant documents:
+    ///
+    /// ```math
+    /// \text{Recall} = \frac{| \text{Res} \cap \text{Rel} |}{| \text{Rel} |}
+    /// ```
+    ///
+    /// ```math
+    /// \text{Recall}@k = \frac{| \text{Res}@k \cap \text{Rel} |}{| \text{Rel} |}
+    /// ```
     Recall { k: usize },
 
-    /// F1 score at k.
+    /// Harmonic mean of precision and recall:
+    ///
+    /// ```math
+    /// \text{F1} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
+    /// ```
     F1 { k: usize },
 
     /// Average precision at k.
