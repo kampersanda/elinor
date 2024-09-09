@@ -23,15 +23,21 @@ fn main() -> Result<()> {
     let run = rb.build();
 
     let metrics = vec![
-        Metric::Hits(3),
-        Metric::HitRate(3),
-        Metric::Precision(3),
-        Metric::Recall(3),
-        Metric::F1(3),
-        Metric::AveragePrecision(3),
-        Metric::ReciprocalRank(3),
-        Metric::Ndcg(3, DcgWeighting::Jarvelin),
-        Metric::Ndcg(3, DcgWeighting::Burges),
+        Metric::Hits { k: 3 },
+        Metric::HitRate { k: 3 },
+        Metric::Precision { k: 3 },
+        Metric::Recall { k: 3 },
+        Metric::F1 { k: 3 },
+        Metric::AveragePrecision { k: 3 },
+        Metric::ReciprocalRank { k: 3 },
+        Metric::Ndcg {
+            k: 3,
+            w: DcgWeighting::Jarvelin,
+        },
+        Metric::Ndcg {
+            k: 3,
+            w: DcgWeighting::Burges,
+        },
     ];
     let evaluated = emir::evaluate(&qrels, &run, metrics)?;
 

@@ -1,3 +1,4 @@
+//! Metrics for evaluating information retrieval systems.
 pub(crate) mod average_precision;
 pub(crate) mod f1;
 pub(crate) mod hits;
@@ -23,65 +24,66 @@ pub enum DcgWeighting {
     Burges,
 }
 
+/// Metrics for evaluating information retrieval systems.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Metric {
     /// Number of relevant documents retrieved.
-    Hits(usize),
+    Hits { k: usize },
 
     /// Fraction of queries for which at least one relevant document is retrieved.
-    HitRate(usize),
+    HitRate { k: usize },
 
     /// Precision at k.
-    Precision(usize),
+    Precision { k: usize },
 
     /// Recall at k.
-    Recall(usize),
+    Recall { k: usize },
 
     /// F1 score at k.
-    F1(usize),
+    F1 { k: usize },
 
     /// Average precision at k.
-    AveragePrecision(usize),
+    AveragePrecision { k: usize },
 
     /// Reciprocal rank at k.
-    ReciprocalRank(usize),
+    ReciprocalRank { k: usize },
 
     /// Discounted cumulative gain at k.
-    Dcg(usize, DcgWeighting),
+    Dcg { k: usize, w: DcgWeighting },
 
     /// Normalized discounted cumulative gain at k.
-    Ndcg(usize, DcgWeighting),
+    Ndcg { k: usize, w: DcgWeighting },
 }
 
 impl std::fmt::Display for Metric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Metric::Hits(k) => {
+            Metric::Hits { k } => {
                 write!(f, "{}", format_binary_metric("Hits", *k))
             }
-            Metric::HitRate(k) => {
+            Metric::HitRate { k } => {
                 write!(f, "{}", format_binary_metric("HitRate", *k))
             }
-            Metric::Precision(k) => {
+            Metric::Precision { k } => {
                 write!(f, "{}", format_binary_metric("Precision", *k))
             }
-            Metric::Recall(k) => {
+            Metric::Recall { k } => {
                 write!(f, "{}", format_binary_metric("Recall", *k))
             }
-            Metric::F1(k) => {
+            Metric::F1 { k } => {
                 write!(f, "{}", format_binary_metric("F1", *k))
             }
-            Metric::AveragePrecision(k) => {
+            Metric::AveragePrecision { k } => {
                 write!(f, "{}", format_binary_metric("MAP", *k))
             }
-            Metric::ReciprocalRank(k) => {
+            Metric::ReciprocalRank { k } => {
                 write!(f, "{}", format_binary_metric("MRR", *k))
             }
-            Metric::Dcg(k, weighting) => {
-                write!(f, "{}", format_dcg_metric("DCG", *k, *weighting))
+            Metric::Dcg { k, w } => {
+                write!(f, "{}", format_dcg_metric("DCG", *k, *w))
             }
-            Metric::Ndcg(k, weighting) => {
-                write!(f, "{}", format_dcg_metric("nDCG", *k, *weighting))
+            Metric::Ndcg { k, w } => {
+                write!(f, "{}", format_dcg_metric("nDCG", *k, *w))
             }
         }
     }
@@ -120,21 +122,21 @@ where
     for (query_id, preds) in run.query_ids_and_sorted() {
         let rels = qrels.get_map(query_id).unwrap();
         let score = match metric {
-            Metric::Hits(k) => hits::compute_hits(rels, preds, k, RELEVANT_LEVEL),
-            Metric::HitRate(k) => hits::compute_if_hit(rels, preds, k, RELEVANT_LEVEL),
-            Metric::Precision(k) => precision::compute_precision(rels, preds, k, RELEVANT_LEVEL),
-            Metric::Recall(k) => recall::compute_recall(rels, preds, k, RELEVANT_LEVEL),
-            Metric::F1(k) => f1::compute_f1(rels, preds, k, RELEVANT_LEVEL),
-            Metric::AveragePrecision(k) => {
+            Metric::Hits { k } => hits::compute_hits(rels, preds, k, RELEVANT_LEVEL),
+            Metric::HitRate { k } => hits::compute_if_hit(rels, preds, k, RELEVANT_LEVEL),
+            Metric::Precision { k } => precision::compute_precision(rels, preds, k, RELEVANT_LEVEL),
+            Metric::Recall { k } => recall::compute_recall(rels, preds, k, RELEVANT_LEVEL),
+            Metric::F1 { k } => f1::compute_f1(rels, preds, k, RELEVANT_LEVEL),
+            Metric::AveragePrecision { k } => {
                 average_precision::compute_average_precision(rels, preds, k, RELEVANT_LEVEL)
             }
-            Metric::ReciprocalRank(k) => {
+            Metric::ReciprocalRank { k } => {
                 reciprocal_rank::compute_reciprocal_rank(rels, preds, k, RELEVANT_LEVEL)
             }
-            Metric::Dcg(k, weighting) => ndcg::compute_dcg(rels, preds, k, weighting),
-            Metric::Ndcg(k, weighting) => {
+            Metric::Dcg { k, w } => ndcg::compute_dcg(rels, preds, k, w),
+            Metric::Ndcg { k, w } => {
                 let golds = qrels.get_sorted(query_id).unwrap();
-                ndcg::compute_ndcg(rels, golds, preds, k, weighting)
+                ndcg::compute_ndcg(rels, golds, preds, k, w)
             }
         };
         results.insert(query_id.clone(), score);
@@ -163,82 +165,82 @@ mod tests {
 
     #[rstest]
     // Hits
-    #[case::hits_k_0_rel_lvl_1(Metric::Hits(0), hashmap! { S("q1") => 2.0 })]
-    #[case::hits_k_1_rel_lvl_1(Metric::Hits(1), hashmap! { S("q1") => 1.0 })]
-    #[case::hits_k_2_rel_lvl_1(Metric::Hits(2), hashmap! { S("q1") => 1.0 })]
-    #[case::hits_k_3_rel_lvl_1(Metric::Hits(3), hashmap! { S("q1") => 2.0 })]
-    #[case::hits_k_4_rel_lvl_1(Metric::Hits(4), hashmap! { S("q1") => 2.0 })]
-    #[case::hits_k_5_rel_lvl_1(Metric::Hits(5), hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_0_rel_lvl_1(Metric::Hits { k: 0 }, hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_1_rel_lvl_1(Metric::Hits { k: 1 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hits_k_2_rel_lvl_1(Metric::Hits { k: 2 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hits_k_3_rel_lvl_1(Metric::Hits { k: 3 }, hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_4_rel_lvl_1(Metric::Hits { k: 4 }, hashmap! { S("q1") => 2.0 })]
+    #[case::hits_k_5_rel_lvl_1(Metric::Hits { k: 5 }, hashmap! { S("q1") => 2.0 })]
     // Hit rate
-    #[case::hit_rate_k_0_rel_lvl_1(Metric::HitRate(0), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_1_rel_lvl_1(Metric::HitRate(1), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_2_rel_lvl_1(Metric::HitRate(2), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_3_rel_lvl_1(Metric::HitRate(3), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_4_rel_lvl_1(Metric::HitRate(4), hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_5_rel_lvl_1(Metric::HitRate(5), hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_0_rel_lvl_1(Metric::HitRate { k: 0 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_1_rel_lvl_1(Metric::HitRate { k: 1 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_2_rel_lvl_1(Metric::HitRate { k: 2 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_3_rel_lvl_1(Metric::HitRate { k: 3 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_4_rel_lvl_1(Metric::HitRate { k: 4 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_5_rel_lvl_1(Metric::HitRate { k: 5 }, hashmap! { S("q1") => 1.0 })]
     // Precision
-    #[case::precision_k_0_rel_lvl_1(Metric::Precision(0), hashmap! { S("q1") => 2.0 / 4.0 })]
-    #[case::precision_k_1_rel_lvl_1(Metric::Precision(1), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::precision_k_2_rel_lvl_1(Metric::Precision(2), hashmap! { S("q1") => 1.0 / 2.0 })]
-    #[case::precision_k_3_rel_lvl_1(Metric::Precision(3), hashmap! { S("q1") => 2.0 / 3.0 })]
-    #[case::precision_k_4_rel_lvl_1(Metric::Precision(4), hashmap! { S("q1") => 2.0 / 4.0 })]
-    #[case::precision_k_5_rel_lvl_1(Metric::Precision(5), hashmap! { S("q1") => 2.0 / 5.0 })]
+    #[case::precision_k_0_rel_lvl_1(Metric::Precision { k: 0 }, hashmap! { S("q1") => 2.0 / 4.0 })]
+    #[case::precision_k_1_rel_lvl_1(Metric::Precision { k: 1 }, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::precision_k_2_rel_lvl_1(Metric::Precision { k: 2 }, hashmap! { S("q1") => 1.0 / 2.0 })]
+    #[case::precision_k_3_rel_lvl_1(Metric::Precision { k: 3 }, hashmap! { S("q1") => 2.0 / 3.0 })]
+    #[case::precision_k_4_rel_lvl_1(Metric::Precision { k: 4 }, hashmap! { S("q1") => 2.0 / 4.0 })]
+    #[case::precision_k_5_rel_lvl_1(Metric::Precision { k: 5 }, hashmap! { S("q1") => 2.0 / 5.0 })]
     // Recall
-    #[case::recall_k_0_rel_lvl_1(Metric::Recall(0), hashmap! { S("q1") => 2.0 / 2.0 })]
-    #[case::recall_k_1_rel_lvl_1(Metric::Recall(1), hashmap! { S("q1") => 1.0 / 2.0 })]
-    #[case::recall_k_2_rel_lvl_1(Metric::Recall(2), hashmap! { S("q1") => 1.0 / 2.0 })]
-    #[case::recall_k_3_rel_lvl_1(Metric::Recall(3), hashmap! { S("q1") => 2.0 / 2.0 })]
-    #[case::recall_k_4_rel_lvl_1(Metric::Recall(4), hashmap! { S("q1") => 2.0 / 2.0 })]
-    #[case::recall_k_5_rel_lvl_1(Metric::Recall(5), hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_0_rel_lvl_1(Metric::Recall { k: 0 }, hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_1_rel_lvl_1(Metric::Recall { k: 1 }, hashmap! { S("q1") => 1.0 / 2.0 })]
+    #[case::recall_k_2_rel_lvl_1(Metric::Recall { k: 2 }, hashmap! { S("q1") => 1.0 / 2.0 })]
+    #[case::recall_k_3_rel_lvl_1(Metric::Recall { k: 3 }, hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_4_rel_lvl_1(Metric::Recall { k: 4 }, hashmap! { S("q1") => 2.0 / 2.0 })]
+    #[case::recall_k_5_rel_lvl_1(Metric::Recall { k: 5 }, hashmap! { S("q1") => 2.0 / 2.0 })]
     // F1
-    #[case::f1_k_0_rel_lvl_1(Metric::F1(0), hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_1_rel_lvl_1(Metric::F1(1), hashmap! { S("q1") => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_2_rel_lvl_1(Metric::F1(2), hashmap! { S("q1") => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_3_rel_lvl_1(Metric::F1(3), hashmap! { S("q1") => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_4_rel_lvl_1(Metric::F1(4), hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_5_rel_lvl_1(Metric::F1(5), hashmap! { S("q1") => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_0_rel_lvl_1(Metric::F1 { k: 0 }, hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_1_rel_lvl_1(Metric::F1 { k: 1 }, hashmap! { S("q1") => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_2_rel_lvl_1(Metric::F1 { k: 2 }, hashmap! { S("q1") => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_3_rel_lvl_1(Metric::F1 { k: 3 }, hashmap! { S("q1") => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_4_rel_lvl_1(Metric::F1 { k: 4 }, hashmap! { S("q1") => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_5_rel_lvl_1(Metric::F1 { k: 5 }, hashmap! { S("q1") => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
     // Average precision
-    #[case::average_precision_k_0_rel_lvl_1(Metric::AveragePrecision(0), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_1_rel_lvl_1(Metric::AveragePrecision(1), hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
-    #[case::average_precision_k_2_rel_lvl_1(Metric::AveragePrecision(2), hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
-    #[case::average_precision_k_3_rel_lvl_1(Metric::AveragePrecision(3), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_4_rel_lvl_1(Metric::AveragePrecision(4), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_5_rel_lvl_1(Metric::AveragePrecision(5), hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_0_rel_lvl_1(Metric::AveragePrecision { k: 0 }, hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_1_rel_lvl_1(Metric::AveragePrecision { k: 1 }, hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
+    #[case::average_precision_k_2_rel_lvl_1(Metric::AveragePrecision { k: 2 }, hashmap! { S("q1") => (1.0 / 1.0) / 1.0 })]
+    #[case::average_precision_k_3_rel_lvl_1(Metric::AveragePrecision { k: 3 }, hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_4_rel_lvl_1(Metric::AveragePrecision { k: 4 }, hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_5_rel_lvl_1(Metric::AveragePrecision { k: 5 }, hashmap! { S("q1") => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
     // Reciprocal rank
-    #[case::reciprocal_rank_k_0_rel_lvl_1(Metric::ReciprocalRank(0), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_1_rel_lvl_1(Metric::ReciprocalRank(1), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_2_rel_lvl_1(Metric::ReciprocalRank(2), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_3_rel_lvl_1(Metric::ReciprocalRank(3), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_4_rel_lvl_1(Metric::ReciprocalRank(4), hashmap! { S("q1") => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_5_rel_lvl_1(Metric::ReciprocalRank(5), hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_0_rel_lvl_1(Metric::ReciprocalRank { k: 0 }, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_1_rel_lvl_1(Metric::ReciprocalRank { k: 1 }, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_2_rel_lvl_1(Metric::ReciprocalRank { k: 2 }, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_3_rel_lvl_1(Metric::ReciprocalRank { k: 3 }, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_4_rel_lvl_1(Metric::ReciprocalRank { k: 4 }, hashmap! { S("q1") => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_5_rel_lvl_1(Metric::ReciprocalRank { k: 5 }, hashmap! { S("q1") => 1.0 / 1.0 })]
     // DCG (Jarvelin)
-    #[case::dcg_k_0_jarvelin(Metric::Dcg(0, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_1_jarvelin(Metric::Dcg(1, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_2_jarvelin(Metric::Dcg(2, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_3_jarvelin(Metric::Dcg(3, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_4_jarvelin(Metric::Dcg(4, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_5_jarvelin(Metric::Dcg(5, DcgWeighting::Jarvelin), hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_0_jarvelin(Metric::Dcg { k: 0, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_1_jarvelin(Metric::Dcg { k: 1, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_2_jarvelin(Metric::Dcg { k: 2, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_3_jarvelin(Metric::Dcg { k: 3, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_4_jarvelin(Metric::Dcg { k: 4, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_5_jarvelin(Metric::Dcg { k: 5, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
     // DCG (Burges)
-    #[case::dcg_k_0_burges(Metric::Dcg(0, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_1_burges(Metric::Dcg(1, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_2_burges(Metric::Dcg(2, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_3_burges(Metric::Dcg(3, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_4_burges(Metric::Dcg(4, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_5_burges(Metric::Dcg(5, DcgWeighting::Burges), hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_0_burges(Metric::Dcg { k: 0, w: DcgWeighting::Burges }, hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_1_burges(Metric::Dcg { k: 1, w: DcgWeighting::Burges }, hashmap! { S("q1") => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_2_burges(Metric::Dcg { k: 2, w: DcgWeighting::Burges }, hashmap! { S("q1") => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_3_burges(Metric::Dcg { k: 3, w: DcgWeighting::Burges }, hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_4_burges(Metric::Dcg { k: 4, w: DcgWeighting::Burges }, hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_5_burges(Metric::Dcg { k: 5, w: DcgWeighting::Burges }, hashmap! { S("q1") => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
     // NDCG (Jarvelin)
-    #[case::ndcg_k_0_jarvelin(Metric::Ndcg(0, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_1_jarvelin(Metric::Ndcg(1, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2) / (2.0 / LOG_2_2) })]
-    #[case::ndcg_k_2_jarvelin(Metric::Ndcg(2, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_3_jarvelin(Metric::Ndcg(3, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_4_jarvelin(Metric::Ndcg(4, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_5_jarvelin(Metric::Ndcg(5, DcgWeighting::Jarvelin), hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_0_jarvelin(Metric::Ndcg { k: 0, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_1_jarvelin(Metric::Ndcg { k: 1, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => (1.0 / LOG_2_2) / (2.0 / LOG_2_2) })]
+    #[case::ndcg_k_2_jarvelin(Metric::Ndcg { k: 2, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => (1.0 / LOG_2_2) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_3_jarvelin(Metric::Ndcg { k: 3, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_4_jarvelin(Metric::Ndcg { k: 4, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_5_jarvelin(Metric::Ndcg { k: 5, w: DcgWeighting::Jarvelin }, hashmap! { S("q1") => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     // NDCG (Burges)
-    #[case::ndcg_k_0_burges(Metric::Ndcg(0, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_1_burges(Metric::Ndcg(1, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2) / (3.0 / LOG_2_2) })]
-    #[case::ndcg_k_2_burges(Metric::Ndcg(2, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_3_burges(Metric::Ndcg(3, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_4_burges(Metric::Ndcg(4, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_5_burges(Metric::Ndcg(5, DcgWeighting::Burges), hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_0_burges(Metric::Ndcg { k: 0, w: DcgWeighting::Burges }, hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_1_burges(Metric::Ndcg { k: 1, w: DcgWeighting::Burges }, hashmap! { S("q1") => (1.0 / LOG_2_2) / (3.0 / LOG_2_2) })]
+    #[case::ndcg_k_2_burges(Metric::Ndcg { k: 2, w: DcgWeighting::Burges }, hashmap! { S("q1") => (1.0 / LOG_2_2) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_3_burges(Metric::Ndcg { k: 3, w: DcgWeighting::Burges }, hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_4_burges(Metric::Ndcg { k: 4, w: DcgWeighting::Burges }, hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_5_burges(Metric::Ndcg { k: 5, w: DcgWeighting::Burges }, hashmap! { S("q1") => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<String, f64>) {
         let qrels = Qrels::from_map(hashmap! {
             S("q1") => hashmap! {

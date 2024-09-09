@@ -50,8 +50,8 @@
 //! let run = Run::from_map(run_map);
 //!
 //! let metrics = vec![
-//!     Metric::AveragePrecision(3),
-//!     Metric::Ndcg(3, DcgWeighting::Jarvelin),
+//!     Metric::AveragePrecision { k: 3 },
+//!     Metric::Ndcg { k: 3, w: DcgWeighting::Jarvelin },
 //! ];
 //! let evaluated = emir::evaluate(&qrels, &run, metrics)?;
 //!
