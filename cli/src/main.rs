@@ -24,19 +24,26 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
+    let k = args.k;
 
     let qrels = trec::parse_qrels_from_trec(load_lines(&args.qrels_file)?.into_iter())?;
     let run = trec::parse_run_from_trec(load_lines(&args.run_file)?.into_iter())?;
     let metrics = [
-        Metric::Hits(args.k),
-        Metric::HitRate(args.k),
-        Metric::Precision(args.k),
-        Metric::Recall(args.k),
-        Metric::F1(args.k),
-        Metric::AveragePrecision(args.k),
-        Metric::ReciprocalRank(args.k),
-        Metric::Ndcg(args.k, DcgWeighting::Jarvelin),
-        Metric::Ndcg(args.k, DcgWeighting::Burges),
+        Metric::Hits { k },
+        Metric::HitRate { k },
+        Metric::Precision { k },
+        Metric::Recall { k },
+        Metric::F1 { k },
+        Metric::AveragePrecision { k },
+        Metric::ReciprocalRank { k },
+        Metric::Ndcg {
+            k,
+            w: DcgWeighting::Jarvelin,
+        },
+        Metric::Ndcg {
+            k,
+            w: DcgWeighting::Burges,
+        },
     ];
 
     let evaluated = emir::evaluate(&qrels, &run, metrics)?;
