@@ -8,35 +8,25 @@ use emir::Run;
 
 fn main() -> Result<()> {
     let qrels_map = HashMap::from([
-        (
-            "q_1".to_string(),
-            HashMap::from([
-                ("d_1".to_string(), 1),
-                ("d_2".to_string(), 0),
-                ("d_3".to_string(), 2),
-            ]),
-        ),
-        (
-            "q_2".to_string(),
-            HashMap::from([("d_2".to_string(), 2), ("d_4".to_string(), 1)]),
-        ),
+        ("q_1", HashMap::from([("d_1", 1), ("d_2", 0), ("d_3", 2)])),
+        ("q_2", HashMap::from([("d_2", 2), ("d_4", 1)])),
     ]);
 
     let run_map = HashMap::from([
         (
-            "q_1".to_string(),
+            "q_1",
             HashMap::from([
-                ("d_1".to_string(), 0.5.into()),
-                ("d_2".to_string(), 0.4.into()),
-                ("d_3".to_string(), 0.3.into()),
-                ("d_4".to_string(), 0.2.into()),
+                ("d_1", 0.5.into()),
+                ("d_2", 0.4.into()),
+                ("d_3", 0.3.into()),
             ]),
         ),
         (
-            "q_2".to_string(),
+            "q_2",
             HashMap::from([
-                ("d_4".to_string(), 0.1.into()),
-                ("d_1".to_string(), 0.2.into()),
+                ("d_4", 0.1.into()),
+                ("d_1", 0.2.into()),
+                ("d_3", 0.3.into()),
             ]),
         ),
     ]);

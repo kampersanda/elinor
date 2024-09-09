@@ -17,9 +17,9 @@ fn main() -> Result<()> {
     rb.add_score("q_1", "d_1", 0.5.into())?;
     rb.add_score("q_1", "d_2", 0.4.into())?;
     rb.add_score("q_1", "d_3", 0.3.into())?;
-    rb.add_score("q_1", "d_4", 0.2.into())?;
     rb.add_score("q_2", "d_4", 0.1.into())?;
     rb.add_score("q_2", "d_1", 0.2.into())?;
+    rb.add_score("q_2", "d_3", 0.3.into())?;
     let run = rb.build();
 
     let metrics = vec![
