@@ -10,17 +10,17 @@ pub struct Relevance<K, T> {
     pub score: T,
 }
 
-/// Mapping from document identifiers to relevance scores.
+/// Mapping from document ids to relevance scores.
 pub type RelevanceMap<K, T> = HashMap<K, T>;
 
-/// Data structure for storing relevance scores for a given query identifier.
+/// Data structure for storing relevance scores for a given query id.
 pub struct RelevanceStore<K, T> {
     // Name.
     name: Option<String>,
 
-    // Mapping from query identifiers to:
+    // Mapping from query ids to:
     //  - Sorted list of relevance scores in descending order.
-    //  - Mapping from document identifiers to relevance scores.
+    //  - Mapping from document ids to relevance scores.
     map: HashMap<K, (Vec<Relevance<K, T>>, RelevanceMap<K, T>)>,
 }
 
@@ -42,33 +42,33 @@ where
         }
     }
 
-    /// Returns the relevance map for a given query identifier.
+    /// Returns the relevance map for a given query id.
     pub fn get_map(&self, query_id: &K) -> Option<&RelevanceMap<K, T>> {
         self.map.get(query_id).map(|(_, rels)| rels)
     }
 
     /// Returns the sorted list of relevance scores in descending order
-    /// for a given query identifier.
+    /// for a given query id.
     pub fn get_sorted(&self, query_id: &K) -> Option<&[Relevance<K, T>]> {
         self.map.get(query_id).map(|(rels, _)| rels.as_slice())
     }
 
-    /// Returns an iterator over the query identifiers in random order.
+    /// Returns an iterator over the query ids in random order.
     pub fn query_ids(&self) -> impl Iterator<Item = &K> {
         self.map.keys()
     }
 
-    /// Returns an iterator over the query identifiers and their relevance maps.
+    /// Returns an iterator over the query ids and their relevance maps.
     pub fn query_ids_and_maps(&self) -> impl Iterator<Item = (&K, &RelevanceMap<K, T>)> {
         self.map.iter().map(|(k, (_, v))| (k, v))
     }
 
-    /// Returns an iterator over the query identifiers and their sorted relevance scores.
+    /// Returns an iterator over the query ids and their sorted relevance scores.
     pub fn query_ids_and_sorted(&self) -> impl Iterator<Item = (&K, &[Relevance<K, T>])> {
         self.map.iter().map(|(k, (v, _))| (k, v.as_slice()))
     }
 
-    /// Creates a relevance store from a map of query identifiers to relevance maps.
+    /// Creates a relevance store from a map of query ids to relevance maps.
     pub fn from_map(map: HashMap<K, RelevanceMap<K, T>>) -> Self {
         let b = RelevanceStoreBuilder { map };
         b.build()
@@ -96,13 +96,13 @@ where
     ///
     /// # Arguments
     ///
-    /// * `query_id` - Query identifier.
-    /// * `doc_id` - Document identifier.
+    /// * `query_id` - Query id.
+    /// * `doc_id` - Document id.
     /// * `score` - Relevance score.
     ///
     /// # Errors
     ///
-    /// * [`EmirError::DuplicateDocId`] if the document identifier already exists for the query.
+    /// * [`EmirError::DuplicateDocId`] if the document id already exists for the query.
     pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), EmirError<K>> {
         let rels = self
             .map
