@@ -24,7 +24,7 @@ fn main() -> Result<()> {
 
     let metrics = vec![
         Metric::Hits { k: 3 },
-        Metric::HitRate { k: 3 },
+        Metric::Success { k: 3 },
         Metric::Precision { k: 3 },
         Metric::Recall { k: 3 },
         Metric::F1 { k: 3 },

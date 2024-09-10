@@ -40,7 +40,7 @@ where
 /// * `preds` - Sorted slice of predicted documents with their scores.
 /// * `k` - Number of documents to consider.
 /// * `rel_lvl` - Relevance level to consider.
-pub fn compute_if_hit<K>(
+pub fn compute_success<K>(
     rels: &RelevanceMap<K, GoldScore>,
     preds: &[Relevance<K, PredScore>],
     k: usize,

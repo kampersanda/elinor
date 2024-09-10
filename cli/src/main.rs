@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let run = trec::parse_run_from_trec(load_lines(&args.run_file)?.into_iter())?;
     let metrics = [
         Metric::Hits { k },
-        Metric::HitRate { k },
+        Metric::Success { k },
         Metric::Precision { k },
         Metric::Recall { k },
         Metric::F1 { k },

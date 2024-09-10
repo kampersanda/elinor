@@ -44,8 +44,15 @@ pub enum Metric {
     /// * $`\text{Rel}`$ is the set of relevant documents.
     Hits { k: usize },
 
-    /// Fraction of queries for which at least one relevant document is retrieved.
-    HitRate { k: usize },
+    /// Binary metric indicating whether at least one relevant document is retrieved:
+    ///
+    /// ```math
+    /// \text{Success} = \left\{ \begin{array}{ll}
+    ///     1 & \text{if Hits} > 0 \\
+    ///     0 & \text{otherwise}
+    /// \end{array} \right.
+    /// ```
+    Success { k: usize },
 
     /// Proportion of the retrieved documents that are relevant:
     ///
@@ -112,8 +119,8 @@ impl std::fmt::Display for Metric {
             Metric::Hits { k } => {
                 write!(f, "{}", format_binary_metric("Hits", *k))
             }
-            Metric::HitRate { k } => {
-                write!(f, "{}", format_binary_metric("HitRate", *k))
+            Metric::Success { k } => {
+                write!(f, "{}", format_binary_metric("Success", *k))
             }
             Metric::Precision { k } => {
                 write!(f, "{}", format_binary_metric("Precision", *k))
@@ -174,7 +181,7 @@ where
         let rels = qrels.get_map(query_id).unwrap();
         let score = match metric {
             Metric::Hits { k } => hits::compute_hits(rels, preds, k, RELEVANT_LEVEL),
-            Metric::HitRate { k } => hits::compute_if_hit(rels, preds, k, RELEVANT_LEVEL),
+            Metric::Success { k } => hits::compute_success(rels, preds, k, RELEVANT_LEVEL),
             Metric::Precision { k } => precision::compute_precision(rels, preds, k, RELEVANT_LEVEL),
             Metric::Recall { k } => recall::compute_recall(rels, preds, k, RELEVANT_LEVEL),
             Metric::F1 { k } => f1::compute_f1(rels, preds, k, RELEVANT_LEVEL),
@@ -223,12 +230,12 @@ mod tests {
     #[case::hits_k_4_rel_lvl_1(Metric::Hits { k: 4 }, hashmap! { S("q1") => 2.0 })]
     #[case::hits_k_5_rel_lvl_1(Metric::Hits { k: 5 }, hashmap! { S("q1") => 2.0 })]
     // Hit rate
-    #[case::hit_rate_k_0_rel_lvl_1(Metric::HitRate { k: 0 }, hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_1_rel_lvl_1(Metric::HitRate { k: 1 }, hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_2_rel_lvl_1(Metric::HitRate { k: 2 }, hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_3_rel_lvl_1(Metric::HitRate { k: 3 }, hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_4_rel_lvl_1(Metric::HitRate { k: 4 }, hashmap! { S("q1") => 1.0 })]
-    #[case::hit_rate_k_5_rel_lvl_1(Metric::HitRate { k: 5 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_0_rel_lvl_1(Metric::Success { k: 0 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_1_rel_lvl_1(Metric::Success { k: 1 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_2_rel_lvl_1(Metric::Success { k: 2 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_3_rel_lvl_1(Metric::Success { k: 3 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_4_rel_lvl_1(Metric::Success { k: 4 }, hashmap! { S("q1") => 1.0 })]
+    #[case::hit_rate_k_5_rel_lvl_1(Metric::Success { k: 5 }, hashmap! { S("q1") => 1.0 })]
     // Precision
     #[case::precision_k_0_rel_lvl_1(Metric::Precision { k: 0 }, hashmap! { S("q1") => 2.0 / 4.0 })]
     #[case::precision_k_1_rel_lvl_1(Metric::Precision { k: 1 }, hashmap! { S("q1") => 1.0 / 1.0 })]
