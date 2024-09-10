@@ -8,53 +8,24 @@
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use emir::{Qrels, Run, Metric, DcgWeighting};
+//! use emir::{QrelsBuilder, RunBuilder, Metric, DcgWeighting};
 //!
-//! let qrels_map = [
-//!     (
-//!         "q_1",
-//!         [
-//!             ("d_1", 1),
-//!             ("d_2", 0),
-//!             ("d_3", 2),
-//!         ]
-//!         .into(),
-//!     ),
-//!     (
-//!         "q_2",
-//!         [
-//!             ("d_2", 2),
-//!             ("d_4", 1),
-//!         ]
-//!         .into(),
-//!     ),
-//! ]
-//! .into();
+//! let mut qb = QrelsBuilder::new();
+//! qb.add_score("q_1", "d_1", 1)?;
+//! qb.add_score("q_1", "d_2", 0)?;
+//! qb.add_score("q_1", "d_3", 2)?;
+//! qb.add_score("q_2", "d_2", 2)?;
+//! qb.add_score("q_2", "d_4", 1)?;
+//! let qrels = qb.build();
 //!
-//! let run_map = [
-//!     (
-//!         "q_1",
-//!         [
-//!             ("d_1", 0.5.into()),
-//!             ("d_2", 0.4.into()),
-//!             ("d_3", 0.3.into()),
-//!         ]
-//!         .into(),
-//!     ),
-//!     (
-//!         "q_2",
-//!         [
-//!             ("d_4", 0.1.into()),
-//!             ("d_1", 0.2.into()),
-//!             ("d_3", 0.3.into()),
-//!         ]
-//!         .into(),
-//!     ),
-//! ]
-//! .into();
-//!
-//! let qrels = Qrels::from_map(qrels_map);
-//! let run = Run::from_map(run_map);
+//! let mut rb = RunBuilder::new();
+//! rb.add_score("q_1", "d_1", 0.5.into())?;
+//! rb.add_score("q_1", "d_2", 0.4.into())?;
+//! rb.add_score("q_1", "d_3", 0.3.into())?;
+//! rb.add_score("q_2", "d_4", 0.1.into())?;
+//! rb.add_score("q_2", "d_1", 0.2.into())?;
+//! rb.add_score("q_2", "d_3", 0.3.into())?;
+//! let run = rb.build();
 //!
 //! let metrics = vec![
 //!     Metric::AveragePrecision { k: 3 },
