@@ -40,17 +40,17 @@ where
         b.build()
     }
 
-    /// Returns the name of the relevance store.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
     /// Sets the name of the relevance store.
     pub fn with_name(self, name: &str) -> Self {
         Self {
             name: Some(name.to_string()),
             ..self
         }
+    }
+
+    /// Returns the name of the relevance store.
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
     }
 
     /// Returns the relevance map for a given query id.
@@ -70,7 +70,7 @@ where
     }
 }
 
-/// Builder for creating a relevance store.
+/// Builder for [`RelevanceStore`].
 pub struct RelevanceStoreBuilder<K, T> {
     map: HashMap<K, RelevanceMap<K, T>>,
 }
