@@ -32,8 +32,16 @@ pub enum DcgWeighting {
 /// * `w` - Weighting scheme to use (only for DCG and nDCG).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Metric {
-    /// Number of relevant documents retrieved.
+    /// Number of relevant documents retrieved:
     ///
+    /// ```math
+    /// \text{Hits} = | \text{Res} \cap \text{Rel} |
+    /// ```
+    ///
+    /// where:
+    ///
+    /// * $`\text{Res}`$ is the set of retrieved documents.
+    /// * $`\text{Rel}`$ is the set of relevant documents.
     Hits { k: usize },
 
     /// Fraction of queries for which at least one relevant document is retrieved.
@@ -42,11 +50,14 @@ pub enum Metric {
     /// Proportion of the retrieved documents that are relevant:
     ///
     /// ```math
-    /// \text{Precision} = \frac{| \text{Res} \cap \text{Rel} |}{| \text{Res} |}
+    /// \text{Precision} = \frac{\text{Hits}}{|\text{Res}|}
     /// ```
     ///
+    /// Note that, when `k` is set, the denominator is fixed to `k`
+    /// even if the number of retrieved documents is fewer than `k`:
+    ///
     /// ```math
-    /// \text{Precision}@k = \frac{| \text{Res}@k \cap \text{Rel} |}{k}
+    /// \text{Precision}@k = \frac{\text{Hits}}{k}
     /// ```
     Precision { k: usize },
 
@@ -54,11 +65,7 @@ pub enum Metric {
     /// the total number of relevant documents:
     ///
     /// ```math
-    /// \text{Recall} = \frac{| \text{Res} \cap \text{Rel} |}{| \text{Rel} |}
-    /// ```
-    ///
-    /// ```math
-    /// \text{Recall}@k = \frac{| \text{Res}@k \cap \text{Rel} |}{| \text{Rel} |}
+    /// \text{Recall} = \frac{\text{Hits}}{| \text{Rel} |}
     /// ```
     Recall { k: usize },
 
