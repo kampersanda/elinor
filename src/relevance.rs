@@ -68,16 +68,6 @@ where
     pub fn query_ids(&self) -> impl Iterator<Item = &K> {
         self.map.keys()
     }
-
-    /// Returns an iterator over the query ids and their relevance maps.
-    pub fn query_ids_and_maps(&self) -> impl Iterator<Item = (&K, &RelevanceMap<K, T>)> {
-        self.map.iter().map(|(k, (_, v))| (k, v))
-    }
-
-    /// Returns an iterator over the query ids and their sorted relevance scores.
-    pub fn query_ids_and_sorted(&self) -> impl Iterator<Item = (&K, &[Relevance<K, T>])> {
-        self.map.iter().map(|(k, (v, _))| (k, v.as_slice()))
-    }
 }
 
 /// Builder for creating a relevance store.
@@ -140,6 +130,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
     // use rstest::*;
 
@@ -173,5 +165,20 @@ mod tests {
         ];
         assert_eq!(store.get_sorted(&'a'), Some(expected.as_slice()));
         assert_eq!(store.get_sorted(&'b'), None);
+    }
+
+    #[test]
+    fn test_relevance_store_query_ids() {
+        let store = RelevanceStore::from_map(
+            [
+                ('a', [('x', 1)].into()),
+                ('b', [('x', 1)].into()),
+                ('c', [('x', 1)].into()),
+            ]
+            .into(),
+        );
+        let expected = HashSet::from_iter([&'a', &'b', &'c']);
+        let actual = store.query_ids().collect::<HashSet<_>>();
+        assert_eq!(actual, expected);
     }
 }

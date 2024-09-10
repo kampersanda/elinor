@@ -177,7 +177,8 @@ where
         }
     }
     let mut results = HashMap::new();
-    for (query_id, preds) in run.query_ids_and_sorted() {
+    for query_id in run.query_ids() {
+        let preds = run.get_sorted(query_id).unwrap();
         let rels = qrels.get_map(query_id).unwrap();
         let score = match metric {
             Metric::Hits { k } => hits::compute_hits(rels, preds, k, RELEVANT_LEVEL),
