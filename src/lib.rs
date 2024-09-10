@@ -1,6 +1,8 @@
 //! # Emir: Evaluation Measures in Information Retrieval
 //!
-//! Emir is a library for evaluating information retrieval systems.
+//! Emir is a Rust library for evaluating information retrieval systems.
+//!
+//! ## Features
 //!
 //! ## Getting started
 //!
@@ -99,13 +101,18 @@ pub use metrics::Metric;
 pub use relevance::Relevance;
 pub use relevance::RelevanceMap;
 
+/// Data type to store a relevance score.
 pub type GoldScore = u32;
+
+/// Data type to store a predicted score.
 pub type PredScore = OrderedFloat<f64>;
 
 pub type Qrels<K> = relevance::RelevanceStore<K, GoldScore>;
+
 pub type QrelsBuilder<K> = relevance::RelevanceStoreBuilder<K, GoldScore>;
 
 pub type Run<K> = relevance::RelevanceStore<K, PredScore>;
+
 pub type RunBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
 
 pub const RELEVANT_LEVEL: GoldScore = 1;
