@@ -9,42 +9,48 @@
 //! use std::collections::HashMap;
 //! use emir::{Qrels, Run, Metric, DcgWeighting};
 //!
-//! let qrels_map = HashMap::from([
+//! let qrels_map = [
 //!     (
 //!         "q_1",
-//!         HashMap::from([
+//!         [
 //!             ("d_1", 1),
 //!             ("d_2", 0),
 //!             ("d_3", 2),
-//!         ]),
+//!         ]
+//!         .into(),
 //!     ),
 //!     (
 //!         "q_2",
-//!         HashMap::from([
+//!         [
 //!             ("d_2", 2),
 //!             ("d_4", 1),
-//!         ]),
+//!         ]
+//!         .into(),
 //!     ),
-//! ]);
+//! ]
+//! .into();
 //!
-//! let run_map = HashMap::from([
+//! let run_map = [
 //!     (
 //!         "q_1",
-//!         HashMap::from([
+//!         [
 //!             ("d_1", 0.5.into()),
 //!             ("d_2", 0.4.into()),
 //!             ("d_3", 0.3.into()),
-//!         ]),
+//!         ]
+//!         .into(),
 //!     ),
 //!     (
 //!         "q_2",
-//!         HashMap::from([
+//!         [
 //!             ("d_4", 0.1.into()),
 //!             ("d_1", 0.2.into()),
 //!             ("d_3", 0.3.into()),
-//!         ]),
+//!         ]
+//!         .into(),
 //!     ),
-//! ]);
+//! ]
+//! .into();
 //!
 //! let qrels = Qrels::from_map(qrels_map);
 //! let run = Run::from_map(run_map);
