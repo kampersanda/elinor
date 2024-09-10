@@ -34,6 +34,12 @@ where
     K: Eq + PartialEq + Hash + Clone + std::fmt::Display,
     T: Eq + PartialEq + Ord + PartialOrd + Clone,
 {
+    /// Creates a relevance store from a map of query ids to relevance maps.
+    pub fn from_map(map: HashMap<K, RelevanceMap<K, T>>) -> Self {
+        let b = RelevanceStoreBuilder { map };
+        b.build()
+    }
+
     /// Returns the name of the relevance store.
     pub fn name(&self) -> Option<&str> {
         self.name.as_deref()
@@ -71,12 +77,6 @@ where
     /// Returns an iterator over the query ids and their sorted relevance scores.
     pub fn query_ids_and_sorted(&self) -> impl Iterator<Item = (&K, &[Relevance<K, T>])> {
         self.map.iter().map(|(k, (v, _))| (k, v.as_slice()))
-    }
-
-    /// Creates a relevance store from a map of query ids to relevance maps.
-    pub fn from_map(map: HashMap<K, RelevanceMap<K, T>>) -> Self {
-        let b = RelevanceStoreBuilder { map };
-        b.build()
     }
 }
 
