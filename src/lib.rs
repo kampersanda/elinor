@@ -6,7 +6,6 @@
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use std::collections::HashMap;
 //! use emir::{Qrels, Run, Metric, DcgWeighting};
 //!
 //! let qrels_map = [

@@ -4,7 +4,7 @@ use std::hash::Hash;
 use crate::errors::EmirError;
 
 /// Data to store a relevance score for a document.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Relevance<K, T> {
     pub doc_id: K,
     pub score: T,
@@ -13,7 +13,12 @@ pub struct Relevance<K, T> {
 /// Mapping from document ids to relevance scores.
 pub type RelevanceMap<K, T> = HashMap<K, T>;
 
-/// Data structure for storing relevance scores for a given query id.
+/// Data structure for storing relevance scores.
+///
+/// # Type parameters
+///
+/// * `K` - Query/document id.
+/// * `T` - Relevance score.
 pub struct RelevanceStore<K, T> {
     // Name.
     name: Option<String>,
@@ -27,7 +32,7 @@ pub struct RelevanceStore<K, T> {
 impl<K, T> RelevanceStore<K, T>
 where
     K: Eq + PartialEq + Hash + Clone + std::fmt::Display,
-    T: Ord + PartialOrd + Clone,
+    T: Eq + PartialEq + Ord + PartialOrd + Clone,
 {
     /// Returns the name of the relevance store.
     pub fn name(&self) -> Option<&str> {
@@ -130,5 +135,43 @@ where
             map.insert(query_id, (sorted, rels));
         }
         RelevanceStore { name: None, map }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    // use rstest::*;
+
+    #[test]
+    fn test_relevance_store_name() {
+        let store = RelevanceStore::from_map([('a', [('x', 1)].into())].into());
+        assert_eq!(store.name(), None);
+        let store = store.with_name("test");
+        assert_eq!(store.name(), Some("test"));
+    }
+
+    #[test]
+    fn test_relevance_store_get_map() {
+        let store = RelevanceStore::from_map([('a', [('x', 1), ('y', 2)].into())].into());
+        assert_eq!(store.get_map(&'a'), Some(&[('x', 1), ('y', 2)].into()));
+        assert_eq!(store.get_map(&'b'), None);
+    }
+
+    #[test]
+    fn test_relevance_store_get_sorted() {
+        let store = RelevanceStore::from_map([('a', [('x', 1), ('y', 2)].into())].into());
+        let expected = vec![
+            Relevance {
+                doc_id: 'y',
+                score: 2,
+            },
+            Relevance {
+                doc_id: 'x',
+                score: 1,
+            },
+        ];
+        assert_eq!(store.get_sorted(&'a'), Some(expected.as_slice()));
+        assert_eq!(store.get_sorted(&'b'), None);
     }
 }
