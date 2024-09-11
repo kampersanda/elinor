@@ -1,10 +1,18 @@
 //! # Emir: Evaluation Measures in Information Retrieval
 //!
-//! Emir is a Rust library for evaluating information retrieval systems.
+//! Emir is a Rust library for evaluating information retrieval systems,
+//! which is inspired by [ranx](https://github.com/AmenRa/ranx).
 //!
 //! ## Features
 //!
+//! ## Glossary
+//!
+//! * **Qrels** - Collection of relevance judgments for a set of queries and documents.
+//! * **Run** - Collection of predicted scores for a set of queries and documents.
+//!
 //! ## Getting started
+//!
+//! A simple example to prepare qrels and run data and evaluate them using MAP and nDCG.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
