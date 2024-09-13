@@ -36,31 +36,20 @@
 //! let run = rb.build();
 //!
 //! let metrics = vec![
+//!     Metric::ReciprocalRank { k: 0 },
 //!     Metric::AveragePrecision { k: 3 },
 //!     Metric::Ndcg { k: 3, w: DcgWeighting::Jarvelin },
 //! ];
-//! let evaluated = emir::evaluate(&qrels, &run, metrics)?;
+//! let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 //!
 //! // Macro-averaged scores.
-//! for (metric, score) in evaluated.mean_scores.iter() {
-//!    println!("{metric}: {score:.4}");
+//! for metric in &metrics {
+//!     let score = evaluated.mean_scores[metric];
+//!     println!("{metric}: {score:.4}");
 //! }
+//! // => MRR: 0.6667
 //! // => MAP@3: 0.5833
 //! // => nDCG_Jarvelin@3: 0.4751
-//!
-//! // Scores per query.
-//! for (metric, scores) in evaluated.scores.iter() {
-//!     println!("{metric}");
-//!     for (query_id, score) in scores.iter() {
-//!         println!("- {query_id}: {score:.4}");
-//!     }
-//! }
-//! // => MAP@3
-//! // => - q_1: 0.8333
-//! // => - q_2: 0.3333
-//! // => nDCG_Jarvelin@3
-//! // => - q_1: 0.7602
-//! // => - q_2: 0.1900
 //! # Ok(())
 //! # }
 //! ```
