@@ -13,9 +13,8 @@ thiserror = "1.0.63"
 [dev-dependencies]
 anyhow = "1.0.87"
 approx = "0.5.1"
-big_s = "1.0.2"
-rstest = "0.22.0"
 maplit = "1.0.2"
+rstest = "0.22.0"
 
 [workspace]
 members = ["cli"]
