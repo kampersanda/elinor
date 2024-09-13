@@ -10,10 +10,11 @@ pub(crate) mod reciprocal_rank;
 use std::collections::HashMap;
 
 use crate::errors::EmirError;
+use crate::GoldScore;
 use crate::Qrels;
 use crate::Run;
 
-use crate::RELEVANT_LEVEL;
+pub const RELEVANT_LEVEL: GoldScore = 1;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DcgWeighting {

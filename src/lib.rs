@@ -75,15 +75,17 @@ pub type GoldScore = u32;
 /// Data type to store a predicted score.
 pub type PredScore = OrderedFloat<f64>;
 
+/// Data structure to store qrels.
 pub type Qrels<K> = relevance::RelevanceStore<K, GoldScore>;
 
+/// Builder for [`Qrels`].
 pub type QrelsBuilder<K> = relevance::RelevanceStoreBuilder<K, GoldScore>;
 
+/// Data structure to store a run.
 pub type Run<K> = relevance::RelevanceStore<K, PredScore>;
 
+/// Builder for [`Run`].
 pub type RunBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
-
-pub const RELEVANT_LEVEL: GoldScore = 1;
 
 pub struct Evaluated<K> {
     /// Metric to macro-averaged score.
