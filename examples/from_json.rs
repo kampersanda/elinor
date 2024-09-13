@@ -1,40 +1,39 @@
 use anyhow::Result;
 use emir::DcgWeighting;
 use emir::Metric;
-use emir::Qrels;
-use emir::Run;
 
 fn main() -> Result<()> {
-    let qrels_map = [
-        ("q_1", [("d_1", 1), ("d_2", 0), ("d_3", 2)].into()),
-        ("q_2", [("d_2", 2), ("d_4", 1)].into()),
-    ]
-    .into();
+    let qrels_data = r#"
+        {
+            "q_1": {
+                "d_1": 1,
+                "d_2": 0,
+                "d_3": 2
+            },
+            "q_2": {
+                "d_2": 2,
+                "d_4": 1
+            }
+        }
+    "#;
 
-    let run_map = [
-        (
-            "q_1",
-            [
-                ("d_1", 0.5.into()),
-                ("d_2", 0.4.into()),
-                ("d_3", 0.3.into()),
-            ]
-            .into(),
-        ),
-        (
-            "q_2",
-            [
-                ("d_4", 0.1.into()),
-                ("d_1", 0.2.into()),
-                ("d_3", 0.3.into()),
-            ]
-            .into(),
-        ),
-    ]
-    .into();
+    let run_data = r#"
+        {
+            "q_1": {
+                "d_1": 0.5,
+                "d_2": 0.4,
+                "d_3": 0.3
+            },
+            "q_2": {
+                "d_4": 0.1,
+                "d_1": 0.2,
+                "d_3": 0.3
+            }
+        }
+    "#;
 
-    let qrels = Qrels::from_map(qrels_map);
-    let run = Run::from_map(run_map);
+    let qrels = emir::json::parse_qrels_from_json(qrels_data)?;
+    let run = emir::json::parse_run_from_json(run_data)?;
 
     let metrics = vec![
         Metric::Hits { k: 3 },

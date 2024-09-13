@@ -6,8 +6,8 @@ use crate::errors::EmirError;
 /// Data to store a relevance score for a document.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Relevance<K, T> {
-    pub doc_id: K,
-    pub score: T,
+    pub(crate) doc_id: K,
+    pub(crate) score: T,
 }
 
 /// Mapping from document ids to relevance scores.

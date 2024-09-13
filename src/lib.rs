@@ -67,6 +67,7 @@
 // #![deny(missing_docs)]
 
 pub mod errors;
+pub mod json;
 pub mod metrics;
 pub mod relevance;
 pub mod trec;

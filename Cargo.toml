@@ -7,14 +7,15 @@ edition = "2021"
 
 [dependencies]
 ordered-float = "4.2.2"
+serde_json = "1.0.128"
 thiserror = "1.0.63"
 
 [dev-dependencies]
-approx = "0.5.1"
-rstest = "0.22.0"
-big_s = "1.0.2"
-maplit = "1.0.2"
 anyhow = "1.0.87"
+approx = "0.5.1"
+big_s = "1.0.2"
+rstest = "0.22.0"
+maplit = "1.0.2"
 
 [workspace]
 members = ["cli"]
