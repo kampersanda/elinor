@@ -53,18 +53,21 @@ fn main() -> Result<()> {
             w: DcgWeighting::Burges,
         },
     ];
-    let evaluated = emir::evaluate(&qrels, &run, metrics)?;
+    let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 
     println!("=== Mean scores ===");
-    for (metric, score) in evaluated.mean_scores.iter() {
+    for metric in &metrics {
+        let score = evaluated.mean_scores[metric];
         println!("{metric}: {score:.4}");
     }
 
-    println!("\n=== Scores by query ===");
-    for (metric, scores) in evaluated.scores.iter() {
+    println!("\n=== Scores for each query ===");
+    for metric in &metrics {
         println!("{metric}");
-        for (query_id, score) in scores.iter() {
-            println!("- {query_id}: {score:.4}");
+        let qid_to_score = &evaluated.scores[metric];
+        for qid in ["q_1", "q_2"] {
+            let score = qid_to_score[qid];
+            println!("- {qid}: {score:.4}");
         }
     }
 
