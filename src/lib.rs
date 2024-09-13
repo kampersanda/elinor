@@ -5,7 +5,7 @@
 //!
 //! ## Features
 //!
-//! ## Glossary
+//! ## Glossary from [TREC](https://trec.nist.gov/)
 //!
 //! * **Qrels** - Collection of relevance judgments for a set of queries and documents.
 //! * **Run** - Collection of predicted scores for a set of queries and documents.
@@ -97,10 +97,14 @@ pub type RunBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
 pub const RELEVANT_LEVEL: GoldScore = 1;
 
 pub struct Evaluated<K> {
+    /// Metric to macro-averaged score.
     pub mean_scores: HashMap<Metric, f64>,
+
+    /// Metric to mapping from query ID to the score.
     pub scores: HashMap<Metric, HashMap<K, f64>>,
 }
 
+/// Evaluates the given qrels and run data using the specified metrics.
 pub fn evaluate<K, M>(
     qrels: &Qrels<K>,
     run: &Run<K>,
