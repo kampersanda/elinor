@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
-use crate::RelevanceMap;
 
 /// Computes the reciprocal rank at k for a given relevance level.
 ///
@@ -12,7 +13,7 @@ use crate::RelevanceMap;
 /// * `k` - Number of documents to consider.
 /// * `rel_lvl` - Relevance level to consider.
 pub fn compute_reciprocal_rank<K>(
-    rels: &RelevanceMap<K, GoldScore>,
+    rels: &HashMap<K, GoldScore>,
     preds: &[Relevance<K, PredScore>],
     k: usize,
     rel_lvl: GoldScore,

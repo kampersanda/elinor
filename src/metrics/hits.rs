@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
-use crate::RelevanceMap;
 
 /// Computes the number of hits at a given relevance level.
 ///
@@ -12,7 +13,7 @@ use crate::RelevanceMap;
 /// * `k` - Number of documents to consider.
 /// * `rel_lvl` - Relevance level to consider.
 pub fn compute_hits<K>(
-    rels: &RelevanceMap<K, GoldScore>,
+    rels: &HashMap<K, GoldScore>,
     preds: &[Relevance<K, PredScore>],
     k: usize,
     rel_lvl: GoldScore,
@@ -41,7 +42,7 @@ where
 /// * `k` - Number of documents to consider.
 /// * `rel_lvl` - Relevance level to consider.
 pub fn compute_success<K>(
-    rels: &RelevanceMap<K, GoldScore>,
+    rels: &HashMap<K, GoldScore>,
     preds: &[Relevance<K, PredScore>],
     k: usize,
     rel_lvl: GoldScore,

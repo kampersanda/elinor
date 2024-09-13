@@ -6,12 +6,9 @@ use crate::errors::EmirError;
 /// Data to store a relevance score for a document.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Relevance<K, T> {
-    pub(crate) doc_id: K,
-    pub(crate) score: T,
+    pub doc_id: K,
+    pub score: T,
 }
-
-/// Mapping from document ids to relevance scores.
-pub type RelevanceMap<K, T> = HashMap<K, T>;
 
 /// Data structure for storing relevance scores.
 ///
@@ -26,7 +23,7 @@ pub struct RelevanceStore<K, T> {
     // Mapping from query ids to:
     //  - Sorted list of relevance scores in descending order.
     //  - Mapping from document ids to relevance scores.
-    map: HashMap<K, (Vec<Relevance<K, T>>, RelevanceMap<K, T>)>,
+    map: HashMap<K, (Vec<Relevance<K, T>>, HashMap<K, T>)>,
 }
 
 impl<K, T> RelevanceStore<K, T>
@@ -35,7 +32,7 @@ where
     T: Eq + PartialEq + Ord + PartialOrd + Clone,
 {
     /// Creates a relevance store from a map of query ids to relevance maps.
-    pub fn from_map(map: HashMap<K, RelevanceMap<K, T>>) -> Self {
+    pub fn from_map(map: HashMap<K, HashMap<K, T>>) -> Self {
         let b = RelevanceStoreBuilder { map };
         b.build()
     }
@@ -54,7 +51,7 @@ where
     }
 
     /// Returns the relevance map for a given query id.
-    pub fn get_map(&self, query_id: &K) -> Option<&RelevanceMap<K, T>> {
+    pub fn get_map(&self, query_id: &K) -> Option<&HashMap<K, T>> {
         self.map.get(query_id).map(|(_, rels)| rels)
     }
 
@@ -72,7 +69,7 @@ where
 
 /// Builder for [`RelevanceStore`].
 pub struct RelevanceStoreBuilder<K, T> {
-    map: HashMap<K, RelevanceMap<K, T>>,
+    map: HashMap<K, HashMap<K, T>>,
 }
 
 impl<K, T> RelevanceStoreBuilder<K, T>

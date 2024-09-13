@@ -1,9 +1,9 @@
+use std::collections::HashMap;
+
+use crate::metrics::DcgWeighting;
 use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
-use crate::RelevanceMap;
-
-use crate::metrics::DcgWeighting;
 
 fn weighted_score(rel: GoldScore, weighting: DcgWeighting) -> f64 {
     match weighting {
@@ -21,7 +21,7 @@ fn weighted_score(rel: GoldScore, weighting: DcgWeighting) -> f64 {
 /// * `k` - Number of documents to consider.
 /// * `weighting` - Weighting scheme to use.
 pub fn compute_dcg<K>(
-    rels: &RelevanceMap<K, GoldScore>,
+    rels: &HashMap<K, GoldScore>,
     preds: &[Relevance<K, PredScore>],
     k: usize,
     weighting: DcgWeighting,
@@ -49,7 +49,7 @@ where
 /// * `k` - Number of documents to consider.
 /// * `weighting` - Weighting scheme to use.
 pub fn compute_ndcg<K>(
-    rels: &RelevanceMap<K, GoldScore>,
+    rels: &HashMap<K, GoldScore>,
     golds: &[Relevance<K, GoldScore>],
     preds: &[Relevance<K, PredScore>],
     k: usize,

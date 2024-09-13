@@ -79,7 +79,6 @@ use std::collections::HashSet;
 pub use metrics::DcgWeighting;
 pub use metrics::Metric;
 pub use relevance::Relevance;
-pub use relevance::RelevanceMap;
 
 /// Data type to store a relevance score.
 pub type GoldScore = u32;

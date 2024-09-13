@@ -1,9 +1,9 @@
+use std::collections::HashMap;
+
+use crate::metrics::hits::compute_hits;
 use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
-use crate::RelevanceMap;
-
-use crate::metrics::hits::compute_hits;
 
 /// Computes the F1 score at k for a given relevance level.
 ///
@@ -14,7 +14,7 @@ use crate::metrics::hits::compute_hits;
 /// * `k` - Number of documents to consider.
 /// * `rel_lvl` - Relevance level to consider.
 pub fn compute_f1<K>(
-    rels: &RelevanceMap<K, GoldScore>,
+    rels: &HashMap<K, GoldScore>,
     preds: &[Relevance<K, PredScore>],
     k: usize,
     rel_lvl: GoldScore,
