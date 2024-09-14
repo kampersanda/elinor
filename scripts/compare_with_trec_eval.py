@@ -34,7 +34,7 @@ def run_trec_eval() -> dict[str, str]:
 def run_emir_eval() -> dict[str, str]:
     ks = [0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000]
     command = (
-        "cargo run --release -p evaluate -- -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
+        "cargo run -p evaluate -- -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
         + "".join([f" -k {k}" for k in ks])
     )
     result = subprocess.run(command, capture_output=True, shell=True)
