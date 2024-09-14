@@ -1,4 +1,4 @@
-//! JSON parsers for qrels and run data.
+//! JSON parsers for Qrels and Run data.
 use crate::errors::EmirError;
 use crate::GoldScore;
 use crate::PredScore;
