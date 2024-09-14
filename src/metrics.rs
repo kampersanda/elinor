@@ -20,8 +20,7 @@ pub const RELEVANT_LEVEL: GoldScore = 1;
 ///
 /// # Arguments
 ///
-/// * `k` - Number of top documents to consider.
-/// * `w` - Weighting scheme to use (only for DCG and nDCG).
+/// * `k` - Number of top documents to consider. if `k` is set to 0, all documents are considered.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Metric {
     /// Number of relevant documents retrieved:
@@ -93,7 +92,7 @@ pub enum Metric {
     /// Discounted cumulative gain at k.
     ///
     /// ```math
-    /// \text{DCG}@k = \sum_{i=1}^k \frac{G(\text{rel}_i)}{\log_2(i + 1)}
+    /// \text{DCG}@k = \sum_{i=1}^k \frac{\text{rel}_i}{\log_2(i + 1)}
     /// ```
     Dcg { k: usize },
 
@@ -107,14 +106,14 @@ pub enum Metric {
     /// Discounted cumulative gain at k.
     ///
     /// ```math
-    /// \text{DCG}@k = \sum_{i=1}^k \frac{G(\text{rel}_i)}{\log_2(i + 1)}
+    /// \text{DCG}_\text{Burges}@k = \sum_{i=1}^k \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}
     /// ```
     DcgBurges { k: usize },
 
     /// Normalized discounted cumulative gain at k.
     ///
     /// ```math
-    /// \text{nDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
+    /// \text{nDCG}_\text{Burges}@k = \frac{\text{DCG}_\text{Burges}@k}{\text{IDCG}_\text{Burges}@k}
     /// ```
     NdcgBurges { k: usize },
 }

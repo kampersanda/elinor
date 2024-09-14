@@ -3,8 +3,6 @@
 //! Emir is a Rust library for evaluating information retrieval systems,
 //! which is inspired by [ranx](https://github.com/AmenRa/ranx).
 //!
-//! ## Features
-//!
 //! ## Glossary from [TREC](https://trec.nist.gov/)
 //!
 //! * **Qrels** - Collection of relevance judgments for a set of queries and documents.
