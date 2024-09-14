@@ -16,7 +16,7 @@
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use emir::{QrelsBuilder, RunBuilder, Metric, DcgWeighting};
+//! use emir::{QrelsBuilder, RunBuilder, Metric};
 //!
 //! let mut qb = QrelsBuilder::new();
 //! qb.add_score("q_1", "d_1", 1)?;
@@ -38,7 +38,7 @@
 //! let metrics = vec![
 //!     Metric::ReciprocalRank { k: 0 },  // k=0 means all documents.
 //!     Metric::AveragePrecision { k: 3 },
-//!     Metric::Ndcg { k: 3, w: DcgWeighting::Jarvelin },
+//!     Metric::Ndcg { k: 3 },
 //! ];
 //! let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 //!
@@ -65,7 +65,6 @@ use ordered_float::OrderedFloat;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-pub use metrics::DcgWeighting;
 pub use metrics::Metric;
 pub use relevance::Relevance;
 

@@ -1,5 +1,4 @@
 use anyhow::Result;
-use emir::DcgWeighting;
 use emir::Metric;
 use emir::QrelsBuilder;
 use emir::RunBuilder;
@@ -30,14 +29,8 @@ fn main() -> Result<()> {
         Metric::F1 { k: 3 },
         Metric::AveragePrecision { k: 3 },
         Metric::ReciprocalRank { k: 3 },
-        Metric::Ndcg {
-            k: 3,
-            w: DcgWeighting::Jarvelin,
-        },
-        Metric::Ndcg {
-            k: 3,
-            w: DcgWeighting::Burges,
-        },
+        Metric::Ndcg { k: 3 },
+        Metric::NdcgBurges { k: 3 },
     ];
     let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 

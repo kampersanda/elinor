@@ -1,9 +1,14 @@
 use std::collections::HashMap;
 
-use crate::metrics::DcgWeighting;
 use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
+
+#[derive(Clone, Copy, Debug)]
+pub enum DcgWeighting {
+    Jarvelin,
+    Burges,
+}
 
 fn weighted_score(rel: GoldScore, weighting: DcgWeighting) -> f64 {
     match weighting {

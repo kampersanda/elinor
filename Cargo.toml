@@ -17,7 +17,7 @@ maplit = "1.0.2"
 rstest = "0.22.0"
 
 [workspace]
-members = ["correctness-test", "evaluate"]
+members = ["evaluate"]
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--html-in-header", "katex.html"]

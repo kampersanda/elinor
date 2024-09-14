@@ -16,15 +16,6 @@ use crate::Run;
 
 pub const RELEVANT_LEVEL: GoldScore = 1;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum DcgWeighting {
-    /// <https://dl.acm.org/doi/10.1145/582415.582418>
-    Jarvelin,
-
-    /// <https://dl.acm.org/doi/10.1145/1102351.1102363>
-    Burges,
-}
-
 /// Metrics for evaluating information retrieval systems.
 ///
 /// # Arguments
@@ -104,14 +95,28 @@ pub enum Metric {
     /// ```math
     /// \text{DCG}@k = \sum_{i=1}^k \frac{G(\text{rel}_i)}{\log_2(i + 1)}
     /// ```
-    Dcg { k: usize, w: DcgWeighting },
+    Dcg { k: usize },
 
     /// Normalized discounted cumulative gain at k.
     ///
     /// ```math
     /// \text{nDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
     /// ```
-    Ndcg { k: usize, w: DcgWeighting },
+    Ndcg { k: usize },
+
+    /// Discounted cumulative gain at k.
+    ///
+    /// ```math
+    /// \text{DCG}@k = \sum_{i=1}^k \frac{G(\text{rel}_i)}{\log_2(i + 1)}
+    /// ```
+    DcgBurges { k: usize },
+
+    /// Normalized discounted cumulative gain at k.
+    ///
+    /// ```math
+    /// \text{nDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
+    /// ```
+    NdcgBurges { k: usize },
 }
 
 impl std::fmt::Display for Metric {
@@ -138,11 +143,17 @@ impl std::fmt::Display for Metric {
             Metric::ReciprocalRank { k } => {
                 write!(f, "{}", format_binary_metric("MRR", *k))
             }
-            Metric::Dcg { k, w } => {
-                write!(f, "{}", format_dcg_metric("DCG", *k, *w))
+            Metric::Dcg { k } => {
+                write!(f, "{}", format_binary_metric("DCG", *k))
             }
-            Metric::Ndcg { k, w } => {
-                write!(f, "{}", format_dcg_metric("nDCG", *k, *w))
+            Metric::Ndcg { k } => {
+                write!(f, "{}", format_binary_metric("nDCG", *k))
+            }
+            Metric::DcgBurges { k } => {
+                write!(f, "{}", format_binary_metric("DCG_Burges", *k))
+            }
+            Metric::NdcgBurges { k } => {
+                write!(f, "{}", format_binary_metric("nDCG_Burges", *k))
             }
         }
     }
@@ -153,14 +164,6 @@ fn format_binary_metric(name: &str, k: usize) -> String {
         format!("{name}")
     } else {
         format!("{name}@{k}")
-    }
-}
-
-fn format_dcg_metric(name: &str, k: usize, weighting: DcgWeighting) -> String {
-    if k == 0 {
-        format!("{name}_{weighting:?}")
-    } else {
-        format!("{name}_{weighting:?}@{k}")
     }
 }
 
@@ -193,10 +196,17 @@ where
             Metric::ReciprocalRank { k } => {
                 reciprocal_rank::compute_reciprocal_rank(rels, preds, k, RELEVANT_LEVEL)
             }
-            Metric::Dcg { k, w } => ndcg::compute_dcg(rels, preds, k, w),
-            Metric::Ndcg { k, w } => {
+            Metric::Dcg { k } => ndcg::compute_dcg(rels, preds, k, ndcg::DcgWeighting::Jarvelin),
+            Metric::Ndcg { k } => {
                 let golds = qrels.get_sorted(query_id).unwrap();
-                ndcg::compute_ndcg(rels, golds, preds, k, w)
+                ndcg::compute_ndcg(rels, golds, preds, k, ndcg::DcgWeighting::Jarvelin)
+            }
+            Metric::DcgBurges { k } => {
+                ndcg::compute_dcg(rels, preds, k, ndcg::DcgWeighting::Burges)
+            }
+            Metric::NdcgBurges { k } => {
+                let golds = qrels.get_sorted(query_id).unwrap();
+                ndcg::compute_ndcg(rels, golds, preds, k, ndcg::DcgWeighting::Burges)
             }
         };
         results.insert(query_id.clone(), score);
@@ -273,33 +283,33 @@ mod tests {
     #[case::reciprocal_rank_k_4_rel_lvl_1(Metric::ReciprocalRank { k: 4 }, hashmap! { 'A' => 1.0 / 1.0 })]
     #[case::reciprocal_rank_k_5_rel_lvl_1(Metric::ReciprocalRank { k: 5 }, hashmap! { 'A' => 1.0 / 1.0 })]
     // DCG (Jarvelin)
-    #[case::dcg_k_0_jarvelin(Metric::Dcg { k: 0, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_1_jarvelin(Metric::Dcg { k: 1, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_2_jarvelin(Metric::Dcg { k: 2, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_3_jarvelin(Metric::Dcg { k: 3, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_4_jarvelin(Metric::Dcg { k: 4, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_5_jarvelin(Metric::Dcg { k: 5, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    // DCG (Burges)
-    #[case::dcg_k_0_burges(Metric::Dcg { k: 0, w: DcgWeighting::Burges }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_1_burges(Metric::Dcg { k: 1, w: DcgWeighting::Burges }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_2_burges(Metric::Dcg { k: 2, w: DcgWeighting::Burges }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_3_burges(Metric::Dcg { k: 3, w: DcgWeighting::Burges }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_4_burges(Metric::Dcg { k: 4, w: DcgWeighting::Burges }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_5_burges(Metric::Dcg { k: 5, w: DcgWeighting::Burges }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_0_jarvelin(Metric::Dcg { k: 0 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_1_jarvelin(Metric::Dcg { k: 1 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_2_jarvelin(Metric::Dcg { k: 2 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_3_jarvelin(Metric::Dcg { k: 3 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_4_jarvelin(Metric::Dcg { k: 4 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_5_jarvelin(Metric::Dcg { k: 5 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
     // NDCG (Jarvelin)
-    #[case::ndcg_k_0_jarvelin(Metric::Ndcg { k: 0, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_1_jarvelin(Metric::Ndcg { k: 1, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => (1.0 / LOG_2_2) / (2.0 / LOG_2_2) })]
-    #[case::ndcg_k_2_jarvelin(Metric::Ndcg { k: 2, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => (1.0 / LOG_2_2) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_3_jarvelin(Metric::Ndcg { k: 3, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_4_jarvelin(Metric::Ndcg { k: 4, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_5_jarvelin(Metric::Ndcg { k: 5, w: DcgWeighting::Jarvelin }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_0_jarvelin(Metric::Ndcg { k: 0 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_1_jarvelin(Metric::Ndcg { k: 1 }, hashmap! { 'A' => (1.0 / LOG_2_2) / (2.0 / LOG_2_2) })]
+    #[case::ndcg_k_2_jarvelin(Metric::Ndcg { k: 2 }, hashmap! { 'A' => (1.0 / LOG_2_2) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_3_jarvelin(Metric::Ndcg { k: 3 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_4_jarvelin(Metric::Ndcg { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_5_jarvelin(Metric::Ndcg { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    // DCG (Burges)
+    #[case::dcg_k_0_burges(Metric::DcgBurges { k: 0 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_1_burges(Metric::DcgBurges { k: 1 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_2_burges(Metric::DcgBurges { k: 2 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_3_burges(Metric::DcgBurges { k: 3 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_4_burges(Metric::DcgBurges { k: 4 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_5_burges(Metric::DcgBurges { k: 5 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
     // NDCG (Burges)
-    #[case::ndcg_k_0_burges(Metric::Ndcg { k: 0, w: DcgWeighting::Burges }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_1_burges(Metric::Ndcg { k: 1, w: DcgWeighting::Burges }, hashmap! { 'A' => (1.0 / LOG_2_2) / (3.0 / LOG_2_2) })]
-    #[case::ndcg_k_2_burges(Metric::Ndcg { k: 2, w: DcgWeighting::Burges }, hashmap! { 'A' => (1.0 / LOG_2_2) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_3_burges(Metric::Ndcg { k: 3, w: DcgWeighting::Burges }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_4_burges(Metric::Ndcg { k: 4, w: DcgWeighting::Burges }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_5_burges(Metric::Ndcg { k: 5, w: DcgWeighting::Burges }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_0_burges(Metric::NdcgBurges { k: 0 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_1_burges(Metric::NdcgBurges { k: 1 }, hashmap! { 'A' => (1.0 / LOG_2_2) / (3.0 / LOG_2_2) })]
+    #[case::ndcg_k_2_burges(Metric::NdcgBurges { k: 2 }, hashmap! { 'A' => (1.0 / LOG_2_2) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_3_burges(Metric::NdcgBurges { k: 3 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_4_burges(Metric::NdcgBurges { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_5_burges(Metric::NdcgBurges { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<char, f64>) {
         let qrels = Qrels::from_map(hashmap! {
             'A' => hashmap! {

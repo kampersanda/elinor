@@ -6,7 +6,6 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use emir::trec;
-use emir::DcgWeighting;
 use emir::Metric;
 
 #[derive(Parser, Debug)]
@@ -55,13 +54,7 @@ fn all_metrics(ks: &[usize]) -> Vec<Metric> {
     metrics.extend(ks.iter().map(|&k| Metric::F1 { k }));
     metrics.extend(ks.iter().map(|&k| Metric::AveragePrecision { k }));
     metrics.extend(ks.iter().map(|&k| Metric::ReciprocalRank { k }));
-    metrics.extend(ks.iter().map(|&k| Metric::Ndcg {
-        k,
-        w: DcgWeighting::Jarvelin,
-    }));
-    metrics.extend(ks.iter().map(|&k| Metric::Ndcg {
-        k,
-        w: DcgWeighting::Burges,
-    }));
+    metrics.extend(ks.iter().map(|&k| Metric::Ndcg { k }));
+    metrics.extend(ks.iter().map(|&k| Metric::NdcgBurges { k }));
     metrics
 }
