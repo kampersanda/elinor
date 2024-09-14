@@ -47,9 +47,9 @@
 //!     let score = evaluated.mean_scores[metric];
 //!     println!("{metric}: {score:.4}");
 //! }
-//! // => MRR: 0.6667
-//! // => MAP@3: 0.5000
-//! // => nDCG_Jarvelin@3: 0.4751
+//! // => mrr: 0.6667
+//! // => map@3: 0.5000
+//! // => ndcg@3: 0.4751
 //! # Ok(())
 //! # }
 //! ```

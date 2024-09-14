@@ -63,21 +63,21 @@ if __name__ == "__main__":
     ks = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
 
     metric_pairs = []
-    metric_pairs.extend([(f"success_{k}", f"Success@{k}") for k in [1, 5, 10]])
+    metric_pairs.extend([(f"success_{k}", f"success@{k}") for k in [1, 5, 10]])
     metric_pairs.extend(
         [
-            ("set_P", "Precision"),
-            ("set_recall", "Recall"),
-            ("set_F", "F1"),
-            ("map", "MAP"),
-            ("recip_rank", "MRR"),
-            ("ndcg", "nDCG_Jarvelin"),
+            ("set_P", "precision"),
+            ("set_recall", "recall"),
+            ("set_F", "f1"),
+            ("map", "map"),
+            ("recip_rank", "mrr"),
+            ("ndcg", "ndcg"),
         ]
     )
-    metric_pairs.extend([(f"P_{k}", f"Precision@{k}") for k in ks])
-    metric_pairs.extend([(f"recall_{k}", f"Recall@{k}") for k in ks])
-    metric_pairs.extend([(f"map_cut_{k}", f"MAP@{k}") for k in ks])
-    metric_pairs.extend([(f"ndcg_cut_{k}", f"nDCG_Jarvelin@{k}") for k in ks])
+    metric_pairs.extend([(f"P_{k}", f"precision@{k}") for k in ks])
+    metric_pairs.extend([(f"recall_{k}", f"recall@{k}") for k in ks])
+    metric_pairs.extend([(f"map_cut_{k}", f"map@{k}") for k in ks])
+    metric_pairs.extend([(f"ndcg_cut_{k}", f"ndcg@{k}") for k in ks])
 
     print("trec_metric\temir_metric\ttrec_score\temir_score\tmatch")
     for trec_metric, emir_metric in metric_pairs:

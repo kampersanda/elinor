@@ -123,37 +123,37 @@ impl std::fmt::Display for Metric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Metric::Hits { k } => {
-                write!(f, "{}", format_binary_metric("Hits", *k))
+                write!(f, "{}", format_binary_metric("hits", *k))
             }
             Metric::Success { k } => {
-                write!(f, "{}", format_binary_metric("Success", *k))
+                write!(f, "{}", format_binary_metric("success", *k))
             }
             Metric::Precision { k } => {
-                write!(f, "{}", format_binary_metric("Precision", *k))
+                write!(f, "{}", format_binary_metric("precision", *k))
             }
             Metric::Recall { k } => {
-                write!(f, "{}", format_binary_metric("Recall", *k))
+                write!(f, "{}", format_binary_metric("recall", *k))
             }
             Metric::F1 { k } => {
-                write!(f, "{}", format_binary_metric("F1", *k))
+                write!(f, "{}", format_binary_metric("f1", *k))
             }
             Metric::AveragePrecision { k } => {
-                write!(f, "{}", format_binary_metric("MAP", *k))
+                write!(f, "{}", format_binary_metric("map", *k))
             }
             Metric::ReciprocalRank { k } => {
-                write!(f, "{}", format_binary_metric("MRR", *k))
+                write!(f, "{}", format_binary_metric("mrr", *k))
             }
             Metric::Dcg { k } => {
-                write!(f, "{}", format_binary_metric("DCG", *k))
+                write!(f, "{}", format_binary_metric("dcg", *k))
             }
             Metric::Ndcg { k } => {
-                write!(f, "{}", format_binary_metric("nDCG", *k))
+                write!(f, "{}", format_binary_metric("ndcg", *k))
             }
             Metric::DcgBurges { k } => {
-                write!(f, "{}", format_binary_metric("DCG_Burges", *k))
+                write!(f, "{}", format_binary_metric("dcg_burges", *k))
             }
             Metric::NdcgBurges { k } => {
-                write!(f, "{}", format_binary_metric("nDCG_Burges", *k))
+                write!(f, "{}", format_binary_metric("ndcg_burges", *k))
             }
         }
     }
