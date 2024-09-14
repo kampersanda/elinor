@@ -10,13 +10,10 @@ def download_trec_eval():
         print("trec_eval-9.0.8 already exists", file=sys.stderr)
         return
     subprocess.run(
-        [
-            "wget",
-            "https://github.com/usnistgov/trec_eval/archive/refs/tags/v9.0.8.tar.gz",
-        ]
+        "wget https://github.com/usnistgov/trec_eval/archive/refs/tags/v9.0.8.tar.gz"
     )
-    subprocess.run(["tar", "-xf", "v9.0.8.tar.gz"])
-    subprocess.run(["make", "-C", "trec_eval-9.0.8"])
+    subprocess.run("tar -xf v9.0.8.tar.gz")
+    subprocess.run("make -C trec_eval-9.0.8")
 
 
 def run_trec_eval() -> dict[str, str]:

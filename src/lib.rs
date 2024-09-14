@@ -36,7 +36,7 @@
 //! let run = rb.build();
 //!
 //! let metrics = vec![
-//!     Metric::ReciprocalRank { k: 0 },
+//!     Metric::ReciprocalRank { k: 0 },  // k=0 means all documents.
 //!     Metric::AveragePrecision { k: 3 },
 //!     Metric::Ndcg { k: 3, w: DcgWeighting::Jarvelin },
 //! ];
