@@ -36,7 +36,7 @@
 //! let metrics = vec![
 //!     Metric::Precision { k: 3 },
 //!     Metric::AP { k: 0 }, // k=0 means all documents.
-//!     "mrr".parse()?,
+//!     "rr".parse()?,
 //!     "ndcg@3".parse()?,
 //! ];
 //! let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
@@ -47,8 +47,8 @@
 //!     println!("{metric}: {score:.4}");
 //! }
 //! // => precision@3: 0.5000
-//! // => map@3: 0.5000
-//! // => mrr: 0.6667
+//! // => ap@3: 0.5000
+//! // => rr: 0.6667
 //! // => ndcg@3: 0.4751
 //! # Ok(())
 //! # }

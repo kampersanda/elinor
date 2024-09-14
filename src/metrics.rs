@@ -177,10 +177,10 @@ impl std::fmt::Display for Metric {
                 write!(f, "{}", format_metric("f1", *k))
             }
             Metric::AP { k } => {
-                write!(f, "{}", format_metric("map", *k))
+                write!(f, "{}", format_metric("ap", *k))
             }
             Metric::RR { k } => {
-                write!(f, "{}", format_metric("mrr", *k))
+                write!(f, "{}", format_metric("rr", *k))
             }
             Metric::DCG { k } => {
                 write!(f, "{}", format_metric("dcg", *k))
@@ -227,8 +227,8 @@ impl FromStr for Metric {
             "precision" => Ok(Metric::Precision { k }),
             "recall" => Ok(Metric::Recall { k }),
             "f1" => Ok(Metric::F1 { k }),
-            "map" => Ok(Metric::AP { k }),
-            "mrr" => Ok(Metric::RR { k }),
+            "ap" => Ok(Metric::AP { k }),
+            "rr" => Ok(Metric::RR { k }),
             "dcg" => Ok(Metric::DCG { k }),
             "ndcg" => Ok(Metric::NDCG { k }),
             "dcg_burges" => Ok(Metric::DCGBurges { k }),
@@ -418,12 +418,12 @@ mod tests {
     #[case::f1("f1", Metric::F1 { k: 0 })]
     #[case::f1_k1("f1@1", Metric::F1 { k: 1 })]
     #[case::f1_k100("f1@100", Metric::F1 { k: 100 })]
-    #[case::average_precision("map", Metric::AP { k: 0 })]
-    #[case::average_precision_k1("map@1", Metric::AP { k: 1 })]
-    #[case::average_precision_k100("map@100", Metric::AP { k: 100 })]
-    #[case::reciprocal_rank("mrr", Metric::RR { k: 0 })]
-    #[case::reciprocal_rank_k1("mrr@1", Metric::RR { k: 1 })]
-    #[case::reciprocal_rank_k100("mrr@100", Metric::RR { k: 100 })]
+    #[case::average_precision("ap", Metric::AP { k: 0 })]
+    #[case::average_precision_k1("ap@1", Metric::AP { k: 1 })]
+    #[case::average_precision_k100("ap@100", Metric::AP { k: 100 })]
+    #[case::reciprocal_rank("rr", Metric::RR { k: 0 })]
+    #[case::reciprocal_rank_k1("rr@1", Metric::RR { k: 1 })]
+    #[case::reciprocal_rank_k100("rr@100", Metric::RR { k: 100 })]
     #[case::dcg("dcg", Metric::DCG { k: 0 })]
     #[case::dcg_k1("dcg@1", Metric::DCG { k: 1 })]
     #[case::dcg_k100("dcg@100", Metric::DCG { k: 100 })]
