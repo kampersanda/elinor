@@ -2,7 +2,7 @@
 use thiserror::Error;
 
 /// Error types for Emir.
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum EmirError {
     /// Error when an entry is duplicated.
     #[error("{0}")]

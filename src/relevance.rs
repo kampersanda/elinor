@@ -136,7 +136,6 @@ mod tests {
     use std::collections::HashSet;
 
     use super::*;
-    // use rstest::*;
 
     #[test]
     fn test_relevance_store_name() {
@@ -183,5 +182,15 @@ mod tests {
         let expected = HashSet::from_iter([&'a', &'b', &'c']);
         let actual = store.query_ids().collect::<HashSet<_>>();
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_relevance_store_builder_duplicate_entry() {
+        let mut b = RelevanceStoreBuilder::new();
+        b.add_score('a', 'x', 1).unwrap();
+        assert_eq!(
+            b.add_score('a', 'x', 2),
+            Err(EmirError::DuplicateEntry("Query: a, Doc: x".to_string()))
+        );
     }
 }
