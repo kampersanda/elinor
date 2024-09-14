@@ -18,4 +18,8 @@ where
     /// Error when a document is missing.
     #[error("Empty input")]
     EmptyLines,
+
+    /// Error when a document is missing.
+    #[error("Invalid format")]
+    InvalidFormat,
 }
