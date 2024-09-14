@@ -34,9 +34,10 @@
 //! let run = rb.build();
 //!
 //! let metrics = vec![
-//!     Metric::ReciprocalRank { k: 0 },  // k=0 means all documents.
-//!     Metric::AveragePrecision { k: 3 },
-//!     Metric::Ndcg { k: 3 },
+//!     Metric::Precision { k: 3 },
+//!     Metric::AveragePrecision { k: 0 }, // k=0 means all documents.
+//!     "mrr".parse()?,
+//!     "ndcg@3".parse()?,
 //! ];
 //! let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 //!
@@ -45,8 +46,9 @@
 //!     let score = evaluated.mean_scores[metric];
 //!     println!("{metric}: {score:.4}");
 //! }
-//! // => mrr: 0.6667
+//! // => precision@3: 0.5000
 //! // => map@3: 0.5000
+//! // => mrr: 0.6667
 //! // => ndcg@3: 0.4751
 //! # Ok(())
 //! # }

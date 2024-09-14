@@ -22,15 +22,10 @@ fn main() -> Result<()> {
     let run = rb.build();
 
     let metrics = vec![
-        Metric::Hits { k: 3 },
-        Metric::Success { k: 3 },
         Metric::Precision { k: 3 },
-        Metric::Recall { k: 3 },
-        Metric::F1 { k: 3 },
-        Metric::AveragePrecision { k: 3 },
-        Metric::ReciprocalRank { k: 3 },
-        Metric::Ndcg { k: 3 },
-        Metric::NdcgBurges { k: 3 },
+        Metric::AveragePrecision { k: 0 }, // k=0 means all documents.
+        "mrr".parse()?,
+        "ndcg@3".parse()?,
     ];
     let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 
