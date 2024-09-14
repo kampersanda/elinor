@@ -26,3 +26,6 @@ Cargo.lock
 # Added by me
 .vscode/
 data/
+v9.0.8.tar.gz
+trec_eval-9.0.8
+results
