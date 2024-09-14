@@ -128,7 +128,7 @@ pub enum Metric {
     /// Normalized discounted cumulative gain.
     ///
     /// ```math
-    /// \text{nDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
+    /// \text{NDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
     /// ```
     ///
     /// where `IDCG` is the ideal DCG score.
@@ -150,7 +150,7 @@ pub enum Metric {
     /// Normalized discounted cumulative gain at k.
     ///
     /// ```math
-    /// \text{nDCG}_\text{Burges}@k = \frac{\text{DCG}_\text{Burges}@k}{\text{IDCG}_\text{Burges}@k}
+    /// \text{NDCG}_\text{Burges}@k = \frac{\text{DCG}_\text{Burges}@k}{\text{IDCG}_\text{Burges}@k}
     /// ```
     NDCGBurges {
         /// See the [Arguments](enum.Metric.html#arguments) section.
