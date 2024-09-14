@@ -110,21 +110,25 @@ pub enum Metric {
         k: usize,
     },
 
-    /// Discounted cumulative gain at k.
+    /// Discounted cumulative gain.
     ///
     /// ```math
     /// \text{DCG}@k = \sum_{i=1}^k \frac{\text{rel}_i}{\log_2(i + 1)}
     /// ```
+    ///
+    /// where `rel_i` is the relevance score of the `i`-th document.
     Dcg {
         /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
-    /// Normalized discounted cumulative gain at k.
+    /// Normalized discounted cumulative gain.
     ///
     /// ```math
     /// \text{nDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
     /// ```
+    ///
+    /// where `IDCG` is the ideal DCG score.
     Ndcg {
         /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
