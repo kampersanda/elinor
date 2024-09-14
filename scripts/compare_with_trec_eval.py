@@ -1,6 +1,8 @@
-#!/usr/bin/python3
 """
-This script compares the output of trec_eval with the output of emir_eval.
+Script to check the correctness of emir by comparing its output with trec_eval.
+
+Usage:
+    $ python3 ./scripts/compare_with_trec_eval.py ./target/release/evaluate
 """
 
 import argparse
@@ -14,10 +16,11 @@ def download_trec_eval():
         print("trec_eval-9.0.8 already exists", file=sys.stderr)
         return
     subprocess.run(
-        "wget https://github.com/usnistgov/trec_eval/archive/refs/tags/v9.0.8.tar.gz"
+        "wget https://github.com/usnistgov/trec_eval/archive/refs/tags/v9.0.8.tar.gz",
+        shell=True,
     )
-    subprocess.run("tar -xf v9.0.8.tar.gz")
-    subprocess.run("make -C trec_eval-9.0.8")
+    subprocess.run("tar -xf v9.0.8.tar.gz", shell=True)
+    subprocess.run("make -C trec_eval-9.0.8", shell=True)
 
 
 def run_trec_eval() -> dict[str, str]:
@@ -32,10 +35,10 @@ def run_trec_eval() -> dict[str, str]:
     return parsed
 
 
-def run_emir_eval(emir_eval_exe: str) -> dict[str, str]:
+def run_emir_eval(emir_exe: str) -> dict[str, str]:
     ks = [0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000]
     command = (
-        f"{emir_eval_exe} -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
+        f"{emir_exe} -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
         + "".join([f" -k {k}" for k in ks])
     )
     result = subprocess.run(command, capture_output=True, shell=True)
@@ -50,12 +53,12 @@ def run_emir_eval(emir_eval_exe: str) -> dict[str, str]:
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("emir-eval-exe")
+    p.add_argument("emir_exe")
     args = p.parse_args()
 
     download_trec_eval()
     trec_results = run_trec_eval()
-    emir_results = run_emir_eval(args.emir_eval_exe)
+    emir_results = run_emir_eval(args.emir_exe)
 
     ks = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
 
