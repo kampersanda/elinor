@@ -90,7 +90,7 @@ pub struct Evaluated<K> {
     pub mean_scores: HashMap<Metric, f64>,
 
     /// Metric to mapping from query ID to the score.
-    pub scores: HashMap<Metric, HashMap<K, f64>>,
+    pub all_scores: HashMap<Metric, HashMap<K, f64>>,
 }
 
 /// Evaluates the given qrels and run data using the specified metrics.
@@ -105,15 +105,15 @@ where
 {
     let metrics: HashSet<Metric> = metrics.into_iter().collect();
     let mut mean_scores = HashMap::new();
-    let mut scores = HashMap::new();
+    let mut all_scores = HashMap::new();
     for metric in metrics {
         let result = metrics::compute_metric(qrels, run, metric)?;
         let mean_score = result.iter().map(|(_, x)| x).sum::<f64>() / result.len() as f64;
         mean_scores.insert(metric, mean_score);
-        scores.insert(metric, result);
+        all_scores.insert(metric, result);
     }
     Ok(Evaluated {
         mean_scores,
-        scores,
+        all_scores,
     })
 }

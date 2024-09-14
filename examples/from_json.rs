@@ -56,7 +56,7 @@ fn main() -> Result<()> {
     println!("\n=== Scores for each query ===");
     for metric in &metrics {
         println!("{metric}");
-        let qid_to_score = &evaluated.scores[metric];
+        let qid_to_score = &evaluated.all_scores[metric];
         for qid in ["q_1", "q_2"] {
             let score = qid_to_score[qid];
             println!("- {qid}: {score:.4}");
