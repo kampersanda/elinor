@@ -14,8 +14,7 @@ use crate::GoldScore;
 use crate::Qrels;
 use crate::Run;
 
-/// Default relevance level.
-pub const RELEVANT_LEVEL: GoldScore = 1;
+pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 
 /// Metrics for evaluating information retrieval systems.
 ///

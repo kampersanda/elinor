@@ -1,4 +1,4 @@
-//! TREC format parser for qrels and run data.
+//! TREC format parser for Qrels and Run data.
 use crate::errors::EmirError;
 use crate::GoldScore;
 use crate::PredScore;
@@ -35,6 +35,9 @@ where
     let mut b = RunBuilder::new();
     for line in lines {
         let line = line.as_ref();
+        if line.is_empty() {
+            continue;
+        }
         let rows = line.split_whitespace().collect::<Vec<_>>();
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
