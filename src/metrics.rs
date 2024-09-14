@@ -35,8 +35,7 @@ pub enum Metric {
     /// * $`\text{Res}`$ is the set of retrieved documents.
     /// * $`\text{Rel}`$ is the set of relevant documents.
     Hits {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -49,8 +48,7 @@ pub enum Metric {
     /// \end{array} \right.
     /// ```
     Success {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -67,8 +65,7 @@ pub enum Metric {
     /// \text{Precision}@k = \frac{\text{Hits}}{k}
     /// ```
     Precision {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -79,8 +76,7 @@ pub enum Metric {
     /// \text{Recall} = \frac{\text{Hits}}{| \text{Rel} |}
     /// ```
     Recall {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -90,8 +86,7 @@ pub enum Metric {
     /// \text{F1} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
     /// ```
     F1 {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -102,8 +97,7 @@ pub enum Metric {
     /// \left\{ \begin{array}{ll} 1 & \text{if the } i \text{-th document is relevant} \\ 0 & \text{otherwise} \end{array} \right.
     /// ```
     AveragePrecision {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -113,8 +107,7 @@ pub enum Metric {
     /// \text{RR} = \frac{1}{\text{the rank of the first retrieved relevant document}}
     /// ```
     ReciprocalRank {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -124,8 +117,7 @@ pub enum Metric {
     /// \text{DCG}@k = \sum_{i=1}^k \frac{\text{rel}_i}{\log_2(i + 1)}
     /// ```
     Dcg {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -135,8 +127,7 @@ pub enum Metric {
     /// \text{nDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
     /// ```
     Ndcg {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -146,8 +137,7 @@ pub enum Metric {
     /// \text{DCG}_\text{Burges}@k = \sum_{i=1}^k \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}
     /// ```
     DcgBurges {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
@@ -157,8 +147,7 @@ pub enum Metric {
     /// \text{nDCG}_\text{Burges}@k = \frac{\text{DCG}_\text{Burges}@k}{\text{IDCG}_\text{Burges}@k}
     /// ```
     NdcgBurges {
-        /// Number of top documents to consider.
-        /// If `k` is set to 0, all documents are considered.
+        /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 }
