@@ -1,3 +1,4 @@
+//! Relevance store.
 use std::collections::HashMap;
 use std::hash::Hash;
 
@@ -6,7 +7,10 @@ use crate::errors::EmirError;
 /// Data to store a relevance score for a document.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Relevance<K, T> {
+    /// Document id.
     pub doc_id: K,
+
+    /// Relevance score.
     pub score: T,
 }
 

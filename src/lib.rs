@@ -51,7 +51,7 @@
 //! # Ok(())
 //! # }
 //! ```
-// #![deny(missing_docs)]
+#![deny(missing_docs)]
 
 pub mod errors;
 pub mod json;
@@ -84,6 +84,7 @@ pub type Run<K> = relevance::RelevanceStore<K, PredScore>;
 /// Builder for [`Run`].
 pub type RunBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
 
+/// Data type to store evaluated scores.
 pub struct Evaluated<K> {
     /// Metric to macro-averaged score.
     pub mean_scores: HashMap<Metric, f64>,

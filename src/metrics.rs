@@ -14,6 +14,7 @@ use crate::GoldScore;
 use crate::Qrels;
 use crate::Run;
 
+/// Default relevance level.
 pub const RELEVANT_LEVEL: GoldScore = 1;
 
 /// Metrics for evaluating information retrieval systems.
@@ -33,7 +34,11 @@ pub enum Metric {
     ///
     /// * $`\text{Res}`$ is the set of retrieved documents.
     /// * $`\text{Rel}`$ is the set of relevant documents.
-    Hits { k: usize },
+    Hits {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Binary metric indicating whether at least one relevant document is retrieved:
     ///
@@ -43,7 +48,11 @@ pub enum Metric {
     ///     0 & \text{otherwise}
     /// \end{array} \right.
     /// ```
-    Success { k: usize },
+    Success {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Proportion of the retrieved documents that are relevant:
     ///
@@ -57,7 +66,11 @@ pub enum Metric {
     /// ```math
     /// \text{Precision}@k = \frac{\text{Hits}}{k}
     /// ```
-    Precision { k: usize },
+    Precision {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Ratio between the retrieved documents that are relevant and
     /// the total number of relevant documents:
@@ -65,14 +78,22 @@ pub enum Metric {
     /// ```math
     /// \text{Recall} = \frac{\text{Hits}}{| \text{Rel} |}
     /// ```
-    Recall { k: usize },
+    Recall {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Harmonic mean of precision and recall:
     ///
     /// ```math
     /// \text{F1} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
     /// ```
-    F1 { k: usize },
+    F1 {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Average of the Precision scores computed after each relevant document is retrieved:
     ///
@@ -80,42 +101,66 @@ pub enum Metric {
     /// \text{AP} = \frac{1}{| \text{Rel} |} \sum_{i=1}^{| \text{Res} |} \text{Precision}@i \times
     /// \left\{ \begin{array}{ll} 1 & \text{if the } i \text{-th document is relevant} \\ 0 & \text{otherwise} \end{array} \right.
     /// ```
-    AveragePrecision { k: usize },
+    AveragePrecision {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Multiplicative inverse of the rank of the first retrieved relevant document:
     ///
     /// ```math
     /// \text{RR} = \frac{1}{\text{the rank of the first retrieved relevant document}}
     /// ```
-    ReciprocalRank { k: usize },
+    ReciprocalRank {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Discounted cumulative gain at k.
     ///
     /// ```math
     /// \text{DCG}@k = \sum_{i=1}^k \frac{\text{rel}_i}{\log_2(i + 1)}
     /// ```
-    Dcg { k: usize },
+    Dcg {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Normalized discounted cumulative gain at k.
     ///
     /// ```math
     /// \text{nDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
     /// ```
-    Ndcg { k: usize },
+    Ndcg {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Discounted cumulative gain at k.
     ///
     /// ```math
     /// \text{DCG}_\text{Burges}@k = \sum_{i=1}^k \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}
     /// ```
-    DcgBurges { k: usize },
+    DcgBurges {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 
     /// Normalized discounted cumulative gain at k.
     ///
     /// ```math
     /// \text{nDCG}_\text{Burges}@k = \frac{\text{DCG}_\text{Burges}@k}{\text{IDCG}_\text{Burges}@k}
     /// ```
-    NdcgBurges { k: usize },
+    NdcgBurges {
+        /// Number of top documents to consider.
+        /// If `k` is set to 0, all documents are considered.
+        k: usize,
+    },
 }
 
 impl std::fmt::Display for Metric {
@@ -166,6 +211,7 @@ fn format_binary_metric(name: &str, k: usize) -> String {
     }
 }
 
+/// Computes the metric scores for the given Qrels and Run data.
 pub fn compute_metric<K>(
     qrels: &Qrels<K>,
     run: &Run<K>,

@@ -1,3 +1,4 @@
+//! TREC format parser for qrels and run data.
 use crate::errors::EmirError;
 use crate::GoldScore;
 use crate::PredScore;
@@ -6,6 +7,7 @@ use crate::QrelsBuilder;
 use crate::Run;
 use crate::RunBuilder;
 
+/// Parses the given TREC data into a Qrels data structure.
 pub fn parse_qrels_from_trec<I, S>(lines: I) -> Result<Qrels<String>, EmirError<String>>
 where
     I: Iterator<Item = S>,
@@ -23,6 +25,7 @@ where
     Ok(b.build())
 }
 
+/// Parses the given TREC data into a Run data structure.
 pub fn parse_run_from_trec<I, S>(lines: I) -> Result<Run<String>, EmirError<String>>
 where
     I: Iterator<Item = S>,
