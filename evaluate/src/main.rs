@@ -17,6 +17,9 @@ struct Args {
 
     #[arg(short, long)]
     run_file: PathBuf,
+
+    #[arg(short, long, default_values_t = &[0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000])]
+    ks: Vec<usize>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,10 +28,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let qrels = trec::parse_qrels_from_trec(load_lines(&args.qrels_file)?.into_iter())?;
     let run = trec::parse_run_from_trec(load_lines(&args.run_file)?.into_iter())?;
 
-    let ks = vec![0, 5, 10, 15, 20, 30, 100, 200, 500, 1000];
-    let metrics = all_metrics(&ks);
-
+    let metrics = all_metrics(&args.ks);
     let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
+
     for metric in &metrics {
         let score = evaluated.mean_scores[metric];
         println!("{metric}\t{score:.4}");
