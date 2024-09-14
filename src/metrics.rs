@@ -260,8 +260,8 @@ mod tests {
     #[case::f1_k_5_rel_lvl_1(Metric::F1 { k: 5 }, hashmap! { 'A' => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
     // Average precision
     #[case::average_precision_k_0_rel_lvl_1(Metric::AveragePrecision { k: 0 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_1_rel_lvl_1(Metric::AveragePrecision { k: 1 }, hashmap! { 'A' => (1.0 / 1.0) / 1.0 })]
-    #[case::average_precision_k_2_rel_lvl_1(Metric::AveragePrecision { k: 2 }, hashmap! { 'A' => (1.0 / 1.0) / 1.0 })]
+    #[case::average_precision_k_1_rel_lvl_1(Metric::AveragePrecision { k: 1 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
+    #[case::average_precision_k_2_rel_lvl_1(Metric::AveragePrecision { k: 2 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
     #[case::average_precision_k_3_rel_lvl_1(Metric::AveragePrecision { k: 3 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
     #[case::average_precision_k_4_rel_lvl_1(Metric::AveragePrecision { k: 4 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
     #[case::average_precision_k_5_rel_lvl_1(Metric::AveragePrecision { k: 5 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]

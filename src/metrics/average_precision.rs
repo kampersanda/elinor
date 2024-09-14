@@ -26,19 +26,17 @@ where
     if k == 0 {
         return 0.0;
     }
+    let n_rels = rels.values().filter(|&&rel| rel >= rel_lvl).count();
+    if n_rels == 0 {
+        return 0.0;
+    }
     let mut sum = 0.0;
-    let mut n_rels = 0;
     for (i, pred) in preds.iter().enumerate().take(k) {
         if let Some(&rel) = rels.get(&pred.doc_id) {
             if rel >= rel_lvl {
-                n_rels += 1;
                 sum += compute_precision(rels, preds, i + 1, rel_lvl);
             }
         }
     }
-    if n_rels == 0 {
-        0.0
-    } else {
-        sum / n_rels as f64
-    }
+    sum / n_rels as f64
 }
