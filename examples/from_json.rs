@@ -40,10 +40,10 @@ fn main() -> Result<()> {
         Metric::Precision { k: 3 },
         Metric::Recall { k: 3 },
         Metric::F1 { k: 3 },
-        Metric::AveragePrecision { k: 3 },
-        Metric::ReciprocalRank { k: 3 },
-        Metric::Ndcg { k: 3 },
-        Metric::NdcgBurges { k: 3 },
+        Metric::AP { k: 3 },
+        Metric::RR { k: 3 },
+        Metric::NDCG { k: 3 },
+        Metric::NDCGBurges { k: 3 },
     ];
     let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 

@@ -35,7 +35,7 @@
 //!
 //! let metrics = vec![
 //!     Metric::Precision { k: 3 },
-//!     Metric::AveragePrecision { k: 0 }, // k=0 means all documents.
+//!     Metric::AP { k: 0 }, // k=0 means all documents.
 //!     "mrr".parse()?,
 //!     "ndcg@3".parse()?,
 //! ];

@@ -52,9 +52,9 @@ fn all_metrics(ks: &[usize]) -> Vec<Metric> {
     metrics.extend(ks.iter().map(|&k| Metric::Precision { k }));
     metrics.extend(ks.iter().map(|&k| Metric::Recall { k }));
     metrics.extend(ks.iter().map(|&k| Metric::F1 { k }));
-    metrics.extend(ks.iter().map(|&k| Metric::AveragePrecision { k }));
-    metrics.extend(ks.iter().map(|&k| Metric::ReciprocalRank { k }));
-    metrics.extend(ks.iter().map(|&k| Metric::Ndcg { k }));
-    metrics.extend(ks.iter().map(|&k| Metric::NdcgBurges { k }));
+    metrics.extend(ks.iter().map(|&k| Metric::AP { k }));
+    metrics.extend(ks.iter().map(|&k| Metric::RR { k }));
+    metrics.extend(ks.iter().map(|&k| Metric::NDCG { k }));
+    metrics.extend(ks.iter().map(|&k| Metric::NDCGBurges { k }));
     metrics
 }
