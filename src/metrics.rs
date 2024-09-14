@@ -8,6 +8,9 @@ pub(crate) mod recall;
 pub(crate) mod reciprocal_rank;
 
 use std::collections::HashMap;
+use std::str::FromStr;
+
+use regex::Regex;
 
 use crate::errors::EmirError;
 use crate::GoldScore;
@@ -159,47 +162,79 @@ impl std::fmt::Display for Metric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Metric::Hits { k } => {
-                write!(f, "{}", format_binary_metric("hits", *k))
+                write!(f, "{}", format_metric("hits", *k))
             }
             Metric::Success { k } => {
-                write!(f, "{}", format_binary_metric("success", *k))
+                write!(f, "{}", format_metric("success", *k))
             }
             Metric::Precision { k } => {
-                write!(f, "{}", format_binary_metric("precision", *k))
+                write!(f, "{}", format_metric("precision", *k))
             }
             Metric::Recall { k } => {
-                write!(f, "{}", format_binary_metric("recall", *k))
+                write!(f, "{}", format_metric("recall", *k))
             }
             Metric::F1 { k } => {
-                write!(f, "{}", format_binary_metric("f1", *k))
+                write!(f, "{}", format_metric("f1", *k))
             }
             Metric::AveragePrecision { k } => {
-                write!(f, "{}", format_binary_metric("map", *k))
+                write!(f, "{}", format_metric("map", *k))
             }
             Metric::ReciprocalRank { k } => {
-                write!(f, "{}", format_binary_metric("mrr", *k))
+                write!(f, "{}", format_metric("mrr", *k))
             }
             Metric::Dcg { k } => {
-                write!(f, "{}", format_binary_metric("dcg", *k))
+                write!(f, "{}", format_metric("dcg", *k))
             }
             Metric::Ndcg { k } => {
-                write!(f, "{}", format_binary_metric("ndcg", *k))
+                write!(f, "{}", format_metric("ndcg", *k))
             }
             Metric::DcgBurges { k } => {
-                write!(f, "{}", format_binary_metric("dcg_burges", *k))
+                write!(f, "{}", format_metric("dcg_burges", *k))
             }
             Metric::NdcgBurges { k } => {
-                write!(f, "{}", format_binary_metric("ndcg_burges", *k))
+                write!(f, "{}", format_metric("ndcg_burges", *k))
             }
         }
     }
 }
 
-fn format_binary_metric(name: &str, k: usize) -> String {
+fn format_metric(name: &str, k: usize) -> String {
     if k == 0 {
         format!("{name}")
     } else {
         format!("{name}@{k}")
+    }
+}
+
+impl FromStr for Metric {
+    type Err = EmirError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let re = Regex::new(r"^(?<metric>[a-z1-9_]+)(@(?<k>\d+))?$").unwrap();
+        let caps = re
+            .captures(s)
+            .ok_or(EmirError::InvalidFormat(s.to_string()))?;
+        let name = caps.name("metric").unwrap().as_str();
+        let k = caps
+            .name("k")
+            .map(|m| m.as_str().parse::<usize>())
+            .transpose()
+            .map_err(|_| EmirError::InvalidFormat(s.to_string()))?
+            .unwrap_or(0);
+        match name {
+            "hits" => Ok(Metric::Hits { k }),
+            "success" => Ok(Metric::Success { k }),
+            "precision" => Ok(Metric::Precision { k }),
+            "recall" => Ok(Metric::Recall { k }),
+            "f1" => Ok(Metric::F1 { k }),
+            "map" => Ok(Metric::AveragePrecision { k }),
+            "mrr" => Ok(Metric::ReciprocalRank { k }),
+            "dcg" => Ok(Metric::Dcg { k }),
+            "ndcg" => Ok(Metric::Ndcg { k }),
+            "dcg_burges" => Ok(Metric::DcgBurges { k }),
+            "ndcg_burges" => Ok(Metric::NdcgBurges { k }),
+            _ => Err(EmirError::InvalidFormat(s.to_string())),
+        }
     }
 }
 
@@ -365,5 +400,44 @@ mod tests {
         });
         let results = compute_metric(&qrels, &run, metric).unwrap();
         compare_hashmaps(&results, &expected);
+    }
+
+    #[rstest]
+    #[case::hits("hits", Metric::Hits { k: 0 })]
+    #[case::hits_k1("hits@1", Metric::Hits { k: 1 })]
+    #[case::hits_k100("hits@100", Metric::Hits { k: 100 })]
+    #[case::success("success", Metric::Success { k: 0 })]
+    #[case::success_k1("success@1", Metric::Success { k: 1 })]
+    #[case::success_k100("success@100", Metric::Success { k: 100 })]
+    #[case::precision("precision", Metric::Precision { k: 0 })]
+    #[case::precision_k1("precision@1", Metric::Precision { k: 1 })]
+    #[case::precision_k100("precision@100", Metric::Precision { k: 100 })]
+    #[case::recall("recall", Metric::Recall { k: 0 })]
+    #[case::recall_k1("recall@1", Metric::Recall { k: 1 })]
+    #[case::recall_k100("recall@100", Metric::Recall { k: 100 })]
+    #[case::f1("f1", Metric::F1 { k: 0 })]
+    #[case::f1_k1("f1@1", Metric::F1 { k: 1 })]
+    #[case::f1_k100("f1@100", Metric::F1 { k: 100 })]
+    #[case::average_precision("map", Metric::AveragePrecision { k: 0 })]
+    #[case::average_precision_k1("map@1", Metric::AveragePrecision { k: 1 })]
+    #[case::average_precision_k100("map@100", Metric::AveragePrecision { k: 100 })]
+    #[case::reciprocal_rank("mrr", Metric::ReciprocalRank { k: 0 })]
+    #[case::reciprocal_rank_k1("mrr@1", Metric::ReciprocalRank { k: 1 })]
+    #[case::reciprocal_rank_k100("mrr@100", Metric::ReciprocalRank { k: 100 })]
+    #[case::dcg("dcg", Metric::Dcg { k: 0 })]
+    #[case::dcg_k1("dcg@1", Metric::Dcg { k: 1 })]
+    #[case::dcg_k100("dcg@100", Metric::Dcg { k: 100 })]
+    #[case::ndcg("ndcg", Metric::Ndcg { k: 0 })]
+    #[case::ndcg_k1("ndcg@1", Metric::Ndcg { k: 1 })]
+    #[case::ndcg_k100("ndcg@100", Metric::Ndcg { k: 100 })]
+    #[case::dcg_burges("dcg_burges", Metric::DcgBurges { k: 0 })]
+    #[case::dcg_burges_k1("dcg_burges@1", Metric::DcgBurges { k: 1 })]
+    #[case::dcg_burges_k100("dcg_burges@100", Metric::DcgBurges { k: 100 })]
+    #[case::ndcg_burges("ndcg_burges", Metric::NdcgBurges { k: 0 })]
+    #[case::ndcg_burges_k1("ndcg_burges@1", Metric::NdcgBurges { k: 1 })]
+    #[case::ndcg_burges_k100("ndcg_burges@100", Metric::NdcgBurges { k: 100 })]
+    fn test_metric_from_str(#[case] input: &str, #[case] expected: Metric) {
+        let metric = Metric::from_str(input).unwrap();
+        assert_eq!(metric, expected);
     }
 }
