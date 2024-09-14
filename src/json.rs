@@ -8,7 +8,7 @@ use crate::Run;
 use crate::RunBuilder;
 
 /// Parses the given JSON data into a Qrels data structure.
-pub fn parse_qrels_from_json(data: &str) -> Result<Qrels<String>, EmirError<String>> {
+pub fn parse_qrels_from_json(data: &str) -> Result<Qrels<String>, EmirError> {
     let qrels_map: serde_json::Value = serde_json::from_str(data).unwrap();
     let mut b = QrelsBuilder::new();
     for (query_id, doc_scores) in qrels_map.as_object().unwrap() {
@@ -23,7 +23,7 @@ pub fn parse_qrels_from_json(data: &str) -> Result<Qrels<String>, EmirError<Stri
 }
 
 /// Parses the given JSON data into a Run data structure.
-pub fn parse_run_from_json(data: &str) -> Result<Run<String>, EmirError<String>> {
+pub fn parse_run_from_json(data: &str) -> Result<Run<String>, EmirError> {
     let run_map: serde_json::Value = serde_json::from_str(data).unwrap();
     let mut b = RunBuilder::new();
     for (query_id, doc_scores) in run_map.as_object().unwrap() {

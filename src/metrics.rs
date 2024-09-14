@@ -208,13 +208,13 @@ pub fn compute_metric<K>(
     qrels: &Qrels<K>,
     run: &Run<K>,
     metric: Metric,
-) -> Result<HashMap<K, f64>, EmirError<K>>
+) -> Result<HashMap<K, f64>, EmirError>
 where
     K: Clone + Eq + std::hash::Hash + std::fmt::Display,
 {
     for query_id in run.query_ids() {
         if qrels.get_map(query_id).is_none() {
-            return Err(EmirError::MissingQueryId(query_id.clone()));
+            return Err(EmirError::MissingEntry(format!("Query ID: {query_id}")));
         }
     }
     let mut results = HashMap::new();

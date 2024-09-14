@@ -13,7 +13,7 @@ use crate::RunBuilder;
 ///
 /// Each line should be `<QueryID> <Dummy> <DocID> <Score>`,
 /// where `<Dummy>` is ignored.
-pub fn parse_qrels_from_trec<I, S>(lines: I) -> Result<Qrels<String>, EmirError<String>>
+pub fn parse_qrels_from_trec<I, S>(lines: I) -> Result<Qrels<String>, EmirError>
 where
     I: Iterator<Item = S>,
     S: AsRef<str>,
@@ -23,7 +23,7 @@ where
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
         if rows.len() != 4 {
-            return Err(EmirError::InvalidFormat);
+            return Err(EmirError::InvalidFormat(line.to_string()));
         }
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
@@ -39,7 +39,7 @@ where
 ///
 /// Each line should be `<QueryID> <Dummy> <DocID> <Rank> <Score> <RunName>`,
 /// where `<Dummy>` and `<Rank>` are ignored.
-pub fn parse_run_from_trec<I, S>(lines: I) -> Result<Run<String>, EmirError<String>>
+pub fn parse_run_from_trec<I, S>(lines: I) -> Result<Run<String>, EmirError>
 where
     I: Iterator<Item = S>,
     S: AsRef<str>,
@@ -48,10 +48,10 @@ where
     let mut b = RunBuilder::new();
     for line in lines {
         let line = line.as_ref();
-        if line.is_empty() {
-            continue;
-        }
         let rows = line.split_whitespace().collect::<Vec<_>>();
+        if rows.len() != 6 {
+            return Err(EmirError::InvalidFormat(line.to_string()));
+        }
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
         let score = rows[4].parse::<PredScore>().unwrap();
@@ -63,6 +63,6 @@ where
     if let Some(name) = name {
         Ok(b.build().with_name(name.as_str()))
     } else {
-        Err(EmirError::EmptyLines)
+        Err(EmirError::MissingEntry("No line is found".to_string()))
     }
 }

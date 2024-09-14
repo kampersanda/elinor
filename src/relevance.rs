@@ -98,14 +98,16 @@ where
     ///
     /// # Errors
     ///
-    /// * [`EmirError::DuplicateDocId`] if the document id already exists for the query.
-    pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), EmirError<K>> {
+    /// * [`EmirError::DuplicateEntry`] if the query-document pair already exists.
+    pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), EmirError> {
         let rels = self
             .map
             .entry(query_id.clone())
             .or_insert_with(HashMap::new);
         if rels.contains_key(&doc_id) {
-            return Err(EmirError::DuplicateDocId(query_id, doc_id));
+            return Err(EmirError::DuplicateEntry(format!(
+                "Query: {query_id}, Doc: {doc_id}"
+            )));
         }
         rels.insert(doc_id, score);
         Ok(())
