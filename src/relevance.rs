@@ -185,6 +185,18 @@ mod tests {
     }
 
     #[test]
+    fn test_relevance_store_builder() {
+        let mut b = RelevanceStoreBuilder::new();
+        b.add_score('a', 'x', 1).unwrap();
+        b.add_score('a', 'y', 2).unwrap();
+        b.add_score('b', 'x', 3).unwrap();
+        let store = b.build();
+        assert_eq!(store.get_map(&'a'), Some(&[('x', 1), ('y', 2)].into()));
+        assert_eq!(store.get_map(&'b'), Some(&[('x', 3)].into()));
+        assert_eq!(store.get_map(&'c'), None);
+    }
+
+    #[test]
     fn test_relevance_store_builder_duplicate_entry() {
         let mut b = RelevanceStoreBuilder::new();
         b.add_score('a', 'x', 1).unwrap();

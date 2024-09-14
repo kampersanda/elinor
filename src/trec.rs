@@ -27,7 +27,9 @@ where
         }
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
-        let score = rows[3].parse::<GoldScore>().unwrap();
+        let score = rows[3]
+            .parse::<GoldScore>()
+            .map_err(|_| EmirError::InvalidFormat(format!("Invalid score: {}", rows[3])))?;
         b.add_score(query_id, doc_id, score)?;
     }
     Ok(b.build())
@@ -54,7 +56,9 @@ where
         }
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
-        let score = rows[4].parse::<PredScore>().unwrap();
+        let score = rows[4]
+            .parse::<PredScore>()
+            .map_err(|_| EmirError::InvalidFormat(format!("Invalid score: {}", rows[4])))?;
         b.add_score(query_id, doc_id, score)?;
         if name.is_none() {
             name = Some(rows[5].to_string());
