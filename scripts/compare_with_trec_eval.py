@@ -1,5 +1,9 @@
 #!/usr/bin/python3
+"""
+This script compares the output of trec_eval with the output of emir_eval.
+"""
 
+import argparse
 import os
 import subprocess
 import sys
@@ -28,10 +32,10 @@ def run_trec_eval() -> dict[str, str]:
     return parsed
 
 
-def run_emir_eval() -> dict[str, str]:
+def run_emir_eval(emir_eval_exe: str) -> dict[str, str]:
     ks = [0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000]
     command = (
-        "cargo run -p evaluate -- -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
+        f"{emir_eval_exe} -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
         + "".join([f" -k {k}" for k in ks])
     )
     result = subprocess.run(command, capture_output=True, shell=True)
@@ -45,9 +49,13 @@ def run_emir_eval() -> dict[str, str]:
 
 
 if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument("emir-eval-exe")
+    args = p.parse_args()
+
     download_trec_eval()
     trec_results = run_trec_eval()
-    emir_results = run_emir_eval()
+    emir_results = run_emir_eval(args.emir_eval_exe)
 
     ks = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
 
