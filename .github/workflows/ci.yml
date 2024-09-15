@@ -1,0 +1,70 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Check on ${{ matrix.rust }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - 1.65.0 # MSRV
+          - stable
+          - nightly
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ${{ matrix.rust }}
+        run: |
+          rustup toolchain install ${{ matrix.rust }} --profile minimal --component rustfmt,clippy
+          rustup default ${{ matrix.rust }}
+      - name: Run cargo check
+        continue-on-error: ${{ matrix.rust == 'nightly' }}
+        run: cargo check
+      - name: Run cargo check (all)
+        # MSRV should be ignored for sub-crates.
+        continue-on-error: ${{ matrix.rust != 'stable' }}
+        run: cargo check --all
+      - name: Run cargo fmt
+        continue-on-error: ${{ matrix.rust == 'nightly' }}
+        run: cargo fmt --all -- --check
+      - name: Run cargo clippy
+        # Run clippy only on stable to ignore unreasonable old warnings.
+        continue-on-error: ${{ matrix.rust != 'stable' }}
+        run: cargo clippy --all -- -D warnings -W clippy::nursery
+      - name: Run cargo test
+        # MSRV should be ignored for dev-dependencies.
+        continue-on-error: ${{ matrix.rust != 'stable' }}
+        run: cargo test --release
+      - name: Run cargo doc
+        continue-on-error: ${{ matrix.rust == 'nightly' }}
+        run: RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps
+
+  correctness-test:
+    name: Correctness test against trec_eval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt,clippy
+          rustup default stable
+      - name: Install Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Build ireval-evaluate
+        run: cargo build --release -p ireval-evaluate
+      - name: Run correctness test
+        run: python scripts/compare_with_trec_eval.py target/release/ireval-evaluate

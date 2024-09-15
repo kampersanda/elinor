@@ -32,7 +32,7 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// instantiating a [`Metric`] from a string, as follows:
 ///
 /// ```rust
-/// use emir::Metric;
+/// use ireval::Metric;
 ///
 /// assert_eq!("hits".parse::<Metric>(), Ok(Metric::Hits { k: 0 }));
 /// assert_eq!("hits@3".parse::<Metric>(), Ok(Metric::Hits { k: 3 }));
@@ -42,7 +42,7 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// formatting a [`Metric`] into a string, as follows:
 ///
 /// ```rust
-/// use emir::Metric;
+/// use ireval::Metric;
 ///
 /// assert_eq!(format!("{}", Metric::Hits { k: 0 }), "hits");
 /// assert_eq!(format!("{}", Metric::Hits { k: 3 }), "hits@3");

@@ -1,6 +1,6 @@
-//! # Emir: Evaluation Measures in Information Retrieval
+//! # Information Retrieval Evaluation Library
 //!
-//! Emir is a Rust library for evaluating information retrieval systems,
+//! This is a Rust library for evaluating information retrieval systems,
 //! which is inspired by [ranx](https://github.com/AmenRa/ranx).
 //!
 //! ## Features
@@ -11,22 +11,20 @@
 //! * **Flexible**:
 //!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
-//! * **Fast**:
-//!     The library is implemented in Rust, achieving high performance.
 //!
 //! ## Glossary from TREC
 //!
 //! * **Qrels** - Collection of relevance judgments for a set of queries and documents.
 //! * **Run** - Collection of predicted scores for a set of queries and documents.
 //!
-//! ## Examples
+//! ## Getting Started
 //!
-//! The following example demonstrates a simple routine to prepare Qrels and Run data
+//! A simple routine to prepare Qrels and Run data
 //! and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use emir::{QrelsBuilder, RunBuilder, Metric};
+//! use ireval::{QrelsBuilder, RunBuilder, Metric};
 //!
 //! // Construct Qrels data.
 //! let mut qb = QrelsBuilder::new();
@@ -57,7 +55,7 @@
 //! ];
 //!
 //! // Evaluate the qrels and run data.
-//! let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
+//! let evaluated = ireval::evaluate(&qrels, &run, metrics.iter().cloned())?;
 //!
 //! // Macro-averaged scores.
 //! for metric in &metrics {
@@ -71,10 +69,11 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! Other examples are available in the [`examples`](https://github.com/kampersanda/ireval/tree/main/examples) directory.
 #![deny(missing_docs)]
 
 pub mod errors;
-pub mod json;
 pub mod metrics;
 pub mod relevance;
 pub mod trec;
