@@ -118,7 +118,7 @@ pub fn evaluate<K, M>(
     qrels: &Qrels<K>,
     run: &Run<K>,
     metrics: M,
-) -> Result<Evaluated<K>, errors::EmirError>
+) -> Result<Evaluated<K>, errors::ElinorError>
 where
     K: Clone + Eq + std::hash::Hash + std::fmt::Display,
     M: IntoIterator<Item = Metric>,

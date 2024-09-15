@@ -3,7 +3,7 @@ use thiserror::Error;
 
 /// Error types for Elinor.
 #[derive(Error, Debug, PartialEq, Eq)]
-pub enum EmirError {
+pub enum ElinorError {
     /// Error when an entry is duplicated.
     #[error("{0}")]
     DuplicateEntry(String),
