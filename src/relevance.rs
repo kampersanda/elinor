@@ -39,11 +39,14 @@ pub struct RelevanceStore<K, T> {
 
 impl<K, T> RelevanceStore<K, T>
 where
-    K: Eq + Hash + Clone + Display,
+    K: Eq + Hash + Clone,
     T: Ord + Clone,
 {
     /// Creates a relevance store from a map of query ids to relevance maps.
-    pub fn from_map(map: HashMap<K, HashMap<K, T>>) -> Self {
+    pub fn from_map(map: HashMap<K, HashMap<K, T>>) -> Self
+    where
+        K: Display,
+    {
         let b = RelevanceStoreBuilder { map };
         b.build()
     }
