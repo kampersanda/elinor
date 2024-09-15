@@ -110,7 +110,7 @@ where
     let mut all_scores = HashMap::new();
     for metric in metrics {
         let result = metrics::compute_metric(qrels, run, metric)?;
-        let mean_score = result.iter().map(|(_, x)| x).sum::<f64>() / result.len() as f64;
+        let mean_score = result.values().sum::<f64>() / result.len() as f64;
         mean_scores.insert(metric, mean_score);
         all_scores.insert(metric, result);
     }

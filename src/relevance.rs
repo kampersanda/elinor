@@ -5,13 +5,18 @@ use std::hash::Hash;
 use crate::errors::EmirError;
 
 /// Data to store a relevance score for a document.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Relevance<K, T> {
     /// Document id.
     pub doc_id: K,
 
     /// Relevance score.
     pub score: T,
+}
+
+struct RelevanceData<K, T> {
+    sorted: Vec<Relevance<K, T>>,
+    map: HashMap<K, T>,
 }
 
 /// Data structure for storing relevance scores.
@@ -27,7 +32,7 @@ pub struct RelevanceStore<K, T> {
     // Mapping from query ids to:
     //  - Sorted list of relevance scores in descending order.
     //  - Mapping from document ids to relevance scores.
-    map: HashMap<K, (Vec<Relevance<K, T>>, HashMap<K, T>)>,
+    map: HashMap<K, RelevanceData<K, T>>,
 }
 
 impl<K, T> RelevanceStore<K, T>
@@ -56,13 +61,13 @@ where
 
     /// Returns the relevance map for a given query id.
     pub fn get_map(&self, query_id: &K) -> Option<&HashMap<K, T>> {
-        self.map.get(query_id).map(|(_, rels)| rels)
+        self.map.get(query_id).map(|data| &data.map)
     }
 
     /// Returns the sorted list of relevance scores in descending order
     /// for a given query id.
     pub fn get_sorted(&self, query_id: &K) -> Option<&[Relevance<K, T>]> {
-        self.map.get(query_id).map(|(rels, _)| rels.as_slice())
+        self.map.get(query_id).map(|data| data.sorted.as_slice())
     }
 
     /// Returns an iterator over the query ids in random order.
@@ -74,6 +79,16 @@ where
 /// Builder for [`RelevanceStore`].
 pub struct RelevanceStoreBuilder<K, T> {
     map: HashMap<K, HashMap<K, T>>,
+}
+
+impl<K, T> Default for RelevanceStoreBuilder<K, T>
+where
+    K: Eq + PartialEq + Hash + Clone + std::fmt::Display,
+    T: Ord + PartialOrd + Clone,
+{
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<K, T> RelevanceStoreBuilder<K, T>
@@ -100,10 +115,7 @@ where
     ///
     /// * [`EmirError::DuplicateEntry`] if the query-document pair already exists.
     pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), EmirError> {
-        let rels = self
-            .map
-            .entry(query_id.clone())
-            .or_insert_with(HashMap::new);
+        let rels = self.map.entry(query_id.clone()).or_default();
         if rels.contains_key(&doc_id) {
             return Err(EmirError::DuplicateEntry(format!(
                 "Query: {query_id}, Doc: {doc_id}"
@@ -125,7 +137,7 @@ where
                 })
                 .collect::<Vec<_>>();
             sorted.sort_by(|a, b| b.score.cmp(&a.score));
-            map.insert(query_id, (sorted, rels));
+            map.insert(query_id, RelevanceData { sorted, map: rels });
         }
         RelevanceStore { name: None, map }
     }

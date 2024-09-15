@@ -161,37 +161,37 @@ pub enum Metric {
 impl std::fmt::Display for Metric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Metric::Hits { k } => {
+            Self::Hits { k } => {
                 write!(f, "{}", format_metric("hits", *k))
             }
-            Metric::Success { k } => {
+            Self::Success { k } => {
                 write!(f, "{}", format_metric("success", *k))
             }
-            Metric::Precision { k } => {
+            Self::Precision { k } => {
                 write!(f, "{}", format_metric("precision", *k))
             }
-            Metric::Recall { k } => {
+            Self::Recall { k } => {
                 write!(f, "{}", format_metric("recall", *k))
             }
-            Metric::F1 { k } => {
+            Self::F1 { k } => {
                 write!(f, "{}", format_metric("f1", *k))
             }
-            Metric::AP { k } => {
+            Self::AP { k } => {
                 write!(f, "{}", format_metric("ap", *k))
             }
-            Metric::RR { k } => {
+            Self::RR { k } => {
                 write!(f, "{}", format_metric("rr", *k))
             }
-            Metric::DCG { k } => {
+            Self::DCG { k } => {
                 write!(f, "{}", format_metric("dcg", *k))
             }
-            Metric::NDCG { k } => {
+            Self::NDCG { k } => {
                 write!(f, "{}", format_metric("ndcg", *k))
             }
-            Metric::DCGBurges { k } => {
+            Self::DCGBurges { k } => {
                 write!(f, "{}", format_metric("dcg_burges", *k))
             }
-            Metric::NDCGBurges { k } => {
+            Self::NDCGBurges { k } => {
                 write!(f, "{}", format_metric("ndcg_burges", *k))
             }
         }
@@ -200,7 +200,7 @@ impl std::fmt::Display for Metric {
 
 fn format_metric(name: &str, k: usize) -> String {
     if k == 0 {
-        format!("{name}")
+        name.to_string()
     } else {
         format!("{name}@{k}")
     }
@@ -213,7 +213,7 @@ impl FromStr for Metric {
         let re = Regex::new(r"^(?<metric>[a-z1-9_]+)(@(?<k>\d+))?$").unwrap();
         let caps = re
             .captures(s)
-            .ok_or(EmirError::InvalidFormat(s.to_string()))?;
+            .ok_or_else(|| EmirError::InvalidFormat(s.to_string()))?;
         let name = caps.name("metric").unwrap().as_str();
         let k = caps
             .name("k")
@@ -222,17 +222,17 @@ impl FromStr for Metric {
             .map_err(|_| EmirError::InvalidFormat(s.to_string()))?
             .unwrap_or(0);
         match name {
-            "hits" => Ok(Metric::Hits { k }),
-            "success" => Ok(Metric::Success { k }),
-            "precision" => Ok(Metric::Precision { k }),
-            "recall" => Ok(Metric::Recall { k }),
-            "f1" => Ok(Metric::F1 { k }),
-            "ap" => Ok(Metric::AP { k }),
-            "rr" => Ok(Metric::RR { k }),
-            "dcg" => Ok(Metric::DCG { k }),
-            "ndcg" => Ok(Metric::NDCG { k }),
-            "dcg_burges" => Ok(Metric::DCGBurges { k }),
-            "ndcg_burges" => Ok(Metric::NDCGBurges { k }),
+            "hits" => Ok(Self::Hits { k }),
+            "success" => Ok(Self::Success { k }),
+            "precision" => Ok(Self::Precision { k }),
+            "recall" => Ok(Self::Recall { k }),
+            "f1" => Ok(Self::F1 { k }),
+            "ap" => Ok(Self::AP { k }),
+            "rr" => Ok(Self::RR { k }),
+            "dcg" => Ok(Self::DCG { k }),
+            "ndcg" => Ok(Self::NDCG { k }),
+            "dcg_burges" => Ok(Self::DCGBurges { k }),
+            "ndcg_burges" => Ok(Self::NDCGBurges { k }),
             _ => Err(EmirError::InvalidFormat(s.to_string())),
         }
     }
