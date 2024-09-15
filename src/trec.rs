@@ -64,9 +64,8 @@ where
             name = Some(rows[5].to_string());
         }
     }
-    if let Some(name) = name {
-        Ok(b.build().with_name(name.as_str()))
-    } else {
-        Err(EmirError::MissingEntry("No line is found".to_string()))
-    }
+    name.map_or_else(
+        || Err(EmirError::MissingEntry("No line is found".to_string())),
+        |name| Ok(b.build().with_name(name.as_str())),
+    )
 }
