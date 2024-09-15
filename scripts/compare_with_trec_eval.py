@@ -91,5 +91,6 @@ if __name__ == "__main__":
         if not match:
             is_failed = True
 
+    is_failed = True
     if is_failed:
         sys.exit(1)
