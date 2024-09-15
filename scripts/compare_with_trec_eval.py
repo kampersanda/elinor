@@ -74,6 +74,7 @@ if __name__ == "__main__":
             ("map", "ap"),
             ("recip_rank", "rr"),
             ("ndcg", "ndcg"),
+            ("bpref", "bpref"),
         ]
     )
     metric_pairs.extend([(f"P_{k}", f"precision@{k}") for k in ks])
