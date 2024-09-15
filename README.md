@@ -22,9 +22,10 @@ which is inspired by [ranx](https://github.com/AmenRa/ranx).
 
 ## Documentation
 
-https://docs.rs/ireval/
+See https://docs.rs/ireval/.
 
-Or, you can build the documentation locally by running the following command:
+Or, you can build and open the documentation locally
+by running the following command:
 
 ```sh
 RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --open
