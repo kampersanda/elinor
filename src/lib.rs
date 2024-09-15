@@ -1,6 +1,6 @@
-//! # Ireval: Evaluation Measures in Information Retrieval
+//! # Information Retrieval Evaluation Library
 //!
-//! Ireval is a Rust library for evaluating information retrieval systems,
+//! This is a Rust library for evaluating information retrieval systems,
 //! which is inspired by [ranx](https://github.com/AmenRa/ranx).
 //!
 //! ## Features
@@ -11,8 +11,6 @@
 //! * **Flexible**:
 //!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
-//! * **Fast**:
-//!     The library is implemented in Rust, achieving high performance.
 //!
 //! ## Glossary from TREC
 //!
