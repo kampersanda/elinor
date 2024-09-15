@@ -70,6 +70,7 @@ if __name__ == "__main__":
             ("set_P", "precision"),
             ("set_recall", "recall"),
             ("set_F", "f1"),
+            ("Rprec", "r_precision"),
             ("map", "ap"),
             ("recip_rank", "rr"),
             ("ndcg", "ndcg"),
