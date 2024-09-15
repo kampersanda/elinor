@@ -31,7 +31,7 @@ by running the following command:
 RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --open
 ```
 
-## Examples
+## Getting Started
 
 A simple routine to prepare Qrels and Run data
 and evaluate them using Precision@3, MAP, MRR, and nDCG@3:

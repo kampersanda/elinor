@@ -17,7 +17,7 @@
 //! * **Qrels** - Collection of relevance judgments for a set of queries and documents.
 //! * **Run** - Collection of predicted scores for a set of queries and documents.
 //!
-//! ## Examples
+//! ## Getting Started
 //!
 //! A simple routine to prepare Qrels and Run data
 //! and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
