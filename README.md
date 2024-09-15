@@ -18,7 +18,7 @@ which is inspired by [ranx](https://github.com/AmenRa/ranx).
     by providing TREC-like data structures, such as Qrels and Run.
 * **Flexible**:
     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
-    The supported metrics are available in `Metric`.
+    The supported metrics are available in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
 
 ## Documentation
 
