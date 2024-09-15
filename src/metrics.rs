@@ -1,13 +1,13 @@
 //! Metrics for evaluating information retrieval systems.
 pub(crate) mod average_precision;
+pub(crate) mod bpref;
 pub(crate) mod f1;
 pub(crate) mod hits;
 pub(crate) mod ndcg;
 pub(crate) mod precision;
+pub(crate) mod r_precision;
 pub(crate) mod recall;
 pub(crate) mod reciprocal_rank;
-pub(crate) mod r_precision;
-
 
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -211,6 +211,9 @@ pub enum Metric {
         /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
+
+    /// Bpref
+    Bpref,
 }
 
 impl Display for Metric {
@@ -252,6 +255,9 @@ impl Display for Metric {
             Self::NDCGBurges { k } => {
                 write!(f, "{}", format_metric("ndcg_burges", *k))
             }
+            Self::Bpref => {
+                write!(f, "bpref")
+            }
         }
     }
 }
@@ -292,6 +298,7 @@ impl FromStr for Metric {
             "ndcg" => Ok(Self::NDCG { k }),
             "dcg_burges" => Ok(Self::DCGBurges { k }),
             "ndcg_burges" => Ok(Self::NDCGBurges { k }),
+            "bpref" => Ok(Self::Bpref),
             _ => Err(ElinorError::InvalidFormat(s.to_string())),
         }
     }
@@ -340,6 +347,7 @@ where
                 let golds = qrels.get_sorted(query_id).unwrap();
                 ndcg::compute_ndcg(rels, golds, preds, k, ndcg::DcgWeighting::Burges)
             }
+            Metric::Bpref => bpref::compute_bpref(rels, preds, RELEVANT_LEVEL),
         };
         results.insert(query_id.clone(), score);
     }
@@ -444,6 +452,8 @@ mod tests {
     #[case::ndcg_k_3_burges(Metric::NDCGBurges { k: 3 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_4_burges(Metric::NDCGBurges { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_5_burges(Metric::NDCGBurges { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    // Bpref
+    #[case::bpref(Metric::Bpref, hashmap! { 'A' => (1.0 + (1.0 - 1.0 / 1.0)) / 2.0 })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<char, f64>) {
         let qrels = Qrels::from_map(hashmap! {
             'A' => hashmap! {
@@ -510,6 +520,7 @@ mod tests {
     #[case::ndcg_burges_k0("ndcg_burges@0", Metric::NDCGBurges { k: 0 })]
     #[case::ndcg_burges_k1("ndcg_burges@1", Metric::NDCGBurges { k: 1 })]
     #[case::ndcg_burges_k100("ndcg_burges@100", Metric::NDCGBurges { k: 100 })]
+    #[case::bpref("bpref", Metric::Bpref)]
     fn test_metric_from_str(#[case] input: &str, #[case] expected: Metric) {
         let metric = Metric::from_str(input).unwrap();
         assert_eq!(metric, expected);
