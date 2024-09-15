@@ -22,7 +22,7 @@ which is inspired by [ranx](https://github.com/AmenRa/ranx).
 
 ## Documentation
 
-https://docs.rs/sif-embedding/
+https://docs.rs/ireval/
 
 Or, you can build the documentation locally by running the following command:
 
