@@ -1,11 +1,11 @@
 # Information Retrieval Evaluation Library in Rust
 
 <p align="left">
-    <a href="https://github.com/kampersanda/ireval/actions/workflows/rust.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/kampersanda/ireval/rust.yml?branch=main&style=flat-square" alt="actions status" /></a>
+    <a href="https://github.com/kampersanda/elinor/actions/workflows/rust.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/kampersanda/elinor/rust.yml?branch=main&style=flat-square" alt="actions status" /></a>
     &nbsp;
-    <a href="https://crates.io/crates/ireval"><img src="https://img.shields.io/crates/v/ireval.svg?style=flat-square" alt="Crates.io version" /></a>
+    <a href="https://crates.io/crates/elinor"><img src="https://img.shields.io/crates/v/elinor.svg?style=flat-square" alt="Crates.io version" /></a>
     &nbsp;
-    <a href="https://docs.rs/ireval"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
+    <a href="https://docs.rs/elinor"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
 </p>
 
 This is a Rust library for evaluating information retrieval systems,
@@ -22,7 +22,7 @@ which is inspired by [ranx](https://github.com/AmenRa/ranx).
 
 ## Documentation
 
-See https://docs.rs/ireval/.
+See https://docs.rs/elinor/.
 
 Or, you can build and open the documentation locally
 by running the following command:
@@ -37,7 +37,7 @@ A simple routine to prepare Qrels and Run data
 and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 
 ```rust
-use ireval::{QrelsBuilder, RunBuilder, Metric};
+use elinor::{QrelsBuilder, RunBuilder, Metric};
 
 // Construct Qrels data.
 let mut qb = QrelsBuilder::new();
@@ -68,7 +68,7 @@ let metrics = vec![
 ];
 
 // Evaluate the qrels and run data.
-let evaluated = ireval::evaluate(&qrels, &run, metrics.iter().cloned())?;
+let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
 
 // Macro-averaged scores.
 for metric in &metrics {
@@ -81,7 +81,7 @@ for metric in &metrics {
 // => ndcg@3: 0.4751
 ```
 
-Other examples are available in the [`examples`](https://github.com/kampersanda/ireval/tree/main/examples) directory.
+Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
 
 ## Licensing
 

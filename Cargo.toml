@@ -1,5 +1,5 @@
 [package]
-name = "ireval"
+name = "elinor"
 version = "0.1.0"
 edition = "2021"
 
@@ -17,7 +17,7 @@ maplit = "1.0.2"
 rstest = "0.22.0"
 
 [workspace]
-members = ["ireval-evaluate"]
+members = ["elinor-evaluate"]
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--html-in-header", "katex.html"]

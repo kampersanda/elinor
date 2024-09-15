@@ -1,7 +1,7 @@
-//! Error handling for Ireval.
+//! Error handling for Elinor.
 use thiserror::Error;
 
-/// Error types for Ireval.
+/// Error types for Elinor.
 #[derive(Error, Debug, PartialEq, Eq)]
 pub enum EmirError {
     /// Error when an entry is duplicated.

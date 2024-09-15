@@ -24,7 +24,7 @@
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use ireval::{QrelsBuilder, RunBuilder, Metric};
+//! use elinor::{QrelsBuilder, RunBuilder, Metric};
 //!
 //! // Construct Qrels data.
 //! let mut qb = QrelsBuilder::new();
@@ -55,7 +55,7 @@
 //! ];
 //!
 //! // Evaluate the qrels and run data.
-//! let evaluated = ireval::evaluate(&qrels, &run, metrics.iter().cloned())?;
+//! let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
 //!
 //! // Macro-averaged scores.
 //! for metric in &metrics {
@@ -70,7 +70,7 @@
 //! # }
 //! ```
 //!
-//! Other examples are available in the [`examples`](https://github.com/kampersanda/ireval/tree/main/examples) directory.
+//! Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
 #![deny(missing_docs)]
 
 pub mod errors;

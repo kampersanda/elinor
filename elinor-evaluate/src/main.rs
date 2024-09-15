@@ -5,8 +5,8 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use clap::Parser;
-use ireval::trec;
-use ireval::Metric;
+use elinor::trec;
+use elinor::Metric;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let run = trec::parse_run_from_trec(load_lines(&args.run_file)?.into_iter())?;
 
     let metrics = all_metrics(&args.ks);
-    let evaluated = ireval::evaluate(&qrels, &run, metrics.iter().cloned())?;
+    let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
 
     for metric in &metrics {
         let score = evaluated.mean_scores[metric];

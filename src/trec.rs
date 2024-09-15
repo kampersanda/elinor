@@ -18,7 +18,7 @@ use crate::RunBuilder;
 ///
 /// ```rust
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// use ireval::trec::parse_qrels_from_trec;
+/// use elinor::trec::parse_qrels_from_trec;
 ///
 /// let data = "
 /// q_1 0 d_1 1
@@ -69,7 +69,7 @@ where
 ///
 /// ```rust
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// use ireval::trec::parse_run_from_trec;
+/// use elinor::trec::parse_run_from_trec;
 ///
 /// let data = "
 /// q_1 0 d_1 1 0.5 SAMPLE

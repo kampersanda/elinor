@@ -1,8 +1,8 @@
 """
-Script to check the correctness of ireval by comparing its output with trec_eval.
+Script to check the correctness of elinor by comparing its output with trec_eval.
 
 Usage:
-    $ python3 ./scripts/compare_with_trec_eval.py ./target/release/ireval-evaluate
+    $ python3 ./scripts/compare_with_trec_eval.py ./target/release/elinor-evaluate
 """
 
 import argparse
@@ -36,10 +36,10 @@ def run_trec_eval() -> dict[str, str]:
     return parsed
 
 
-def run_ireval(ireval_exe: str) -> dict[str, str]:
+def run_elinor(elinor_exe: str) -> dict[str, str]:
     ks = [0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000]
     command = (
-        f"{ireval_exe} -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
+        f"{elinor_exe} -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
         + "".join([f" -k {k}" for k in ks])
     )
     result = subprocess.run(command, capture_output=True, shell=True)
@@ -54,12 +54,12 @@ def run_ireval(ireval_exe: str) -> dict[str, str]:
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("ireval_exe")
+    p.add_argument("elinor_exe")
     args = p.parse_args()
 
     download_trec_eval()
     trec_results = run_trec_eval()
-    ireval_results = run_ireval(args.ireval_exe)
+    elinor_results = run_elinor(args.elinor_exe)
 
     ks = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
 
@@ -82,12 +82,12 @@ if __name__ == "__main__":
 
     failed_rows = []
 
-    print("trec_metric\tireval_metric\ttrec_score\tireval_score\tmatch")
-    for trec_metric, ireval_metric in metric_pairs:
+    print("trec_metric\telinor_metric\ttrec_score\telinor_score\tmatch")
+    for trec_metric, elinor_metric in metric_pairs:
         trec_score = trec_results[trec_metric]
-        ireval_score = ireval_results[ireval_metric]
-        match = trec_score == ireval_score
-        row = f"{trec_metric}\t{ireval_metric}\t{trec_score}\t{ireval_score}\t{match}"
+        elinor_score = elinor_results[elinor_metric]
+        match = trec_score == elinor_score
+        row = f"{trec_metric}\t{elinor_metric}\t{trec_score}\t{elinor_score}\t{match}"
         if not match:
             failed_rows.append(row)
         print(row)
