@@ -8,6 +8,7 @@ pub(crate) mod recall;
 pub(crate) mod reciprocal_rank;
 
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::str::FromStr;
 
 use regex::Regex;
@@ -24,6 +25,48 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// # Arguments
 ///
 /// * `k` - Number of top documents to consider. if `k` is set to 0, all documents are considered.
+///
+/// # Conversion from/into string
+///
+/// The [`FromStr`] trait is implemented to allow
+/// instantiating a [`Metric`] from a string, as follows:
+///
+/// ```rust
+/// use emir::Metric;
+///
+/// assert_eq!("hits".parse::<Metric>(), Ok(Metric::Hits { k: 0 }));
+/// assert_eq!("hits@3".parse::<Metric>(), Ok(Metric::Hits { k: 3 }));
+/// ```
+///
+/// The [`Display`] trait is also implemented to allow
+/// formatting a [`Metric`] into a string, as follows:
+///
+/// ```rust
+/// use emir::Metric;
+///
+/// assert_eq!(format!("{}", Metric::Hits { k: 0 }), "hits");
+/// assert_eq!(format!("{}", Metric::Hits { k: 3 }), "hits@3");
+/// ```
+///
+/// ## Conversion table
+///
+/// | Metric | String |
+/// | ------ | ------ |
+/// | [`Metric::Hits`] | `hits` |
+/// | [`Metric::Success`] | `success` |
+/// | [`Metric::Precision`] | `precision` |
+/// | [`Metric::Recall`] | `recall` |
+/// | [`Metric::F1`] | `f1` |
+/// | [`Metric::AP`] | `ap` |
+/// | [`Metric::RR`] | `rr` |
+/// | [`Metric::DCG`] | `dcg` |
+/// | [`Metric::NDCG`] | `ndcg` |
+/// | [`Metric::DCGBurges`] | `dcg_burges` |
+/// | [`Metric::NDCGBurges`] | `ndcg_burges` |
+///
+/// ## Parameters
+///
+/// The `@k` suffix is used to specify the value of `k`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Metric {
     /// Number of relevant documents retrieved:
@@ -160,7 +203,7 @@ pub enum Metric {
     },
 }
 
-impl std::fmt::Display for Metric {
+impl Display for Metric {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Self::Hits { k } => {
