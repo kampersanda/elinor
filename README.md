@@ -13,12 +13,12 @@ which is inspired by [ranx](https://github.com/AmenRa/ranx).
 
 ## Features
 
-* **IRer-friendly**:
-    The library is designed to be easy to use for developers in information retrieval
-    by providing TREC-like data structures, such as Qrels and Run.
-* **Flexible**:
-    The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
-    The supported metrics are available in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
+- **IRer-friendly**:
+  The library is designed to be easy to use for developers in information retrieval
+  by providing TREC-like data structures, such as Qrels and Run.
+- **Flexible**:
+  The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
+  The supported metrics are available in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
 
 ## Documentation
 
@@ -33,13 +33,13 @@ RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --open
 
 ## Getting Started
 
-A simple routine to prepare Qrels and Run data
+A simple routine to prepare Qrels and Run data structures
 and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 
 ```rust
 use elinor::{QrelsBuilder, RunBuilder, Metric};
 
-// Construct Qrels data.
+// Construct Qrels data structure.
 let mut qb = QrelsBuilder::new();
 qb.add_score("q_1", "d_1", 1)?;
 qb.add_score("q_1", "d_2", 0)?;
@@ -48,7 +48,7 @@ qb.add_score("q_2", "d_2", 2)?;
 qb.add_score("q_2", "d_4", 1)?;
 let qrels = qb.build();
 
-// Construct Run data.
+// Construct Run data structure.
 let mut rb = RunBuilder::new();
 rb.add_score("q_1", "d_1", 0.5.into())?;
 rb.add_score("q_1", "d_2", 0.4.into())?;
@@ -87,9 +87,9 @@ Other examples are available in the [`examples`](https://github.com/kampersanda/
 
 Licensed under either of
 
- * Apache License, Version 2.0
-   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license
-   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0
+  ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license
+  ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.

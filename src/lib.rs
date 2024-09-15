@@ -12,7 +12,7 @@
 //!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
 //!
-//! ## Glossary from TREC
+//! ## Glossary
 //!
 //! * **Qrels** - Collection of relevance judgments for a set of queries and documents.
 //! * **Run** - Collection of predicted scores for a set of queries and documents.
@@ -26,7 +26,7 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use elinor::{QrelsBuilder, RunBuilder, Metric};
 //!
-//! // Construct Qrels data.
+//! // Construct Qrels data structure.
 //! let mut qb = QrelsBuilder::new();
 //! qb.add_score("q_1", "d_1", 1)?;
 //! qb.add_score("q_1", "d_2", 0)?;
@@ -35,7 +35,7 @@
 //! qb.add_score("q_2", "d_4", 1)?;
 //! let qrels = qb.build();
 //!
-//! // Construct Run data.
+//! // Construct Run data structure.
 //! let mut rb = RunBuilder::new();
 //! rb.add_score("q_1", "d_1", 0.5.into())?;
 //! rb.add_score("q_1", "d_2", 0.4.into())?;

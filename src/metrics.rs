@@ -46,10 +46,10 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 ///
 /// * `k` - Number of top documents to consider. if `k` is set to 0, all documents are considered.
 ///
-/// # Conversion from/into string
+/// # Conversion from/into string representation
 ///
-/// The [`FromStr`] trait is implemented to allow
-/// instantiating a [`Metric`] from a string, as follows:
+/// The [`FromStr`] trait is implemented to allow instantiating
+/// a [`Metric`] from its string representation, as follows:
 ///
 /// ```rust
 /// use elinor::Metric;
@@ -58,8 +58,10 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// assert_eq!("hits@3".parse::<Metric>(), Ok(Metric::Hits { k: 3 }));
 /// ```
 ///
-/// The [`Display`] trait is also implemented to allow
-/// formatting a [`Metric`] into a string, as follows:
+/// The `@k` suffix can be used to specify the value of `k`.
+///
+/// The [`Display`] trait is also implemented to allow formatting
+/// a [`Metric`] into its string representation, as follows:
 ///
 /// ```rust
 /// use elinor::Metric;
@@ -67,13 +69,6 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// assert_eq!(format!("{}", Metric::Hits { k: 0 }), "hits");
 /// assert_eq!(format!("{}", Metric::Hits { k: 3 }), "hits@3");
 /// ```
-///
-/// ## Conversion table
-///
-///
-/// ## Parameters
-///
-/// The `@k` suffix is used to specify the value of `k`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Metric {
     /// Number of relevant documents retrieved:
