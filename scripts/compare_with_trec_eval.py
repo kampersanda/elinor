@@ -15,6 +15,7 @@ def download_trec_eval():
     if os.path.exists("trec_eval-9.0.8"):
         print("trec_eval-9.0.8 already exists", file=sys.stderr)
         return
+    subprocess.run("rm -f v9.0.8.tar.gz", shell=True)
     subprocess.run(
         "wget https://github.com/usnistgov/trec_eval/archive/refs/tags/v9.0.8.tar.gz",
         shell=True,
@@ -35,10 +36,10 @@ def run_trec_eval() -> dict[str, str]:
     return parsed
 
 
-def run_emir_eval(emir_exe: str) -> dict[str, str]:
+def run_ireval(ireval_exe: str) -> dict[str, str]:
     ks = [0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000]
     command = (
-        f"{emir_exe} -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
+        f"{ireval_exe} -q trec_eval-9.0.8/test/qrels.test -r trec_eval-9.0.8/test/results.test"
         + "".join([f" -k {k}" for k in ks])
     )
     result = subprocess.run(command, capture_output=True, shell=True)
@@ -53,12 +54,12 @@ def run_emir_eval(emir_exe: str) -> dict[str, str]:
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("emir_exe")
+    p.add_argument("ireval_exe")
     args = p.parse_args()
 
     download_trec_eval()
     trec_results = run_trec_eval()
-    emir_results = run_emir_eval(args.emir_exe)
+    ireval_results = run_ireval(args.ireval_exe)
 
     ks = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
 
@@ -79,9 +80,9 @@ if __name__ == "__main__":
     metric_pairs.extend([(f"map_cut_{k}", f"ap@{k}") for k in ks])
     metric_pairs.extend([(f"ndcg_cut_{k}", f"ndcg@{k}") for k in ks])
 
-    print("trec_metric\temir_metric\ttrec_score\temir_score\tmatch")
-    for trec_metric, emir_metric in metric_pairs:
+    print("trec_metric\tireval_metric\ttrec_score\tireval_score\tmatch")
+    for trec_metric, ireval_metric in metric_pairs:
         trec_score = trec_results[trec_metric]
-        emir_score = emir_results[emir_metric]
-        match = trec_score == emir_score
-        print(f"{trec_metric}\t{emir_metric}\t{trec_score}\t{emir_score}\t{match}")
+        ireval_score = ireval_results[ireval_metric]
+        match = trec_score == ireval_score
+        print(f"{trec_metric}\t{ireval_metric}\t{trec_score}\t{ireval_score}\t{match}")
