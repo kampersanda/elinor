@@ -69,6 +69,8 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! Other examples are available in the [`examples`](https://github.com/kampersanda/ireval/tree/main/examples) directory.
 #![deny(missing_docs)]
 
 pub mod errors;
