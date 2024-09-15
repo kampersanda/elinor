@@ -69,6 +69,7 @@ pub use metrics::Metric;
 pub use relevance::Relevance;
 
 /// Data type to store a relevance score.
+/// In binary relevance, 0 means non-relevant and the others mean relevant.
 pub type GoldScore = u32;
 
 /// Data type to store a predicted score.
