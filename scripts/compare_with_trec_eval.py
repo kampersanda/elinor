@@ -80,9 +80,16 @@ if __name__ == "__main__":
     metric_pairs.extend([(f"map_cut_{k}", f"ap@{k}") for k in ks])
     metric_pairs.extend([(f"ndcg_cut_{k}", f"ndcg@{k}") for k in ks])
 
+    is_failed = False
+
     print("trec_metric\tireval_metric\ttrec_score\tireval_score\tmatch")
     for trec_metric, ireval_metric in metric_pairs:
         trec_score = trec_results[trec_metric]
         ireval_score = ireval_results[ireval_metric]
         match = trec_score == ireval_score
         print(f"{trec_metric}\t{ireval_metric}\t{trec_score}\t{ireval_score}\t{match}")
+        if not match:
+            is_failed = True
+
+    if is_failed:
+        sys.exit(1)
