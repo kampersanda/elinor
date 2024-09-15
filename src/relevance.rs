@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
 
-use crate::errors::EmirError;
+use crate::errors::ElinorError;
 
 /// Data to store a relevance score for a document.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -139,14 +139,14 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
     ///
     /// # Errors
     ///
-    /// * [`EmirError::DuplicateEntry`] if the query-document pair already exists.
-    pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), EmirError>
+    /// * [`ElinorError::DuplicateEntry`] if the query-document pair already exists.
+    pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), ElinorError>
     where
         K: Eq + Hash + Clone + Display,
     {
         let rels = self.map.entry(query_id.clone()).or_default();
         if rels.contains_key(&doc_id) {
-            return Err(EmirError::DuplicateEntry(format!(
+            return Err(ElinorError::DuplicateEntry(format!(
                 "Query: {query_id}, Doc: {doc_id}"
             )));
         }
@@ -281,7 +281,7 @@ mod tests {
         b.add_score('a', 'x', 1).unwrap();
         assert_eq!(
             b.add_score('a', 'x', 2),
-            Err(EmirError::DuplicateEntry("Query: a, Doc: x".to_string()))
+            Err(ElinorError::DuplicateEntry("Query: a, Doc: x".to_string()))
         );
     }
 }

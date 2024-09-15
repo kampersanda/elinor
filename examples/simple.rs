@@ -1,7 +1,7 @@
 use anyhow::Result;
-use ireval::Metric;
-use ireval::QrelsBuilder;
-use ireval::RunBuilder;
+use elinor::Metric;
+use elinor::QrelsBuilder;
+use elinor::RunBuilder;
 
 fn main() -> Result<()> {
     let mut qb = QrelsBuilder::new();
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
         "mrr".parse()?,
         "ndcg@3".parse()?,
     ];
-    let evaluated = ireval::evaluate(&qrels, &run, metrics.iter().cloned())?;
+    let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
 
     println!("=== Mean scores ===");
     for metric in &metrics {

@@ -13,7 +13,7 @@ use std::str::FromStr;
 
 use regex::Regex;
 
-use crate::errors::EmirError;
+use crate::errors::ElinorError;
 use crate::GoldScore;
 use crate::Qrels;
 use crate::Run;
@@ -32,7 +32,7 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// instantiating a [`Metric`] from a string, as follows:
 ///
 /// ```rust
-/// use ireval::Metric;
+/// use elinor::Metric;
 ///
 /// assert_eq!("hits".parse::<Metric>(), Ok(Metric::Hits { k: 0 }));
 /// assert_eq!("hits@3".parse::<Metric>(), Ok(Metric::Hits { k: 3 }));
@@ -42,7 +42,7 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// formatting a [`Metric`] into a string, as follows:
 ///
 /// ```rust
-/// use ireval::Metric;
+/// use elinor::Metric;
 ///
 /// assert_eq!(format!("{}", Metric::Hits { k: 0 }), "hits");
 /// assert_eq!(format!("{}", Metric::Hits { k: 3 }), "hits@3");
@@ -252,19 +252,19 @@ fn format_metric(name: &str, k: usize) -> String {
 }
 
 impl FromStr for Metric {
-    type Err = EmirError;
+    type Err = ElinorError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let re = Regex::new(r"^(?<metric>[a-z1-9_]+)(@(?<k>\d+))?$").unwrap();
         let caps = re
             .captures(s)
-            .ok_or_else(|| EmirError::InvalidFormat(s.to_string()))?;
+            .ok_or_else(|| ElinorError::InvalidFormat(s.to_string()))?;
         let name = caps.name("metric").unwrap().as_str();
         let k = caps
             .name("k")
             .map(|m| m.as_str().parse::<usize>())
             .transpose()
-            .map_err(|_| EmirError::InvalidFormat(s.to_string()))?
+            .map_err(|_| ElinorError::InvalidFormat(s.to_string()))?
             .unwrap_or(0);
         match name {
             "hits" => Ok(Self::Hits { k }),
@@ -278,7 +278,7 @@ impl FromStr for Metric {
             "ndcg" => Ok(Self::NDCG { k }),
             "dcg_burges" => Ok(Self::DCGBurges { k }),
             "ndcg_burges" => Ok(Self::NDCGBurges { k }),
-            _ => Err(EmirError::InvalidFormat(s.to_string())),
+            _ => Err(ElinorError::InvalidFormat(s.to_string())),
         }
     }
 }
@@ -288,13 +288,13 @@ pub fn compute_metric<K>(
     qrels: &Qrels<K>,
     run: &Run<K>,
     metric: Metric,
-) -> Result<HashMap<K, f64>, EmirError>
+) -> Result<HashMap<K, f64>, ElinorError>
 where
     K: Clone + Eq + std::hash::Hash + std::fmt::Display,
 {
     for query_id in run.query_ids() {
         if qrels.get_map(query_id).is_none() {
-            return Err(EmirError::MissingEntry(format!("Query ID: {query_id}")));
+            return Err(ElinorError::MissingEntry(format!("Query ID: {query_id}")));
         }
     }
     let mut results = HashMap::new();

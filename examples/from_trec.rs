@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ireval::Metric;
+use elinor::Metric;
 
 fn main() -> Result<()> {
     // <QueryID> <Dummy> <DocID> <Relevance>
@@ -23,8 +23,8 @@ q_2 0 d_4 3 0.1 SAMPLE
     "
     .trim();
 
-    let qrels = ireval::trec::parse_qrels_from_trec(qrels_data.lines())?;
-    let run = ireval::trec::parse_run_from_trec(run_data.lines())?;
+    let qrels = elinor::trec::parse_qrels_from_trec(qrels_data.lines())?;
+    let run = elinor::trec::parse_run_from_trec(run_data.lines())?;
 
     let metrics = vec![
         Metric::Hits { k: 3 },
@@ -37,7 +37,7 @@ q_2 0 d_4 3 0.1 SAMPLE
         Metric::NDCG { k: 3 },
         Metric::NDCGBurges { k: 3 },
     ];
-    let evaluated = ireval::evaluate(&qrels, &run, metrics.iter().cloned())?;
+    let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
 
     println!("=== Mean scores ===");
     for metric in &metrics {

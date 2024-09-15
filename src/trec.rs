@@ -1,5 +1,5 @@
 //! TREC format parser for Qrels and Run data.
-use crate::errors::EmirError;
+use crate::errors::ElinorError;
 use crate::GoldScore;
 use crate::PredScore;
 use crate::Qrels;
@@ -18,7 +18,7 @@ use crate::RunBuilder;
 ///
 /// ```rust
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// use ireval::trec::parse_qrels_from_trec;
+/// use elinor::trec::parse_qrels_from_trec;
 ///
 /// let data = "
 /// q_1 0 d_1 1
@@ -36,7 +36,7 @@ use crate::RunBuilder;
 /// # Ok(())
 /// # }
 /// ```
-pub fn parse_qrels_from_trec<I, S>(lines: I) -> Result<Qrels<String>, EmirError>
+pub fn parse_qrels_from_trec<I, S>(lines: I) -> Result<Qrels<String>, ElinorError>
 where
     I: Iterator<Item = S>,
     S: AsRef<str>,
@@ -46,13 +46,13 @@ where
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
         if rows.len() != 4 {
-            return Err(EmirError::InvalidFormat(line.to_string()));
+            return Err(ElinorError::InvalidFormat(line.to_string()));
         }
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
         let score = rows[3]
             .parse::<GoldScore>()
-            .map_err(|_| EmirError::InvalidFormat(format!("Invalid score: {}", rows[3])))?;
+            .map_err(|_| ElinorError::InvalidFormat(format!("Invalid score: {}", rows[3])))?;
         b.add_score(query_id, doc_id, score)?;
     }
     Ok(b.build())
@@ -69,7 +69,7 @@ where
 ///
 /// ```rust
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// use ireval::trec::parse_run_from_trec;
+/// use elinor::trec::parse_run_from_trec;
 ///
 /// let data = "
 /// q_1 0 d_1 1 0.5 SAMPLE
@@ -88,7 +88,7 @@ where
 /// # Ok(())
 /// # }
 /// ```
-pub fn parse_run_from_trec<I, S>(lines: I) -> Result<Run<String>, EmirError>
+pub fn parse_run_from_trec<I, S>(lines: I) -> Result<Run<String>, ElinorError>
 where
     I: Iterator<Item = S>,
     S: AsRef<str>,
@@ -99,20 +99,20 @@ where
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
         if rows.len() != 6 {
-            return Err(EmirError::InvalidFormat(line.to_string()));
+            return Err(ElinorError::InvalidFormat(line.to_string()));
         }
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
         let score = rows[4]
             .parse::<PredScore>()
-            .map_err(|_| EmirError::InvalidFormat(format!("Invalid score: {}", rows[4])))?;
+            .map_err(|_| ElinorError::InvalidFormat(format!("Invalid score: {}", rows[4])))?;
         b.add_score(query_id, doc_id, score)?;
         if name.is_none() {
             name = Some(rows[5].to_string());
         }
     }
     name.map_or_else(
-        || Err(EmirError::MissingEntry("No line is found".to_string())),
+        || Err(ElinorError::MissingEntry("No line is found".to_string())),
         |name| Ok(b.build().with_name(name.as_str())),
     )
 }

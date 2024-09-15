@@ -64,7 +64,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.12
-      - name: Build ireval-evaluate
-        run: cargo build --release -p ireval-evaluate
+      - name: Build elinor-evaluate
+        run: cargo build --release -p elinor-evaluate
       - name: Run correctness test
-        run: python scripts/compare_with_trec_eval.py target/release/ireval-evaluate
+        run: python scripts/compare_with_trec_eval.py target/release/elinor-evaluate

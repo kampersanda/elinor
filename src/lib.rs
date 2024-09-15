@@ -1,6 +1,6 @@
-//! # Information Retrieval Evaluation Library
+//! # Elinor: Evaluation Library in Information Retrieval
 //!
-//! This is a Rust library for evaluating information retrieval systems,
+//! Elinor is a Rust library for evaluating information retrieval systems,
 //! which is inspired by [ranx](https://github.com/AmenRa/ranx).
 //!
 //! ## Features
@@ -24,7 +24,7 @@
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use ireval::{QrelsBuilder, RunBuilder, Metric};
+//! use elinor::{QrelsBuilder, RunBuilder, Metric};
 //!
 //! // Construct Qrels data.
 //! let mut qb = QrelsBuilder::new();
@@ -55,7 +55,7 @@
 //! ];
 //!
 //! // Evaluate the qrels and run data.
-//! let evaluated = ireval::evaluate(&qrels, &run, metrics.iter().cloned())?;
+//! let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
 //!
 //! // Macro-averaged scores.
 //! for metric in &metrics {
@@ -70,7 +70,7 @@
 //! # }
 //! ```
 //!
-//! Other examples are available in the [`examples`](https://github.com/kampersanda/ireval/tree/main/examples) directory.
+//! Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
 #![deny(missing_docs)]
 
 pub mod errors;
@@ -118,7 +118,7 @@ pub fn evaluate<K, M>(
     qrels: &Qrels<K>,
     run: &Run<K>,
     metrics: M,
-) -> Result<Evaluated<K>, errors::EmirError>
+) -> Result<Evaluated<K>, errors::ElinorError>
 where
     K: Clone + Eq + std::hash::Hash + std::fmt::Display,
     M: IntoIterator<Item = Metric>,
