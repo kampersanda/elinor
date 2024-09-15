@@ -44,7 +44,8 @@ jobs:
         continue-on-error: ${{ matrix.rust != 'stable' }}
         run: cargo clippy --all -- -D warnings -W clippy::nursery
       - name: Run cargo test
-        continue-on-error: ${{ matrix.rust == 'nightly' }}
+        # MSRV should be ignored for dev-dependencies.
+        continue-on-error: ${{ matrix.rust != 'stable' }}
         run: cargo test --release
       - name: Run cargo doc
         continue-on-error: ${{ matrix.rust == 'nightly' }}
