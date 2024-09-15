@@ -1,6 +1,7 @@
 //! Relevance store.
 use std::borrow::Borrow;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::hash::Hash;
 
 use crate::errors::EmirError;
@@ -38,36 +39,13 @@ pub struct RelevanceStore<K, T> {
 
 impl<K, T> RelevanceStore<K, T>
 where
-    K: Eq + PartialEq + Hash + Clone + std::fmt::Display,
-    T: Eq + PartialEq + Ord + PartialOrd + Clone,
+    K: Eq + Hash + Clone + Display,
+    T: Ord + Clone,
 {
     /// Creates a relevance store from a map of query ids to relevance maps.
     pub fn from_map(map: HashMap<K, HashMap<K, T>>) -> Self {
         let b = RelevanceStoreBuilder { map };
         b.build()
-    }
-
-    /// Sets the name of the relevance store.
-    pub fn with_name(self, name: &str) -> Self {
-        Self {
-            name: Some(name.to_string()),
-            ..self
-        }
-    }
-
-    /// Returns the name of the relevance store.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Returns the number of query ids in the store.
-    pub fn n_queries(&self) -> usize {
-        self.map.len()
-    }
-
-    /// Returns the number of document ids in the store.
-    pub fn n_docs(&self) -> usize {
-        self.map.values().map(|data| data.map.len()).sum()
     }
 
     /// Returns the score for a given query-document pair.
@@ -97,6 +75,31 @@ where
     {
         self.map.get(query_id).map(|data| data.sorted.as_slice())
     }
+}
+
+impl<K, T> RelevanceStore<K, T> {
+    /// Sets the name of the relevance store.
+    pub fn with_name(self, name: &str) -> Self {
+        Self {
+            name: Some(name.to_string()),
+            ..self
+        }
+    }
+
+    /// Returns the name of the relevance store.
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    /// Returns the number of query ids in the store.
+    pub fn n_queries(&self) -> usize {
+        self.map.len()
+    }
+
+    /// Returns the number of document ids in the store.
+    pub fn n_docs(&self) -> usize {
+        self.map.values().map(|data| data.map.len()).sum()
+    }
 
     /// Returns an iterator over the query ids in random order.
     pub fn query_ids(&self) -> impl Iterator<Item = &K> {
@@ -109,21 +112,13 @@ pub struct RelevanceStoreBuilder<K, T> {
     map: HashMap<K, HashMap<K, T>>,
 }
 
-impl<K, T> Default for RelevanceStoreBuilder<K, T>
-where
-    K: Eq + PartialEq + Hash + Clone + std::fmt::Display,
-    T: Ord + PartialOrd + Clone,
-{
+impl<K, T> Default for RelevanceStoreBuilder<K, T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<K, T> RelevanceStoreBuilder<K, T>
-where
-    K: Eq + PartialEq + Hash + Clone + std::fmt::Display,
-    T: Ord + PartialOrd + Clone,
-{
+impl<K, T> RelevanceStoreBuilder<K, T> {
     /// Creates a new builder.
     pub fn new() -> Self {
         Self {
@@ -142,7 +137,10 @@ where
     /// # Errors
     ///
     /// * [`EmirError::DuplicateEntry`] if the query-document pair already exists.
-    pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), EmirError> {
+    pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), EmirError>
+    where
+        K: Eq + Hash + Clone + Display,
+    {
         let rels = self.map.entry(query_id.clone()).or_default();
         if rels.contains_key(&doc_id) {
             return Err(EmirError::DuplicateEntry(format!(
@@ -154,7 +152,11 @@ where
     }
 
     /// Builds the relevance store.
-    pub fn build(self) -> RelevanceStore<K, T> {
+    pub fn build(self) -> RelevanceStore<K, T>
+    where
+        K: Eq + Hash + Clone + Display,
+        T: Ord + Clone,
+    {
         let mut map = HashMap::new();
         for (query_id, rels) in self.map {
             let mut sorted = rels
