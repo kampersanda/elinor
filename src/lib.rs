@@ -16,6 +16,7 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use emir::{QrelsBuilder, RunBuilder, Metric};
 //!
+//! // Construct Qrels data.
 //! let mut qb = QrelsBuilder::new();
 //! qb.add_score("q_1", "d_1", 1)?;
 //! qb.add_score("q_1", "d_2", 0)?;
@@ -24,6 +25,7 @@
 //! qb.add_score("q_2", "d_4", 1)?;
 //! let qrels = qb.build();
 //!
+//! // Construct Run data.
 //! let mut rb = RunBuilder::new();
 //! rb.add_score("q_1", "d_1", 0.5.into())?;
 //! rb.add_score("q_1", "d_2", 0.4.into())?;
@@ -33,12 +35,16 @@
 //! rb.add_score("q_2", "d_3", 0.3.into())?;
 //! let run = rb.build();
 //!
+//! // The metrics to evaluate can be specified via Metric instances.
 //! let metrics = vec![
 //!     Metric::Precision { k: 3 },
 //!     Metric::AP { k: 0 }, // k=0 means all documents.
+//!     // The instances can also be specified via strings.
 //!     "rr".parse()?,
 //!     "ndcg@3".parse()?,
 //! ];
+//!
+//! // Evaluate the qrels and run data.
 //! let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 //!
 //! // Macro-averaged scores.
@@ -47,7 +53,7 @@
 //!     println!("{metric}: {score:.4}");
 //! }
 //! // => precision@3: 0.5000
-//! // => ap@3: 0.5000
+//! // => ap: 0.5000
 //! // => rr: 0.6667
 //! // => ndcg@3: 0.4751
 //! # Ok(())
