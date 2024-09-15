@@ -1,9 +1,11 @@
 //! Metrics for evaluating information retrieval systems.
 pub(crate) mod average_precision;
+pub(crate) mod bpref;
 pub(crate) mod f1;
 pub(crate) mod hits;
 pub(crate) mod ndcg;
 pub(crate) mod precision;
+pub(crate) mod r_precision;
 pub(crate) mod recall;
 pub(crate) mod reciprocal_rank;
 
@@ -22,14 +24,32 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 
 /// Metrics for evaluating information retrieval systems.
 ///
+/// # Supported metrics
+///
+/// | Metric | Repr. | Relevance | `k` |
+/// | ------ | ----- | --------- | --- |
+/// | [`Metric::Hits`] | `hits` | Binary | ✔ |
+/// | [`Metric::Success`] | `success` | Binary | ✔ |
+/// | [`Metric::Precision`] | `precision` | Binary | ✔ |
+/// | [`Metric::Recall`] | `recall` | Binary | ✔ |
+/// | [`Metric::F1`] | `f1` | Binary | ✔ |
+/// | [`Metric::RPrecision`] | `r_precision` | Binary |  |
+/// | [`Metric::AP`] | `ap` | Binary | ✔ |
+/// | [`Metric::RR`] | `rr` | Binary | ✔ |
+/// | [`Metric::Bpref`] | `bpref` | Binary | |
+/// | [`Metric::DCG`] | `dcg` | Multi | ✔ |
+/// | [`Metric::NDCG`] | `ndcg` | Multi | ✔ |
+/// | [`Metric::DCGBurges`] | `dcg_burges` | Multi | ✔ |
+/// | [`Metric::NDCGBurges`] | `ndcg_burges` | Multi | ✔ |
+///
 /// # Arguments
 ///
 /// * `k` - Number of top documents to consider. if `k` is set to 0, all documents are considered.
 ///
-/// # Conversion from/into string
+/// # Conversion from/into string representation
 ///
-/// The [`FromStr`] trait is implemented to allow
-/// instantiating a [`Metric`] from a string, as follows:
+/// The [`FromStr`] trait is implemented to allow instantiating
+/// a [`Metric`] from its string representation, as follows:
 ///
 /// ```rust
 /// use elinor::Metric;
@@ -38,8 +58,10 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// assert_eq!("hits@3".parse::<Metric>(), Ok(Metric::Hits { k: 3 }));
 /// ```
 ///
-/// The [`Display`] trait is also implemented to allow
-/// formatting a [`Metric`] into a string, as follows:
+/// The `@k` suffix can be used to specify the value of `k`.
+///
+/// The [`Display`] trait is also implemented to allow formatting
+/// a [`Metric`] into its string representation, as follows:
 ///
 /// ```rust
 /// use elinor::Metric;
@@ -47,26 +69,6 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// assert_eq!(format!("{}", Metric::Hits { k: 0 }), "hits");
 /// assert_eq!(format!("{}", Metric::Hits { k: 3 }), "hits@3");
 /// ```
-///
-/// ## Conversion table
-///
-/// | Metric | String |
-/// | ------ | ------ |
-/// | [`Metric::Hits`] | `hits` |
-/// | [`Metric::Success`] | `success` |
-/// | [`Metric::Precision`] | `precision` |
-/// | [`Metric::Recall`] | `recall` |
-/// | [`Metric::F1`] | `f1` |
-/// | [`Metric::AP`] | `ap` |
-/// | [`Metric::RR`] | `rr` |
-/// | [`Metric::DCG`] | `dcg` |
-/// | [`Metric::NDCG`] | `ndcg` |
-/// | [`Metric::DCGBurges`] | `dcg_burges` |
-/// | [`Metric::NDCGBurges`] | `ndcg_burges` |
-///
-/// ## Parameters
-///
-/// The `@k` suffix is used to specify the value of `k`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Metric {
     /// Number of relevant documents retrieved:
@@ -135,6 +137,13 @@ pub enum Metric {
         k: usize,
     },
 
+    /// R-Precision, the precision (or recall) score at the number of relevant documents:
+    ///
+    /// ```math
+    /// \text{R-Precision} = \text{Precision}@| \text{Rel} | = \text{Recall}@| \text{Rel} |
+    /// ```
+    RPrecision,
+
     /// Average of the Precision scores computed after each relevant document is retrieved:
     ///
     /// ```math
@@ -155,6 +164,21 @@ pub enum Metric {
         /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
+
+    /// Bpref, an evaluation metric for incomplete Qrels, proposed in
+    /// [Buckley and Voorhees, SIGIR 2004](https://doi.org/10.1145/1008992.1009000).
+    ///
+    /// ```math
+    /// \text{Bpref} = \frac{1}{R} \sum_{r} \left( 1 - \frac{\min(R, N_{r})}{\min(R, N)} \right)
+    /// ```
+    ///
+    /// where:
+    ///
+    /// * $`r`$ is a retrieved relevant document,
+    /// * $`R`$ is the number of relevant documents,
+    /// * $`N`$ is the number of irrelevant documents without unjudged documents, and
+    /// * $`N_{r}`$ is the number of irrelevant documents ranked above $`r`$.
+    Bpref,
 
     /// Discounted cumulative gain proposed in
     /// [Järvelin et al., TOIS 2002](https://dl.acm.org/doi/10.1145/582415.582418).
@@ -221,11 +245,17 @@ impl Display for Metric {
             Self::F1 { k } => {
                 write!(f, "{}", format_metric("f1", *k))
             }
+            Self::RPrecision => {
+                write!(f, "r_precision")
+            }
             Self::AP { k } => {
                 write!(f, "{}", format_metric("ap", *k))
             }
             Self::RR { k } => {
                 write!(f, "{}", format_metric("rr", *k))
+            }
+            Self::Bpref => {
+                write!(f, "bpref")
             }
             Self::DCG { k } => {
                 write!(f, "{}", format_metric("dcg", *k))
@@ -272,8 +302,10 @@ impl FromStr for Metric {
             "precision" => Ok(Self::Precision { k }),
             "recall" => Ok(Self::Recall { k }),
             "f1" => Ok(Self::F1 { k }),
+            "r_precision" => Ok(Self::RPrecision),
             "ap" => Ok(Self::AP { k }),
             "rr" => Ok(Self::RR { k }),
+            "bpref" => Ok(Self::Bpref),
             "dcg" => Ok(Self::DCG { k }),
             "ndcg" => Ok(Self::NDCG { k }),
             "dcg_burges" => Ok(Self::DCGBurges { k }),
@@ -307,12 +339,14 @@ where
             Metric::Precision { k } => precision::compute_precision(rels, preds, k, RELEVANT_LEVEL),
             Metric::Recall { k } => recall::compute_recall(rels, preds, k, RELEVANT_LEVEL),
             Metric::F1 { k } => f1::compute_f1(rels, preds, k, RELEVANT_LEVEL),
+            Metric::RPrecision => r_precision::compute_r_precision(rels, preds, RELEVANT_LEVEL),
             Metric::AP { k } => {
                 average_precision::compute_average_precision(rels, preds, k, RELEVANT_LEVEL)
             }
             Metric::RR { k } => {
                 reciprocal_rank::compute_reciprocal_rank(rels, preds, k, RELEVANT_LEVEL)
             }
+            Metric::Bpref => bpref::compute_bpref(rels, preds, RELEVANT_LEVEL),
             Metric::DCG { k } => ndcg::compute_dcg(rels, preds, k, ndcg::DcgWeighting::Jarvelin),
             Metric::NDCG { k } => {
                 let golds = qrels.get_sorted(query_id).unwrap();
@@ -351,54 +385,58 @@ mod tests {
 
     #[rstest]
     // Hits
-    #[case::hits_k_0_rel_lvl_1(Metric::Hits { k: 0 }, hashmap! { 'A' => 2.0 })]
-    #[case::hits_k_1_rel_lvl_1(Metric::Hits { k: 1 }, hashmap! { 'A' => 1.0 })]
-    #[case::hits_k_2_rel_lvl_1(Metric::Hits { k: 2 }, hashmap! { 'A' => 1.0 })]
-    #[case::hits_k_3_rel_lvl_1(Metric::Hits { k: 3 }, hashmap! { 'A' => 2.0 })]
-    #[case::hits_k_4_rel_lvl_1(Metric::Hits { k: 4 }, hashmap! { 'A' => 2.0 })]
-    #[case::hits_k_5_rel_lvl_1(Metric::Hits { k: 5 }, hashmap! { 'A' => 2.0 })]
+    #[case::hits_k_0(Metric::Hits { k: 0 }, hashmap! { 'A' => 2.0 })]
+    #[case::hits_k_1(Metric::Hits { k: 1 }, hashmap! { 'A' => 1.0 })]
+    #[case::hits_k_2(Metric::Hits { k: 2 }, hashmap! { 'A' => 1.0 })]
+    #[case::hits_k_3(Metric::Hits { k: 3 }, hashmap! { 'A' => 2.0 })]
+    #[case::hits_k_4(Metric::Hits { k: 4 }, hashmap! { 'A' => 2.0 })]
+    #[case::hits_k_5(Metric::Hits { k: 5 }, hashmap! { 'A' => 2.0 })]
     // Hit rate
-    #[case::hit_rate_k_0_rel_lvl_1(Metric::Success { k: 0 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_1_rel_lvl_1(Metric::Success { k: 1 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_2_rel_lvl_1(Metric::Success { k: 2 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_3_rel_lvl_1(Metric::Success { k: 3 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_4_rel_lvl_1(Metric::Success { k: 4 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_5_rel_lvl_1(Metric::Success { k: 5 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_0(Metric::Success { k: 0 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_1(Metric::Success { k: 1 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_2(Metric::Success { k: 2 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_3(Metric::Success { k: 3 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_4(Metric::Success { k: 4 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_5(Metric::Success { k: 5 }, hashmap! { 'A' => 1.0 })]
     // Precision
-    #[case::precision_k_0_rel_lvl_1(Metric::Precision { k: 0 }, hashmap! { 'A' => 2.0 / 4.0 })]
-    #[case::precision_k_1_rel_lvl_1(Metric::Precision { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::precision_k_2_rel_lvl_1(Metric::Precision { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
-    #[case::precision_k_3_rel_lvl_1(Metric::Precision { k: 3 }, hashmap! { 'A' => 2.0 / 3.0 })]
-    #[case::precision_k_4_rel_lvl_1(Metric::Precision { k: 4 }, hashmap! { 'A' => 2.0 / 4.0 })]
-    #[case::precision_k_5_rel_lvl_1(Metric::Precision { k: 5 }, hashmap! { 'A' => 2.0 / 5.0 })]
+    #[case::precision_k_0(Metric::Precision { k: 0 }, hashmap! { 'A' => 2.0 / 4.0 })]
+    #[case::precision_k_1(Metric::Precision { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::precision_k_2(Metric::Precision { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
+    #[case::precision_k_3(Metric::Precision { k: 3 }, hashmap! { 'A' => 2.0 / 3.0 })]
+    #[case::precision_k_4(Metric::Precision { k: 4 }, hashmap! { 'A' => 2.0 / 4.0 })]
+    #[case::precision_k_5(Metric::Precision { k: 5 }, hashmap! { 'A' => 2.0 / 5.0 })]
     // Recall
-    #[case::recall_k_0_rel_lvl_1(Metric::Recall { k: 0 }, hashmap! { 'A' => 2.0 / 2.0 })]
-    #[case::recall_k_1_rel_lvl_1(Metric::Recall { k: 1 }, hashmap! { 'A' => 1.0 / 2.0 })]
-    #[case::recall_k_2_rel_lvl_1(Metric::Recall { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
-    #[case::recall_k_3_rel_lvl_1(Metric::Recall { k: 3 }, hashmap! { 'A' => 2.0 / 2.0 })]
-    #[case::recall_k_4_rel_lvl_1(Metric::Recall { k: 4 }, hashmap! { 'A' => 2.0 / 2.0 })]
-    #[case::recall_k_5_rel_lvl_1(Metric::Recall { k: 5 }, hashmap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_0(Metric::Recall { k: 0 }, hashmap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_1(Metric::Recall { k: 1 }, hashmap! { 'A' => 1.0 / 2.0 })]
+    #[case::recall_k_2(Metric::Recall { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
+    #[case::recall_k_3(Metric::Recall { k: 3 }, hashmap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_4(Metric::Recall { k: 4 }, hashmap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_5(Metric::Recall { k: 5 }, hashmap! { 'A' => 2.0 / 2.0 })]
     // F1
-    #[case::f1_k_0_rel_lvl_1(Metric::F1 { k: 0 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_1_rel_lvl_1(Metric::F1 { k: 1 }, hashmap! { 'A' => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_2_rel_lvl_1(Metric::F1 { k: 2 }, hashmap! { 'A' => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_3_rel_lvl_1(Metric::F1 { k: 3 }, hashmap! { 'A' => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_4_rel_lvl_1(Metric::F1 { k: 4 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_5_rel_lvl_1(Metric::F1 { k: 5 }, hashmap! { 'A' => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_0(Metric::F1 { k: 0 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_1(Metric::F1 { k: 1 }, hashmap! { 'A' => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_2(Metric::F1 { k: 2 }, hashmap! { 'A' => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_3(Metric::F1 { k: 3 }, hashmap! { 'A' => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_4(Metric::F1 { k: 4 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_5(Metric::F1 { k: 5 }, hashmap! { 'A' => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
+    // R-Precision
+    #[case::r_precision(Metric::RPrecision, hashmap! { 'A' => 1.0 / 2.0 })]
     // Average precision
-    #[case::average_precision_k_0_rel_lvl_1(Metric::AP { k: 0 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_1_rel_lvl_1(Metric::AP { k: 1 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
-    #[case::average_precision_k_2_rel_lvl_1(Metric::AP { k: 2 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
-    #[case::average_precision_k_3_rel_lvl_1(Metric::AP { k: 3 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_4_rel_lvl_1(Metric::AP { k: 4 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_5_rel_lvl_1(Metric::AP { k: 5 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_0(Metric::AP { k: 0 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_1(Metric::AP { k: 1 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
+    #[case::average_precision_k_2(Metric::AP { k: 2 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
+    #[case::average_precision_k_3(Metric::AP { k: 3 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_4(Metric::AP { k: 4 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_5(Metric::AP { k: 5 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
     // Reciprocal rank
-    #[case::reciprocal_rank_k_0_rel_lvl_1(Metric::RR { k: 0 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_1_rel_lvl_1(Metric::RR { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_2_rel_lvl_1(Metric::RR { k: 2 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_3_rel_lvl_1(Metric::RR { k: 3 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_4_rel_lvl_1(Metric::RR { k: 4 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_5_rel_lvl_1(Metric::RR { k: 5 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_0(Metric::RR { k: 0 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_1(Metric::RR { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_2(Metric::RR { k: 2 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_3(Metric::RR { k: 3 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_4(Metric::RR { k: 4 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_5(Metric::RR { k: 5 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    // Bpref
+    #[case::bpref(Metric::Bpref, hashmap! { 'A' => (1.0 + (1.0 - 1.0 / 1.0)) / 2.0 })]
     // DCG (Jarvelin)
     #[case::dcg_k_0_jarvelin(Metric::DCG { k: 0 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
     #[case::dcg_k_1_jarvelin(Metric::DCG { k: 1 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
@@ -468,6 +506,7 @@ mod tests {
     #[case::f1_k0("f1@0", Metric::F1 { k: 0 })]
     #[case::f1_k1("f1@1", Metric::F1 { k: 1 })]
     #[case::f1_k100("f1@100", Metric::F1 { k: 100 })]
+    #[case::r_precision("r_precision", Metric::RPrecision)]
     #[case::average_precision("ap", Metric::AP { k: 0 })]
     #[case::average_precision_k0("ap@0", Metric::AP { k: 0 })]
     #[case::average_precision_k1("ap@1", Metric::AP { k: 1 })]
@@ -476,6 +515,7 @@ mod tests {
     #[case::reciprocal_rank_k0("rr@0", Metric::RR { k: 0 })]
     #[case::reciprocal_rank_k1("rr@1", Metric::RR { k: 1 })]
     #[case::reciprocal_rank_k100("rr@100", Metric::RR { k: 100 })]
+    #[case::bpref("bpref", Metric::Bpref)]
     #[case::dcg("dcg", Metric::DCG { k: 0 })]
     #[case::dcg_k0("dcg@0", Metric::DCG { k: 0 })]
     #[case::dcg_k1("dcg@1", Metric::DCG { k: 1 })]
