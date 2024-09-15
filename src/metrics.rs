@@ -66,6 +66,7 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// | [`Metric::NDCG`] | `ndcg` |
 /// | [`Metric::DCGBurges`] | `dcg_burges` |
 /// | [`Metric::NDCGBurges`] | `ndcg_burges` |
+/// | [`Metric::Bpref`] | `bpref` |
 ///
 /// ## Parameters
 ///
@@ -212,7 +213,19 @@ pub enum Metric {
         k: usize,
     },
 
-    /// Bpref
+    /// Bpref, an evaluation metric for incomplete Qrels, proposed in
+    /// [Buckley and Voorhees, SIGIR 2004](https://doi.org/10.1145/1008992.1009000).
+    ///
+    /// ```math
+    /// \text{Bpref} = \frac{1}{R} \sum_{r} \left( 1 - \frac{\min(R, N_{r})}{\min(R, N)} \right)
+    /// ```
+    ///
+    /// where:
+    ///
+    /// * $`r`$ is a retrieved relevant document,
+    /// * $`R`$ is the number of relevant documents,
+    /// * $`N`$ is the number of irrelevant documents without unjudged documents, and
+    /// * $`N_{r}`$ is the number of irrelevant documents ranked above $`r`$.
     Bpref,
 }
 
