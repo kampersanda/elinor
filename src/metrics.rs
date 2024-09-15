@@ -24,6 +24,24 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 
 /// Metrics for evaluating information retrieval systems.
 ///
+/// # Supported metrics
+///
+/// | Metric | Repr. | Relevance | `k` |
+/// | ------ | ----- | --------- | --- |
+/// | [`Metric::Hits`] | `hits` | Binary | ✔ |
+/// | [`Metric::Success`] | `success` | Binary | ✔ |
+/// | [`Metric::Precision`] | `precision` | Binary | ✔ |
+/// | [`Metric::Recall`] | `recall` | Binary | ✔ |
+/// | [`Metric::F1`] | `f1` | Binary | ✔ |
+/// | [`Metric::RPrecision`] | `r_precision` | Binary |  |
+/// | [`Metric::AP`] | `ap` | Binary | ✔ |
+/// | [`Metric::RR`] | `rr` | Binary | ✔ |
+/// | [`Metric::Bpref`] | `bpref` | Binary | |
+/// | [`Metric::DCG`] | `dcg` | Multi | ✔ |
+/// | [`Metric::NDCG`] | `ndcg` | Multi | ✔ |
+/// | [`Metric::DCGBurges`] | `dcg_burges` | Multi | ✔ |
+/// | [`Metric::NDCGBurges`] | `ndcg_burges` | Multi | ✔ |
+///
 /// # Arguments
 ///
 /// * `k` - Number of top documents to consider. if `k` is set to 0, all documents are considered.
@@ -52,21 +70,6 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 ///
 /// ## Conversion table
 ///
-/// | Metric | String |
-/// | ------ | ------ |
-/// | [`Metric::Hits`] | `hits` |
-/// | [`Metric::Success`] | `success` |
-/// | [`Metric::Precision`] | `precision` |
-/// | [`Metric::Recall`] | `recall` |
-/// | [`Metric::F1`] | `f1` |
-/// | [`Metric::RPrecision`] | `r_precision` |
-/// | [`Metric::AP`] | `ap` |
-/// | [`Metric::RR`] | `rr` |
-/// | [`Metric::DCG`] | `dcg` |
-/// | [`Metric::NDCG`] | `ndcg` |
-/// | [`Metric::DCGBurges`] | `dcg_burges` |
-/// | [`Metric::NDCGBurges`] | `ndcg_burges` |
-/// | [`Metric::Bpref`] | `bpref` |
 ///
 /// ## Parameters
 ///
@@ -167,6 +170,21 @@ pub enum Metric {
         k: usize,
     },
 
+    /// Bpref, an evaluation metric for incomplete Qrels, proposed in
+    /// [Buckley and Voorhees, SIGIR 2004](https://doi.org/10.1145/1008992.1009000).
+    ///
+    /// ```math
+    /// \text{Bpref} = \frac{1}{R} \sum_{r} \left( 1 - \frac{\min(R, N_{r})}{\min(R, N)} \right)
+    /// ```
+    ///
+    /// where:
+    ///
+    /// * $`r`$ is a retrieved relevant document,
+    /// * $`R`$ is the number of relevant documents,
+    /// * $`N`$ is the number of irrelevant documents without unjudged documents, and
+    /// * $`N_{r}`$ is the number of irrelevant documents ranked above $`r`$.
+    Bpref,
+
     /// Discounted cumulative gain proposed in
     /// [Järvelin et al., TOIS 2002](https://dl.acm.org/doi/10.1145/582415.582418).
     ///
@@ -212,21 +230,6 @@ pub enum Metric {
         /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
-
-    /// Bpref, an evaluation metric for incomplete Qrels, proposed in
-    /// [Buckley and Voorhees, SIGIR 2004](https://doi.org/10.1145/1008992.1009000).
-    ///
-    /// ```math
-    /// \text{Bpref} = \frac{1}{R} \sum_{r} \left( 1 - \frac{\min(R, N_{r})}{\min(R, N)} \right)
-    /// ```
-    ///
-    /// where:
-    ///
-    /// * $`r`$ is a retrieved relevant document,
-    /// * $`R`$ is the number of relevant documents,
-    /// * $`N`$ is the number of irrelevant documents without unjudged documents, and
-    /// * $`N_{r}`$ is the number of irrelevant documents ranked above $`r`$.
-    Bpref,
 }
 
 impl Display for Metric {
@@ -256,6 +259,9 @@ impl Display for Metric {
             Self::RR { k } => {
                 write!(f, "{}", format_metric("rr", *k))
             }
+            Self::Bpref => {
+                write!(f, "bpref")
+            }
             Self::DCG { k } => {
                 write!(f, "{}", format_metric("dcg", *k))
             }
@@ -267,9 +273,6 @@ impl Display for Metric {
             }
             Self::NDCGBurges { k } => {
                 write!(f, "{}", format_metric("ndcg_burges", *k))
-            }
-            Self::Bpref => {
-                write!(f, "bpref")
             }
         }
     }
@@ -307,11 +310,11 @@ impl FromStr for Metric {
             "r_precision" => Ok(Self::RPrecision),
             "ap" => Ok(Self::AP { k }),
             "rr" => Ok(Self::RR { k }),
+            "bpref" => Ok(Self::Bpref),
             "dcg" => Ok(Self::DCG { k }),
             "ndcg" => Ok(Self::NDCG { k }),
             "dcg_burges" => Ok(Self::DCGBurges { k }),
             "ndcg_burges" => Ok(Self::NDCGBurges { k }),
-            "bpref" => Ok(Self::Bpref),
             _ => Err(ElinorError::InvalidFormat(s.to_string())),
         }
     }
@@ -348,6 +351,7 @@ where
             Metric::RR { k } => {
                 reciprocal_rank::compute_reciprocal_rank(rels, preds, k, RELEVANT_LEVEL)
             }
+            Metric::Bpref => bpref::compute_bpref(rels, preds, RELEVANT_LEVEL),
             Metric::DCG { k } => ndcg::compute_dcg(rels, preds, k, ndcg::DcgWeighting::Jarvelin),
             Metric::NDCG { k } => {
                 let golds = qrels.get_sorted(query_id).unwrap();
@@ -360,7 +364,6 @@ where
                 let golds = qrels.get_sorted(query_id).unwrap();
                 ndcg::compute_ndcg(rels, golds, preds, k, ndcg::DcgWeighting::Burges)
             }
-            Metric::Bpref => bpref::compute_bpref(rels, preds, RELEVANT_LEVEL),
         };
         results.insert(query_id.clone(), score);
     }
@@ -437,6 +440,8 @@ mod tests {
     #[case::reciprocal_rank_k_3(Metric::RR { k: 3 }, hashmap! { 'A' => 1.0 / 1.0 })]
     #[case::reciprocal_rank_k_4(Metric::RR { k: 4 }, hashmap! { 'A' => 1.0 / 1.0 })]
     #[case::reciprocal_rank_k_5(Metric::RR { k: 5 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    // Bpref
+    #[case::bpref(Metric::Bpref, hashmap! { 'A' => (1.0 + (1.0 - 1.0 / 1.0)) / 2.0 })]
     // DCG (Jarvelin)
     #[case::dcg_k_0_jarvelin(Metric::DCG { k: 0 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
     #[case::dcg_k_1_jarvelin(Metric::DCG { k: 1 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
@@ -465,8 +470,6 @@ mod tests {
     #[case::ndcg_k_3_burges(Metric::NDCGBurges { k: 3 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_4_burges(Metric::NDCGBurges { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_5_burges(Metric::NDCGBurges { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    // Bpref
-    #[case::bpref(Metric::Bpref, hashmap! { 'A' => (1.0 + (1.0 - 1.0 / 1.0)) / 2.0 })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<char, f64>) {
         let qrels = Qrels::from_map(hashmap! {
             'A' => hashmap! {
@@ -517,6 +520,7 @@ mod tests {
     #[case::reciprocal_rank_k0("rr@0", Metric::RR { k: 0 })]
     #[case::reciprocal_rank_k1("rr@1", Metric::RR { k: 1 })]
     #[case::reciprocal_rank_k100("rr@100", Metric::RR { k: 100 })]
+    #[case::bpref("bpref", Metric::Bpref)]
     #[case::dcg("dcg", Metric::DCG { k: 0 })]
     #[case::dcg_k0("dcg@0", Metric::DCG { k: 0 })]
     #[case::dcg_k1("dcg@1", Metric::DCG { k: 1 })]
@@ -533,7 +537,6 @@ mod tests {
     #[case::ndcg_burges_k0("ndcg_burges@0", Metric::NDCGBurges { k: 0 })]
     #[case::ndcg_burges_k1("ndcg_burges@1", Metric::NDCGBurges { k: 1 })]
     #[case::ndcg_burges_k100("ndcg_burges@100", Metric::NDCGBurges { k: 100 })]
-    #[case::bpref("bpref", Metric::Bpref)]
     fn test_metric_from_str(#[case] input: &str, #[case] expected: Metric) {
         let metric = Metric::from_str(input).unwrap();
         assert_eq!(metric, expected);
