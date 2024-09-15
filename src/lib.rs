@@ -19,7 +19,7 @@
 //!
 //! ## Getting Started
 //!
-//! A simple routine to prepare Qrels and Run data
+//! A simple routine to prepare Qrels and Run data structures
 //! and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 //!
 //! ```
