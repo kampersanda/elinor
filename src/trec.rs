@@ -29,6 +29,9 @@ use crate::RunBuilder;
 /// ".trim();
 ///
 /// let qrels = parse_qrels_from_trec(data.lines())?;
+/// assert_eq!(qrels.n_queries(), 2);
+/// assert_eq!(qrels.n_docs(), 5);
+/// assert_eq!(qrels.get_score("q_1", "d_3"), Some(&2));
 /// # Ok(())
 /// # }
 /// ```

@@ -1,4 +1,5 @@
 //! Relevance store.
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::Hash;
 
@@ -70,18 +71,30 @@ where
     }
 
     /// Returns the score for a given query-document pair.
-    pub fn get_score(&self, query_id: &K, doc_id: &K) -> Option<&T> {
+    pub fn get_score<Q>(&self, query_id: &Q, doc_id: &Q) -> Option<&T>
+    where
+        K: Borrow<Q>,
+        Q: Eq + Hash + ?Sized,
+    {
         self.map.get(query_id).and_then(|data| data.map.get(doc_id))
     }
 
     /// Returns the relevance map for a given query id.
-    pub fn get_map(&self, query_id: &K) -> Option<&HashMap<K, T>> {
+    pub fn get_map<Q>(&self, query_id: &Q) -> Option<&HashMap<K, T>>
+    where
+        K: Borrow<Q>,
+        Q: Eq + Hash + ?Sized,
+    {
         self.map.get(query_id).map(|data| &data.map)
     }
 
     /// Returns the sorted list of relevance scores in descending order
     /// for a given query id.
-    pub fn get_sorted(&self, query_id: &K) -> Option<&[Relevance<K, T>]> {
+    pub fn get_sorted<Q>(&self, query_id: &Q) -> Option<&[Relevance<K, T>]>
+    where
+        K: Borrow<Q>,
+        Q: Eq + Hash + ?Sized,
+    {
         self.map.get(query_id).map(|data| data.sorted.as_slice())
     }
 
