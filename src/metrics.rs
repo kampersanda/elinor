@@ -6,6 +6,8 @@ pub(crate) mod ndcg;
 pub(crate) mod precision;
 pub(crate) mod recall;
 pub(crate) mod reciprocal_rank;
+pub(crate) mod r_precision;
+
 
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -57,6 +59,7 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// | [`Metric::Precision`] | `precision` |
 /// | [`Metric::Recall`] | `recall` |
 /// | [`Metric::F1`] | `f1` |
+/// | [`Metric::RPrecision`] | `r_precision` |
 /// | [`Metric::AP`] | `ap` |
 /// | [`Metric::RR`] | `rr` |
 /// | [`Metric::DCG`] | `dcg` |
@@ -134,6 +137,13 @@ pub enum Metric {
         /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
+
+    /// R-Precision, the precision (or recall) score at the number of relevant documents:
+    ///
+    /// ```math
+    /// \text{R-Precision} = \text{Precision}@| \text{Rel} | = \text{Recall}@| \text{Rel} |
+    /// ```
+    RPrecision,
 
     /// Average of the Precision scores computed after each relevant document is retrieved:
     ///
@@ -221,6 +231,9 @@ impl Display for Metric {
             Self::F1 { k } => {
                 write!(f, "{}", format_metric("f1", *k))
             }
+            Self::RPrecision => {
+                write!(f, "r_precision")
+            }
             Self::AP { k } => {
                 write!(f, "{}", format_metric("ap", *k))
             }
@@ -272,6 +285,7 @@ impl FromStr for Metric {
             "precision" => Ok(Self::Precision { k }),
             "recall" => Ok(Self::Recall { k }),
             "f1" => Ok(Self::F1 { k }),
+            "r_precision" => Ok(Self::RPrecision),
             "ap" => Ok(Self::AP { k }),
             "rr" => Ok(Self::RR { k }),
             "dcg" => Ok(Self::DCG { k }),
@@ -307,6 +321,7 @@ where
             Metric::Precision { k } => precision::compute_precision(rels, preds, k, RELEVANT_LEVEL),
             Metric::Recall { k } => recall::compute_recall(rels, preds, k, RELEVANT_LEVEL),
             Metric::F1 { k } => f1::compute_f1(rels, preds, k, RELEVANT_LEVEL),
+            Metric::RPrecision => r_precision::compute_r_precision(rels, preds, RELEVANT_LEVEL),
             Metric::AP { k } => {
                 average_precision::compute_average_precision(rels, preds, k, RELEVANT_LEVEL)
             }
@@ -351,54 +366,56 @@ mod tests {
 
     #[rstest]
     // Hits
-    #[case::hits_k_0_rel_lvl_1(Metric::Hits { k: 0 }, hashmap! { 'A' => 2.0 })]
-    #[case::hits_k_1_rel_lvl_1(Metric::Hits { k: 1 }, hashmap! { 'A' => 1.0 })]
-    #[case::hits_k_2_rel_lvl_1(Metric::Hits { k: 2 }, hashmap! { 'A' => 1.0 })]
-    #[case::hits_k_3_rel_lvl_1(Metric::Hits { k: 3 }, hashmap! { 'A' => 2.0 })]
-    #[case::hits_k_4_rel_lvl_1(Metric::Hits { k: 4 }, hashmap! { 'A' => 2.0 })]
-    #[case::hits_k_5_rel_lvl_1(Metric::Hits { k: 5 }, hashmap! { 'A' => 2.0 })]
+    #[case::hits_k_0(Metric::Hits { k: 0 }, hashmap! { 'A' => 2.0 })]
+    #[case::hits_k_1(Metric::Hits { k: 1 }, hashmap! { 'A' => 1.0 })]
+    #[case::hits_k_2(Metric::Hits { k: 2 }, hashmap! { 'A' => 1.0 })]
+    #[case::hits_k_3(Metric::Hits { k: 3 }, hashmap! { 'A' => 2.0 })]
+    #[case::hits_k_4(Metric::Hits { k: 4 }, hashmap! { 'A' => 2.0 })]
+    #[case::hits_k_5(Metric::Hits { k: 5 }, hashmap! { 'A' => 2.0 })]
     // Hit rate
-    #[case::hit_rate_k_0_rel_lvl_1(Metric::Success { k: 0 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_1_rel_lvl_1(Metric::Success { k: 1 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_2_rel_lvl_1(Metric::Success { k: 2 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_3_rel_lvl_1(Metric::Success { k: 3 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_4_rel_lvl_1(Metric::Success { k: 4 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_5_rel_lvl_1(Metric::Success { k: 5 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_0(Metric::Success { k: 0 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_1(Metric::Success { k: 1 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_2(Metric::Success { k: 2 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_3(Metric::Success { k: 3 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_4(Metric::Success { k: 4 }, hashmap! { 'A' => 1.0 })]
+    #[case::hit_rate_k_5(Metric::Success { k: 5 }, hashmap! { 'A' => 1.0 })]
     // Precision
-    #[case::precision_k_0_rel_lvl_1(Metric::Precision { k: 0 }, hashmap! { 'A' => 2.0 / 4.0 })]
-    #[case::precision_k_1_rel_lvl_1(Metric::Precision { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::precision_k_2_rel_lvl_1(Metric::Precision { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
-    #[case::precision_k_3_rel_lvl_1(Metric::Precision { k: 3 }, hashmap! { 'A' => 2.0 / 3.0 })]
-    #[case::precision_k_4_rel_lvl_1(Metric::Precision { k: 4 }, hashmap! { 'A' => 2.0 / 4.0 })]
-    #[case::precision_k_5_rel_lvl_1(Metric::Precision { k: 5 }, hashmap! { 'A' => 2.0 / 5.0 })]
+    #[case::precision_k_0(Metric::Precision { k: 0 }, hashmap! { 'A' => 2.0 / 4.0 })]
+    #[case::precision_k_1(Metric::Precision { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::precision_k_2(Metric::Precision { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
+    #[case::precision_k_3(Metric::Precision { k: 3 }, hashmap! { 'A' => 2.0 / 3.0 })]
+    #[case::precision_k_4(Metric::Precision { k: 4 }, hashmap! { 'A' => 2.0 / 4.0 })]
+    #[case::precision_k_5(Metric::Precision { k: 5 }, hashmap! { 'A' => 2.0 / 5.0 })]
     // Recall
-    #[case::recall_k_0_rel_lvl_1(Metric::Recall { k: 0 }, hashmap! { 'A' => 2.0 / 2.0 })]
-    #[case::recall_k_1_rel_lvl_1(Metric::Recall { k: 1 }, hashmap! { 'A' => 1.0 / 2.0 })]
-    #[case::recall_k_2_rel_lvl_1(Metric::Recall { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
-    #[case::recall_k_3_rel_lvl_1(Metric::Recall { k: 3 }, hashmap! { 'A' => 2.0 / 2.0 })]
-    #[case::recall_k_4_rel_lvl_1(Metric::Recall { k: 4 }, hashmap! { 'A' => 2.0 / 2.0 })]
-    #[case::recall_k_5_rel_lvl_1(Metric::Recall { k: 5 }, hashmap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_0(Metric::Recall { k: 0 }, hashmap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_1(Metric::Recall { k: 1 }, hashmap! { 'A' => 1.0 / 2.0 })]
+    #[case::recall_k_2(Metric::Recall { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
+    #[case::recall_k_3(Metric::Recall { k: 3 }, hashmap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_4(Metric::Recall { k: 4 }, hashmap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_5(Metric::Recall { k: 5 }, hashmap! { 'A' => 2.0 / 2.0 })]
     // F1
-    #[case::f1_k_0_rel_lvl_1(Metric::F1 { k: 0 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_1_rel_lvl_1(Metric::F1 { k: 1 }, hashmap! { 'A' => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_2_rel_lvl_1(Metric::F1 { k: 2 }, hashmap! { 'A' => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_3_rel_lvl_1(Metric::F1 { k: 3 }, hashmap! { 'A' => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_4_rel_lvl_1(Metric::F1 { k: 4 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_5_rel_lvl_1(Metric::F1 { k: 5 }, hashmap! { 'A' => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_0(Metric::F1 { k: 0 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_1(Metric::F1 { k: 1 }, hashmap! { 'A' => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_2(Metric::F1 { k: 2 }, hashmap! { 'A' => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_3(Metric::F1 { k: 3 }, hashmap! { 'A' => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_4(Metric::F1 { k: 4 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_5(Metric::F1 { k: 5 }, hashmap! { 'A' => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
+    // R-Precision
+    #[case::r_precision(Metric::RPrecision, hashmap! { 'A' => 1.0 / 2.0 })]
     // Average precision
-    #[case::average_precision_k_0_rel_lvl_1(Metric::AP { k: 0 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_1_rel_lvl_1(Metric::AP { k: 1 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
-    #[case::average_precision_k_2_rel_lvl_1(Metric::AP { k: 2 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
-    #[case::average_precision_k_3_rel_lvl_1(Metric::AP { k: 3 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_4_rel_lvl_1(Metric::AP { k: 4 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_5_rel_lvl_1(Metric::AP { k: 5 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_0(Metric::AP { k: 0 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_1(Metric::AP { k: 1 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
+    #[case::average_precision_k_2(Metric::AP { k: 2 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
+    #[case::average_precision_k_3(Metric::AP { k: 3 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_4(Metric::AP { k: 4 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_5(Metric::AP { k: 5 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
     // Reciprocal rank
-    #[case::reciprocal_rank_k_0_rel_lvl_1(Metric::RR { k: 0 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_1_rel_lvl_1(Metric::RR { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_2_rel_lvl_1(Metric::RR { k: 2 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_3_rel_lvl_1(Metric::RR { k: 3 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_4_rel_lvl_1(Metric::RR { k: 4 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_5_rel_lvl_1(Metric::RR { k: 5 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_0(Metric::RR { k: 0 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_1(Metric::RR { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_2(Metric::RR { k: 2 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_3(Metric::RR { k: 3 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_4(Metric::RR { k: 4 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_5(Metric::RR { k: 5 }, hashmap! { 'A' => 1.0 / 1.0 })]
     // DCG (Jarvelin)
     #[case::dcg_k_0_jarvelin(Metric::DCG { k: 0 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
     #[case::dcg_k_1_jarvelin(Metric::DCG { k: 1 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
@@ -468,6 +485,7 @@ mod tests {
     #[case::f1_k0("f1@0", Metric::F1 { k: 0 })]
     #[case::f1_k1("f1@1", Metric::F1 { k: 1 })]
     #[case::f1_k100("f1@100", Metric::F1 { k: 100 })]
+    #[case::r_precision("r_precision", Metric::RPrecision)]
     #[case::average_precision("ap", Metric::AP { k: 0 })]
     #[case::average_precision_k0("ap@0", Metric::AP { k: 0 })]
     #[case::average_precision_k1("ap@1", Metric::AP { k: 1 })]
