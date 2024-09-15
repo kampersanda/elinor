@@ -113,7 +113,8 @@ pub enum Metric {
         k: usize,
     },
 
-    /// Discounted cumulative gain.
+    /// Discounted cumulative gain proposed in
+    /// [Järvelin et al., TOIS 2002](https://dl.acm.org/doi/10.1145/582415.582418).
     ///
     /// ```math
     /// \text{DCG}@k = \sum_{i=1}^k \frac{\text{rel}_i}{\log_2(i + 1)}
@@ -125,19 +126,20 @@ pub enum Metric {
         k: usize,
     },
 
-    /// Normalized discounted cumulative gain.
+    /// Normalized version of the DCG score:
     ///
     /// ```math
     /// \text{NDCG}@k = \frac{\text{DCG}@k}{\text{IDCG}@k}
     /// ```
     ///
-    /// where `IDCG` is the ideal DCG score.
+    /// where `IDCG` is the ideal DCG score, i.e., the max possible DCG score.
     NDCG {
         /// See the [Arguments](enum.Metric.html#arguments) section.
         k: usize,
     },
 
-    /// Discounted cumulative gain at k.
+    /// Discounted cumulative gain proposed in
+    /// [Burges et al. ICML 2005](https://dl.acm.org/doi/10.1145/1102351.1102363).
     ///
     /// ```math
     /// \text{DCG}_\text{Burges}@k = \sum_{i=1}^k \frac{2^{\text{rel}_i} - 1}{\log_2(i + 1)}
@@ -147,7 +149,7 @@ pub enum Metric {
         k: usize,
     },
 
-    /// Normalized discounted cumulative gain at k.
+    /// Normalized version of the Burges' DCG score:
     ///
     /// ```math
     /// \text{NDCG}_\text{Burges}@k = \frac{\text{DCG}_\text{Burges}@k}{\text{IDCG}_\text{Burges}@k}
