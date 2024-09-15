@@ -1,7 +1,7 @@
-//! Error handling for Emir.
+//! Error handling for Ireval.
 use thiserror::Error;
 
-/// Error types for Emir.
+/// Error types for Ireval.
 #[derive(Error, Debug, PartialEq, Eq)]
 pub enum EmirError {
     /// Error when an entry is duplicated.

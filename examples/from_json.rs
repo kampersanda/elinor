@@ -1,5 +1,5 @@
 use anyhow::Result;
-use emir::Metric;
+use ireval::Metric;
 
 fn main() -> Result<()> {
     let qrels_data = r#"
@@ -31,8 +31,8 @@ fn main() -> Result<()> {
         }
     "#;
 
-    let qrels = emir::json::parse_qrels_from_json(qrels_data)?;
-    let run = emir::json::parse_run_from_json(run_data)?;
+    let qrels = ireval::json::parse_qrels_from_json(qrels_data)?;
+    let run = ireval::json::parse_run_from_json(run_data)?;
 
     let metrics = vec![
         Metric::Hits { k: 3 },
@@ -45,7 +45,7 @@ fn main() -> Result<()> {
         Metric::NDCG { k: 3 },
         Metric::NDCGBurges { k: 3 },
     ];
-    let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
+    let evaluated = ireval::evaluate(&qrels, &run, metrics.iter().cloned())?;
 
     println!("=== Mean scores ===");
     for metric in &metrics {

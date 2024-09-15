@@ -1,6 +1,6 @@
-# Emir: Evaluation Measures in Information Retrieval
+# Information Retrieval Evaluation Library
 
-Emir is a Rust library for evaluating information retrieval systems,
+ireval is a Rust library for evaluating information retrieval systems,
 which is inspired by [ranx](https://github.com/AmenRa/ranx).
 
 ## Documentation

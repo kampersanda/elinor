@@ -1,6 +1,6 @@
-//! # Emir: Evaluation Measures in Information Retrieval
+//! # Ireval: Evaluation Measures in Information Retrieval
 //!
-//! Emir is a Rust library for evaluating information retrieval systems,
+//! Ireval is a Rust library for evaluating information retrieval systems,
 //! which is inspired by [ranx](https://github.com/AmenRa/ranx).
 //!
 //! ## Features
@@ -26,7 +26,7 @@
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use emir::{QrelsBuilder, RunBuilder, Metric};
+//! use ireval::{QrelsBuilder, RunBuilder, Metric};
 //!
 //! // Construct Qrels data.
 //! let mut qb = QrelsBuilder::new();
@@ -57,7 +57,7 @@
 //! ];
 //!
 //! // Evaluate the qrels and run data.
-//! let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
+//! let evaluated = ireval::evaluate(&qrels, &run, metrics.iter().cloned())?;
 //!
 //! // Macro-averaged scores.
 //! for metric in &metrics {

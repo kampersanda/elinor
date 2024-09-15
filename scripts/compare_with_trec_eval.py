@@ -1,5 +1,5 @@
 """
-Script to check the correctness of emir by comparing its output with trec_eval.
+Script to check the correctness of ireval by comparing its output with trec_eval.
 
 Usage:
     $ python3 ./scripts/compare_with_trec_eval.py ./target/release/evaluate
