@@ -1,6 +1,6 @@
-//! # Information Retrieval Evaluation Library
+//! # Elinor: Evaluation Library in Information Retrieval
 //!
-//! This is a Rust library for evaluating information retrieval systems,
+//! Elinor is a Rust library for evaluating information retrieval systems,
 //! which is inspired by [ranx](https://github.com/AmenRa/ranx).
 //!
 //! ## Features

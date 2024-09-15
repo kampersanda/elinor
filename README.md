@@ -1,4 +1,4 @@
-# Information Retrieval Evaluation Library in Rust
+# Elinor: Evaluation Library in Information Retrieval
 
 <p align="left">
     <a href="https://github.com/kampersanda/elinor/actions/workflows/rust.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/kampersanda/elinor/rust.yml?branch=main&style=flat-square" alt="actions status" /></a>
@@ -8,7 +8,7 @@
     <a href="https://docs.rs/elinor"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
 </p>
 
-This is a Rust library for evaluating information retrieval systems,
+Elinor is a Rust library for evaluating information retrieval systems,
 which is inspired by [ranx](https://github.com/AmenRa/ranx).
 
 ## Features
