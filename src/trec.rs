@@ -13,6 +13,25 @@ use crate::RunBuilder;
 ///
 /// Each line should be `<QueryID> <Dummy> <DocID> <Score>`,
 /// where `<Dummy>` is ignored.
+///
+/// # Example
+///
+/// ```rust
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// use emir::trec::parse_qrels_from_trec;
+///
+/// let data = "
+/// q_1 0 d_1 1
+/// q_1 0 d_2 0
+/// q_1 0 d_3 2
+/// q_2 0 d_2 2
+/// q_2 0 d_4 1
+/// ".trim();
+///
+/// let qrels = parse_qrels_from_trec(data.lines())?;
+/// # Ok(())
+/// # }
+/// ```
 pub fn parse_qrels_from_trec<I, S>(lines: I) -> Result<Qrels<String>, EmirError>
 where
     I: Iterator<Item = S>,

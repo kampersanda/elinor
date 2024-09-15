@@ -59,6 +59,21 @@ where
         self.name.as_deref()
     }
 
+    /// Returns the number of query ids in the store.
+    pub fn n_queries(&self) -> usize {
+        self.map.len()
+    }
+
+    /// Returns the number of document ids in the store.
+    pub fn n_docs(&self) -> usize {
+        self.map.values().map(|data| data.map.len()).sum()
+    }
+
+    /// Returns the score for a given query-document pair.
+    pub fn get_score(&self, query_id: &K, doc_id: &K) -> Option<&T> {
+        self.map.get(query_id).and_then(|data| data.map.get(doc_id))
+    }
+
     /// Returns the relevance map for a given query id.
     pub fn get_map(&self, query_id: &K) -> Option<&HashMap<K, T>> {
         self.map.get(query_id).map(|data| &data.map)
@@ -155,6 +170,40 @@ mod tests {
         assert_eq!(store.name(), None);
         let store = store.with_name("test");
         assert_eq!(store.name(), Some("test"));
+    }
+
+    #[test]
+    fn test_relevance_store_n_queries() {
+        let store = RelevanceStore::from_map(
+            [
+                ('a', [('x', 1)].into()),
+                ('b', [('x', 1), ('y', 2)].into()),
+                ('c', [('x', 1)].into()),
+            ]
+            .into(),
+        );
+        assert_eq!(store.n_queries(), 3);
+    }
+
+    #[test]
+    fn test_relevance_store_n_docs() {
+        let store = RelevanceStore::from_map(
+            [
+                ('a', [('x', 1)].into()),
+                ('b', [('x', 1), ('y', 2)].into()),
+                ('c', [('x', 1)].into()),
+            ]
+            .into(),
+        );
+        assert_eq!(store.n_docs(), 4);
+    }
+
+    #[test]
+    fn test_relevance_store_get_score() {
+        let store = RelevanceStore::from_map([('a', [('x', 1)].into())].into());
+        assert_eq!(store.get_score(&'a', &'x'), Some(&1));
+        assert_eq!(store.get_score(&'a', &'y'), None);
+        assert_eq!(store.get_score(&'b', &'x'), None);
     }
 
     #[test]
