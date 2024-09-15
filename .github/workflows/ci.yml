@@ -61,10 +61,10 @@ jobs:
           rustup toolchain install stable --profile minimal --component rustfmt,clippy
           rustup default stable
       - name: Install Python 3.12
-        run: |
-          sudo apt-get update
-          sudo apt-get install python3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
       - name: Build ireval-evaluate
         run: cargo build --release -p ireval-evaluate
       - name: Run correctness test
-        run: python3.12 scripts/compare_with_trec_eval.py target/release/ireval-evaluate
+        run: python scripts/compare_with_trec_eval.py target/release/ireval-evaluate
