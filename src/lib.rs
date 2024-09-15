@@ -19,7 +19,7 @@
 //!
 //! ## Examples
 //!
-//! The following example demonstrates a simple routine to prepare Qrels and Run data
+//! A simple routine to prepare Qrels and Run data
 //! and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 //!
 //! ```
