@@ -2,37 +2,29 @@ use anyhow::Result;
 use emir::Metric;
 
 fn main() -> Result<()> {
-    let qrels_data = r#"
-        {
-            "q_1": {
-                "d_1": 1,
-                "d_2": 0,
-                "d_3": 2
-            },
-            "q_2": {
-                "d_2": 2,
-                "d_4": 1
-            }
-        }
-    "#;
+    // <QueryID> <Dummy> <DocID> <Relevance>
+    let qrels_data = "
+q_1 0 d_1 1
+q_1 0 d_2 0
+q_1 0 d_3 2
+q_2 0 d_2 2
+q_2 0 d_4 1
+    "
+    .trim();
 
-    let run_data = r#"
-        {
-            "q_1": {
-                "d_1": 0.5,
-                "d_2": 0.4,
-                "d_3": 0.3
-            },
-            "q_2": {
-                "d_4": 0.1,
-                "d_1": 0.2,
-                "d_3": 0.3
-            }
-        }
-    "#;
+    // <QueryID> <Dummy> <DocID> <Rank> <Score> <RunName>
+    let run_data = "
+q_1 0 d_1 1 0.5 SAMPLE
+q_1 0 d_2 2 0.4 SAMPLE
+q_1 0 d_3 3 0.3 SAMPLE
+q_2 0 d_3 1 0.3 SAMPLE
+q_2 0 d_1 2 0.2 SAMPLE
+q_2 0 d_4 3 0.1 SAMPLE
+    "
+    .trim();
 
-    let qrels = emir::json::parse_qrels_from_json(qrels_data)?;
-    let run = emir::json::parse_run_from_json(run_data)?;
+    let qrels = emir::trec::parse_qrels_from_trec(qrels_data.lines())?;
+    let run = emir::trec::parse_run_from_trec(run_data.lines())?;
 
     let metrics = vec![
         Metric::Hits { k: 3 },

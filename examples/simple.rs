@@ -22,15 +22,10 @@ fn main() -> Result<()> {
     let run = rb.build();
 
     let metrics = vec![
-        Metric::Hits { k: 3 },
-        Metric::Success { k: 3 },
         Metric::Precision { k: 3 },
-        Metric::Recall { k: 3 },
-        Metric::F1 { k: 3 },
-        Metric::AveragePrecision { k: 3 },
-        Metric::ReciprocalRank { k: 3 },
-        Metric::Ndcg { k: 3 },
-        Metric::NdcgBurges { k: 3 },
+        Metric::AP { k: 0 }, // k=0 means all documents.
+        "mrr".parse()?,
+        "ndcg@3".parse()?,
     ];
     let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 
@@ -43,7 +38,7 @@ fn main() -> Result<()> {
     println!("\n=== Scores for each query ===");
     for metric in &metrics {
         println!("{metric}");
-        let qid_to_score = &evaluated.scores[metric];
+        let qid_to_score = &evaluated.all_scores[metric];
         for qid in ["q_1", "q_2"] {
             let score = qid_to_score[qid];
             println!("- {qid}: {score:.4}");

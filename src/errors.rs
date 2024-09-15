@@ -2,20 +2,17 @@
 use thiserror::Error;
 
 /// Error types for Emir.
-#[derive(Error, Debug)]
-pub enum EmirError<K>
-where
-    K: std::fmt::Display,
-{
-    /// Error when query-document pairs are duplicated.
-    #[error("Error: QueryID {0}, DocID {1}")]
-    DuplicateDocId(K, K),
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum EmirError {
+    /// Error when an entry is duplicated.
+    #[error("{0}")]
+    DuplicateEntry(String),
 
-    /// Error when a query is missing.
-    #[error("Error: {0}")]
-    MissingQueryId(K),
+    /// Error when an entry is missing.
+    #[error("{0}")]
+    MissingEntry(String),
 
-    /// Error when a document is missing.
-    #[error("Empty input")]
-    EmptyLines,
+    /// Error when the format is invalid.
+    #[error("{0}")]
+    InvalidFormat(String),
 }

@@ -3,19 +3,32 @@
 //! Emir is a Rust library for evaluating information retrieval systems,
 //! which is inspired by [ranx](https://github.com/AmenRa/ranx).
 //!
-//! ## Glossary from [TREC](https://trec.nist.gov/)
+//! ## Features
+//!
+//! * **IRer-friendly**:
+//!     The library is designed to be easy to use for developers in information retrieval
+//!     by providing TREC-like data structures, such as Qrels and Run.
+//! * **Flexible**:
+//!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
+//!     The supported metrics are available in [`Metric`].
+//! * **Fast**:
+//!     The library is implemented in Rust, achieving high performance.
+//!
+//! ## Glossary from TREC
 //!
 //! * **Qrels** - Collection of relevance judgments for a set of queries and documents.
 //! * **Run** - Collection of predicted scores for a set of queries and documents.
 //!
-//! ## Getting started
+//! ## Examples
 //!
-//! A simple example to prepare qrels and run data and evaluate them using MAP and nDCG.
+//! The following example demonstrates a simple routine to prepare Qrels and Run data
+//! and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use emir::{QrelsBuilder, RunBuilder, Metric};
 //!
+//! // Construct Qrels data.
 //! let mut qb = QrelsBuilder::new();
 //! qb.add_score("q_1", "d_1", 1)?;
 //! qb.add_score("q_1", "d_2", 0)?;
@@ -24,6 +37,7 @@
 //! qb.add_score("q_2", "d_4", 1)?;
 //! let qrels = qb.build();
 //!
+//! // Construct Run data.
 //! let mut rb = RunBuilder::new();
 //! rb.add_score("q_1", "d_1", 0.5.into())?;
 //! rb.add_score("q_1", "d_2", 0.4.into())?;
@@ -33,11 +47,16 @@
 //! rb.add_score("q_2", "d_3", 0.3.into())?;
 //! let run = rb.build();
 //!
+//! // The metrics to evaluate can be specified via Metric instances.
 //! let metrics = vec![
-//!     Metric::ReciprocalRank { k: 0 },  // k=0 means all documents.
-//!     Metric::AveragePrecision { k: 3 },
-//!     Metric::Ndcg { k: 3 },
+//!     Metric::Precision { k: 3 },
+//!     Metric::AP { k: 0 }, // k=0 means all documents.
+//!     // The instances can also be specified via strings.
+//!     "rr".parse()?,
+//!     "ndcg@3".parse()?,
 //! ];
+//!
+//! // Evaluate the qrels and run data.
 //! let evaluated = emir::evaluate(&qrels, &run, metrics.iter().cloned())?;
 //!
 //! // Macro-averaged scores.
@@ -45,8 +64,9 @@
 //!     let score = evaluated.mean_scores[metric];
 //!     println!("{metric}: {score:.4}");
 //! }
-//! // => mrr: 0.6667
-//! // => map@3: 0.5000
+//! // => precision@3: 0.5000
+//! // => ap: 0.5000
+//! // => rr: 0.6667
 //! // => ndcg@3: 0.4751
 //! # Ok(())
 //! # }
@@ -67,18 +87,19 @@ pub use metrics::Metric;
 pub use relevance::Relevance;
 
 /// Data type to store a relevance score.
+/// In binary relevance, 0 means non-relevant and the others mean relevant.
 pub type GoldScore = u32;
 
 /// Data type to store a predicted score.
 pub type PredScore = OrderedFloat<f64>;
 
-/// Data structure to store qrels.
+/// Data structure to store Qrels.
 pub type Qrels<K> = relevance::RelevanceStore<K, GoldScore>;
 
 /// Builder for [`Qrels`].
 pub type QrelsBuilder<K> = relevance::RelevanceStoreBuilder<K, GoldScore>;
 
-/// Data structure to store a run.
+/// Data structure to store a Run.
 pub type Run<K> = relevance::RelevanceStore<K, PredScore>;
 
 /// Builder for [`Run`].
@@ -90,7 +111,7 @@ pub struct Evaluated<K> {
     pub mean_scores: HashMap<Metric, f64>,
 
     /// Metric to mapping from query ID to the score.
-    pub scores: HashMap<Metric, HashMap<K, f64>>,
+    pub all_scores: HashMap<Metric, HashMap<K, f64>>,
 }
 
 /// Evaluates the given qrels and run data using the specified metrics.
@@ -98,22 +119,22 @@ pub fn evaluate<K, M>(
     qrels: &Qrels<K>,
     run: &Run<K>,
     metrics: M,
-) -> Result<Evaluated<K>, errors::EmirError<K>>
+) -> Result<Evaluated<K>, errors::EmirError>
 where
     K: Clone + Eq + std::hash::Hash + std::fmt::Display,
     M: IntoIterator<Item = Metric>,
 {
     let metrics: HashSet<Metric> = metrics.into_iter().collect();
     let mut mean_scores = HashMap::new();
-    let mut scores = HashMap::new();
+    let mut all_scores = HashMap::new();
     for metric in metrics {
         let result = metrics::compute_metric(qrels, run, metric)?;
-        let mean_score = result.iter().map(|(_, x)| x).sum::<f64>() / result.len() as f64;
+        let mean_score = result.values().sum::<f64>() / result.len() as f64;
         mean_scores.insert(metric, mean_score);
-        scores.insert(metric, result);
+        all_scores.insert(metric, result);
     }
     Ok(Evaluated {
         mean_scores,
-        scores,
+        all_scores,
     })
 }

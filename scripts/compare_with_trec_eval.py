@@ -69,14 +69,14 @@ if __name__ == "__main__":
             ("set_P", "precision"),
             ("set_recall", "recall"),
             ("set_F", "f1"),
-            ("map", "map"),
-            ("recip_rank", "mrr"),
+            ("map", "ap"),
+            ("recip_rank", "rr"),
             ("ndcg", "ndcg"),
         ]
     )
     metric_pairs.extend([(f"P_{k}", f"precision@{k}") for k in ks])
     metric_pairs.extend([(f"recall_{k}", f"recall@{k}") for k in ks])
-    metric_pairs.extend([(f"map_cut_{k}", f"map@{k}") for k in ks])
+    metric_pairs.extend([(f"map_cut_{k}", f"ap@{k}") for k in ks])
     metric_pairs.extend([(f"ndcg_cut_{k}", f"ndcg@{k}") for k in ks])
 
     print("trec_metric\temir_metric\ttrec_score\temir_score\tmatch")
