@@ -1,7 +1,7 @@
 # Elinor: Evaluation Library in Information Retrieval
 
 <p align="left">
-    <a href="https://github.com/kampersanda/elinor/actions/workflows/rust.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/kampersanda/elinor/rust.yml?branch=main&style=flat-square" alt="actions status" /></a>
+    <a href="https://github.com/kampersanda/elinor/actions/workflows/ci.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/kampersanda/elinor/ci.yml?branch=main&style=flat-square" alt="actions status" /></a>
     &nbsp;
     <a href="https://crates.io/crates/elinor"><img src="https://img.shields.io/crates/v/elinor.svg?style=flat-square" alt="Crates.io version" /></a>
     &nbsp;
