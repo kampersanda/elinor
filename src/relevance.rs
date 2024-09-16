@@ -51,6 +51,11 @@ where
         b.build()
     }
 
+    /// Exports the relevance store as a map of query ids to relevance maps.
+    pub fn into_map(self) -> HashMap<K, HashMap<K, T>> {
+        self.map.into_iter().map(|(k, v)| (k, v.map)).collect()
+    }
+
     /// Returns the score for a given query-document pair.
     pub fn get_score<Q>(&self, query_id: &Q, doc_id: &Q) -> Option<&T>
     where
@@ -178,9 +183,19 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
     use std::collections::HashSet;
 
     use super::*;
+
+    #[test]
+    fn test_relevance_store_from_into_map() {
+        let map1: HashMap<char, HashMap<char, u32>> =
+            [('a', [('x', 1), ('y', 2)].into()), ('b', [('x', 1)].into())].into();
+        let store = RelevanceStore::from_map(map1.clone());
+        let map2 = store.into_map();
+        assert_eq!(map1, map2);
+    }
 
     #[test]
     fn test_relevance_store_name() {
