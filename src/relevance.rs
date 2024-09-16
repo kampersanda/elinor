@@ -51,6 +51,11 @@ where
         b.build()
     }
 
+    /// Exports the relevance store as a map of query ids to relevance maps.
+    pub fn into_map(self) -> HashMap<K, HashMap<K, T>> {
+        self.map.into_iter().map(|(k, v)| (k, v.map)).collect()
+    }
+
     /// Returns the score for a given query-document pair.
     pub fn get_score<Q>(&self, query_id: &Q, doc_id: &Q) -> Option<&T>
     where

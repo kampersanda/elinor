@@ -26,6 +26,9 @@ approx = "0.5.1"
 maplit = "1.0.2"
 rstest = "0.22.0"
 
+[features]
+serde = ["ordered-float/serde"]
+
 [workspace]
 members = ["elinor-evaluate"]
 
