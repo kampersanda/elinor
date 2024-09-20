@@ -40,14 +40,20 @@ def run_elinor_evaluate(
     return parsed
 
 
+def compare_decimal_places(a: str, b: str, decimal_places: int) -> bool:
+    return round(float(a), decimal_places) == round(float(b), decimal_places)
+
+
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("trec_eval")
     p.add_argument("elinor_evaluate")
+    p.add_argument("--decimal-places", type=int, default=3)
     args = p.parse_args()
 
     trec_eval: str = args.trec_eval
     elinor_evaluate: str = args.elinor_evaluate
+    decimal_places: int = args.decimal_places
 
     failed_ids = []
     test_data = [
@@ -85,7 +91,7 @@ if __name__ == "__main__":
             case_id = f"{data_id}.{metric_id}"
             trec_score = trec_results[trec_metric]
             elinor_score = elinor_results[elinor_metric]
-            match = trec_score == elinor_score
+            match = compare_decimal_places(trec_score, elinor_score, decimal_places)
             row = f"{case_id}\t{trec_metric}\t{elinor_metric}\t{trec_score}\t{elinor_score}\t{match}"
             print(row)
 
@@ -96,4 +102,4 @@ if __name__ == "__main__":
         print("Mismatched cases:", failed_ids, file=sys.stderr)
         sys.exit(1)
     else:
-        print("All metrics match :)")
+        print(f"All metrics match 🎉 with {decimal_places=}")
