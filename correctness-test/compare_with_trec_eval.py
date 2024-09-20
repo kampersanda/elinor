@@ -8,8 +8,10 @@ import subprocess
 import sys
 
 
-def run_trec_eval(trec_eval: str, qrels_file: str, results_file: str) -> dict[str, str]:
-    command = f"./{trec_eval} -c -m all_trec {qrels_file} {results_file}"
+def run_trec_eval(
+    trec_eval_dir: str, qrels_file: str, results_file: str
+) -> dict[str, str]:
+    command = f"./{trec_eval_dir}/trec_eval -c -m all_trec {qrels_file} {results_file}"
     print(f"Running: {command}")
     result = subprocess.run(command, capture_output=True, shell=True)
     parsed: dict[str, str] = {}
@@ -22,11 +24,13 @@ def run_trec_eval(trec_eval: str, qrels_file: str, results_file: str) -> dict[st
 
 
 def run_elinor_evaluate(
-    elinor_evaluate: str, qrels_file: str, results_file: str
+    elinor_dir: str, qrels_file: str, results_file: str
 ) -> dict[str, str]:
     ks = [0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000]
     ks_args = " ".join([f"-k {k}" for k in ks])
-    command = f"./{elinor_evaluate} -q {qrels_file} -r {results_file} {ks_args}"
+    command = (
+        f"./{elinor_dir}/elinor-evaluate -q {qrels_file} -r {results_file} {ks_args}"
+    )
     print(f"Running: {command}")
     result = subprocess.run(command, capture_output=True, shell=True)
     parsed: dict[str, str] = {}
@@ -44,24 +48,24 @@ def compare_decimal_places(a: str, b: str, decimal_places: int) -> bool:
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("trec_eval")
-    p.add_argument("elinor_evaluate")
+    p.add_argument("trec_eval_dir")
+    p.add_argument("elinor_dir")
     p.add_argument("--decimal-places", type=int, default=3)
     args = p.parse_args()
 
-    trec_eval: str = args.trec_eval
-    elinor_evaluate: str = args.elinor_evaluate
+    trec_eval_dir: str = args.trec_eval_dir
+    elinor_dir: str = args.elinor_dir
     decimal_places: int = args.decimal_places
 
     failed_ids = []
     test_data = [
-        ("trec_eval-9.0.8/test/qrels.test", "trec_eval-9.0.8/test/results.test"),
-        ("trec_eval-9.0.8/test/qrels.rel_level", "trec_eval-9.0.8/test/results.test"),
+        (f"{trec_eval_dir}/test/qrels.test", f"{trec_eval_dir}/test/results.test"),
+        (f"{trec_eval_dir}/test/qrels.rel_level", f"{trec_eval_dir}/test/results.test"),
     ]
 
     for data_id, (qrels_file, results_file) in enumerate(test_data, 1):
-        trec_results = run_trec_eval(trec_eval, qrels_file, results_file)
-        elinor_results = run_elinor_evaluate(elinor_evaluate, qrels_file, results_file)
+        trec_results = run_trec_eval(trec_eval_dir, qrels_file, results_file)
+        elinor_results = run_elinor_evaluate(elinor_dir, qrels_file, results_file)
 
         metric_pairs = []
         metric_pairs.extend([(f"success_{k}", f"success@{k}") for k in [1, 5, 10]])
