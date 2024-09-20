@@ -49,15 +49,15 @@ if __name__ == "__main__":
     trec_eval: str = args.trec_eval
     elinor_evaluate: str = args.elinor_evaluate
 
-    for qrels_file, results_file in [
+    failed_ids = []
+    test_data = [
         ("trec_eval-9.0.8/test/qrels.test", "trec_eval-9.0.8/test/results.test"),
-        # TODO: Handle negative relevance levels
-        # ("trec_eval-9.0.8/test/qrels.rel_level", "trec_eval-9.0.8/test/results.test"),
-    ]:
+        ("trec_eval-9.0.8/test/qrels.rel_level", "trec_eval-9.0.8/test/results.test"),
+    ]
+
+    for data_id, (qrels_file, results_file) in enumerate(test_data, 1):
         trec_results = run_trec_eval(trec_eval, qrels_file, results_file)
         elinor_results = run_elinor_evaluate(elinor_evaluate, qrels_file, results_file)
-
-        ks = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
 
         metric_pairs = []
         metric_pairs.extend([(f"success_{k}", f"success@{k}") for k in [1, 5, 10]])
@@ -73,27 +73,27 @@ if __name__ == "__main__":
                 ("bpref", "bpref"),
             ]
         )
+
+        ks = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
         metric_pairs.extend([(f"P_{k}", f"precision@{k}") for k in ks])
         metric_pairs.extend([(f"recall_{k}", f"recall@{k}") for k in ks])
         metric_pairs.extend([(f"map_cut_{k}", f"ap@{k}") for k in ks])
         metric_pairs.extend([(f"ndcg_cut_{k}", f"ndcg@{k}") for k in ks])
 
-        failed_rows = []
-
-        print("trec_metric\telinor_metric\ttrec_score\telinor_score\tmatch")
-        for trec_metric, elinor_metric in metric_pairs:
+        print("case_id\ttrec_metric\telinor_metric\ttrec_score\telinor_score\tmatch")
+        for metric_id, (trec_metric, elinor_metric) in enumerate(metric_pairs, 1):
+            case_id = f"{data_id}.{metric_id}"
             trec_score = trec_results[trec_metric]
             elinor_score = elinor_results[elinor_metric]
             match = trec_score == elinor_score
-            row = (
-                f"{trec_metric}\t{elinor_metric}\t{trec_score}\t{elinor_score}\t{match}"
-            )
-            if not match:
-                failed_rows.append(row)
+            row = f"{case_id}\t{trec_metric}\t{elinor_metric}\t{trec_score}\t{elinor_score}\t{match}"
             print(row)
 
-        if failed_rows:
-            print("\nFailed rows:", file=sys.stderr)
-            for row in failed_rows:
-                print(row, file=sys.stderr)
-            sys.exit(1)
+            if not match:
+                failed_ids.append(case_id)
+
+    if failed_ids:
+        print("Mismatched cases:", failed_ids, file=sys.stderr)
+        sys.exit(1)
+    else:
+        print("All metrics match :)")
