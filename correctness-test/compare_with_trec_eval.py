@@ -1,8 +1,6 @@
+#!/usr/bin/env python3
 """
 Script to check the correctness of elinor by comparing its output with trec_eval.
-
-Usage:
-    $ python3 ./correctness-test/compare_with_trec_eval.py trec_eval-9.0.8/trec_eval target/release/elinor-evaluate
 """
 
 import argparse
