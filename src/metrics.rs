@@ -322,7 +322,7 @@ pub fn compute_metric<K>(
     metric: Metric,
 ) -> Result<HashMap<K, f64>, ElinorError>
 where
-    K: Clone + Eq + std::hash::Hash + std::fmt::Display,
+    K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
     for query_id in run.query_ids() {
         if qrels.get_map(query_id).is_none() {

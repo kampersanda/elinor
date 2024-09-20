@@ -39,7 +39,7 @@ pub struct RelevanceStore<K, T> {
 
 impl<K, T> RelevanceStore<K, T>
 where
-    K: Eq + Hash + Clone,
+    K: Eq + Ord + Hash + Clone,
     T: Ord + Clone,
 {
     /// Creates a relevance store from a map of query ids to relevance maps.
@@ -162,7 +162,7 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
     /// Builds the relevance store.
     pub fn build(self) -> RelevanceStore<K, T>
     where
-        K: Eq + Hash + Clone + Display,
+        K: Eq + Ord + Hash + Clone + Display,
         T: Ord + Clone,
     {
         let mut map = HashMap::new();
@@ -174,7 +174,7 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
                     score: score.clone(),
                 })
                 .collect::<Vec<_>>();
-            sorted.sort_by(|a, b| b.score.cmp(&a.score));
+            sorted.sort_by(|a, b| b.score.cmp(&a.score).then(a.doc_id.cmp(&b.doc_id)));
             map.insert(query_id, RelevanceData { sorted, map: rels });
         }
         RelevanceStore { name: None, map }

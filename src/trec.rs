@@ -45,14 +45,15 @@ where
     for line in lines {
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
-        if rows.len() != 4 {
+        if rows.len() < 4 {
             return Err(ElinorError::InvalidFormat(line.to_string()));
         }
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
         let score = rows[3]
-            .parse::<GoldScore>()
+            .parse::<i32>()
             .map_err(|_| ElinorError::InvalidFormat(format!("Invalid score: {}", rows[3])))?;
+        let score = GoldScore::try_from(score.max(0)).unwrap();
         b.add_score(query_id, doc_id, score)?;
     }
     Ok(b.build())
@@ -98,7 +99,7 @@ where
     for line in lines {
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
-        if rows.len() != 6 {
+        if rows.len() < 6 {
             return Err(ElinorError::InvalidFormat(line.to_string()));
         }
         let query_id = rows[0].to_string();

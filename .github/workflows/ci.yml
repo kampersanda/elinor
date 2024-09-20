@@ -67,4 +67,6 @@ jobs:
       - name: Build elinor-evaluate
         run: cargo build --release -p elinor-evaluate
       - name: Run correctness test
-        run: python scripts/compare_with_trec_eval.py target/release/elinor-evaluate
+        run: |
+          ./correctness-test/prepare_trec_eval.sh
+          ./correctness-test/compare_with_trec_eval.py trec_eval-9.0.8 target/release

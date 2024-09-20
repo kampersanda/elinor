@@ -120,7 +120,7 @@ pub fn evaluate<K, M>(
     metrics: M,
 ) -> Result<Evaluated<K>, errors::ElinorError>
 where
-    K: Clone + Eq + std::hash::Hash + std::fmt::Display,
+    K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
     M: IntoIterator<Item = Metric>,
 {
     let metrics: HashSet<Metric> = metrics.into_iter().collect();
