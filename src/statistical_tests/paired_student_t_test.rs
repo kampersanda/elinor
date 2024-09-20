@@ -49,8 +49,8 @@ impl PairedStudentTTest {
     }
 }
 
-/// Computes the paired Student's t-test.
-pub fn compute_paired_student_t_test(a: &[f64], b: &[f64]) -> PairedStudentTTest {
+/// Runs a paired Student's t-test.
+pub fn run_paired_student_t_test(a: &[f64], b: &[f64]) -> PairedStudentTTest {
     assert_eq!(a.len(), b.len());
 
     let diffs: Vec<f64> = a.iter().zip(b.iter()).map(|(x, y)| x - y).collect();
@@ -95,7 +95,7 @@ mod tests {
             0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
             0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
         ];
-        let result = compute_paired_student_t_test(&a, &b);
+        let result = run_paired_student_t_test(&a, &b);
         assert_abs_diff_eq!(result.mean, 0.0750, epsilon = 1e-4);
         assert_abs_diff_eq!(result.var, 0.0251, epsilon = 1e-4);
         assert_abs_diff_eq!(result.t_stat, 2.116, epsilon = 1e-3);
