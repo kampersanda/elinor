@@ -76,6 +76,7 @@
 pub mod errors;
 pub mod metrics;
 pub mod relevance;
+pub mod statistical_tests;
 pub mod trec;
 
 use ordered_float::OrderedFloat;
