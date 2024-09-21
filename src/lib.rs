@@ -1,9 +1,7 @@
-//! # Elinor: Evaluation Library in INfOrmation Retrieval
-//!
-//! Elinor is a Rust library for evaluating information retrieval systems,
+//! Elinor (Evaluation Library in INfOrmation Retrieval) is a library for evaluating information retrieval systems,
 //! inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://www.coronasha.co.jp/np/isbn/9784339024968/).
 //!
-//! ## Features
+//! # Features
 //!
 //! * **IRer-friendly**:
 //!     The library is designed to be easy to use for developers in information retrieval.
@@ -11,7 +9,7 @@
 //!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
 //!
-//! ## Example: Evaluating metrics
+//! # Example: Evaluating metrics
 //!
 //! This example shows how to evaluate Precision@3, MAP, MRR, and nDCG@3.
 //!
@@ -59,7 +57,7 @@
 //! # }
 //! ```
 //!
-//! ## Example: Performing paired Student's t-test
+//! # Example: Performing paired Student's t-test
 //!
 //! This example shows how to perform Student's t-test for Precision scores
 //! between two systems.
@@ -124,11 +122,14 @@
 //! # }
 //! ```
 //!
+//! Other statistical tests such as bootstrap resampling are available
+//! in the [`statistical_tests`] module.
+//!
 //! ## Other examples
 //!
 //! Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
 //!
-//! ## Crate features
+//! # Crate features
 //!
 //! * `serde` - Enables (de)serialization of [`PredScore`] using Serde.
 #![deny(missing_docs)]
