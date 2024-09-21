@@ -75,11 +75,7 @@ impl PairedStudentTTest {
                 "The input must have at least two samples.".to_string(),
             ));
         }
-        let diffs: Vec<f64> = a
-            .into_iter()
-            .zip(b.into_iter())
-            .map(|(x, y)| x - y)
-            .collect();
+        let diffs: Vec<f64> = a.into_iter().zip(b).map(|(x, y)| x - y).collect();
         let mean = Statistics::mean(&diffs);
         let var = Statistics::variance(&diffs);
         if var == 0.0 {
