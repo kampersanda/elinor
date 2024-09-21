@@ -5,7 +5,7 @@ use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
 
-/// Computes the F1 score at k for a given relevance level.
+/// Computes the F1 score at k.
 pub fn compute_f1<K>(
     golds: &HashMap<K, GoldScore>,
     sorted_preds: &[Relevance<K, PredScore>],

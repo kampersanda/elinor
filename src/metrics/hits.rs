@@ -4,7 +4,7 @@ use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
 
-/// Computes the number of hits at a given relevance level.
+/// Computes the number of hits.
 pub fn compute_hits<K>(
     golds: &HashMap<K, GoldScore>,
     sorted_preds: &[Relevance<K, PredScore>],

@@ -4,7 +4,7 @@ use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
 
-/// Computes the reciprocal rank at k for a given relevance level.
+/// Computes the reciprocal rank at k.
 pub fn compute_reciprocal_rank<K>(
     golds: &HashMap<K, GoldScore>,
     sorted_preds: &[Relevance<K, PredScore>],

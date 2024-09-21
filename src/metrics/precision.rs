@@ -5,7 +5,7 @@ use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
 
-/// Computes the precision at k for a given relevance level.
+/// Computes the precision at k.
 pub fn compute_precision<K>(
     golds: &HashMap<K, GoldScore>,
     sorted_preds: &[Relevance<K, PredScore>],

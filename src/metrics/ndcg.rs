@@ -17,7 +17,7 @@ fn weighted_score(rel: GoldScore, weighting: DcgWeighting) -> f64 {
     }
 }
 
-/// Computes the DCG at k for a given relevance level.
+/// Computes the DCG at k.
 pub fn compute_dcg<K>(
     golds: &HashMap<K, GoldScore>,
     sorted_preds: &[Relevance<K, PredScore>],
@@ -37,7 +37,7 @@ where
     dcg
 }
 
-/// Computes the NDCG at k for a given relevance level.
+/// Computes the NDCG at k.
 pub fn compute_ndcg<K>(
     golds: &HashMap<K, GoldScore>,
     sorted_golds: &[Relevance<K, GoldScore>],
