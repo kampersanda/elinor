@@ -18,8 +18,8 @@
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
 //! use approx::assert_abs_diff_eq;
+//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
 //!
 //! // Prepare gold relevance scores.
 //! let mut b = GoldRelStoreBuilder::new();

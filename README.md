@@ -36,8 +36,8 @@ A simple routine to prepare gold and predicted relevance scores
 and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 
 ```rust
-use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
 use approx::assert_abs_diff_eq;
+use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
 
 // Prepare gold relevance scores.
 let mut b = GoldRelStoreBuilder::new();
