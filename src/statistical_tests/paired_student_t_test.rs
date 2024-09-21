@@ -19,13 +19,21 @@ pub struct PairedStudentTTest {
 
 impl PairedStudentTTest {
     /// Computes a paired Student's t-test.
-    pub fn compute(a: &[f64], b: &[f64]) -> Result<Self, ElinorError> {
-        if a.len() != b.len() {
+    pub fn compute<I>(paired_samples: I) -> Result<Self, ElinorError>
+    where
+        I: IntoIterator<Item = (f64, f64)>,
+    {
+        let (a, b): (Vec<f64>, Vec<f64>) = paired_samples.into_iter().unzip();
+        if a.is_empty() {
             return Err(ElinorError::InvalidArgument(
-                "The number of elements in the two arrays must be the same.".to_string(),
+                "The input samples must not be empty.".to_string(),
             ));
         }
-        let diffs: Vec<f64> = a.iter().zip(b.iter()).map(|(x, y)| x - y).collect();
+        let diffs: Vec<f64> = a
+            .into_iter()
+            .zip(b.into_iter())
+            .map(|(x, y)| x - y)
+            .collect();
         let mean = Statistics::mean(&diffs);
         let var = Statistics::variance(&diffs);
         let n = diffs.len() as f64;
@@ -104,7 +112,9 @@ mod tests {
             0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
         ];
 
-        let result = PairedStudentTTest::compute(&a, &b).unwrap();
+        let result =
+            PairedStudentTTest::compute(a.into_iter().zip(b.into_iter()).map(|(x, y)| (x, y)))
+                .unwrap();
         assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
         assert_abs_diff_eq!(result.var(), 0.0251, epsilon = 1e-4);
         assert_abs_diff_eq!(result.t_stat(), 2.116, epsilon = 1e-3);
