@@ -28,9 +28,6 @@ struct RelevanceData<K, T> {
 /// * `K` - Query/document id.
 /// * `T` - Relevance score.
 pub struct RelevanceStore<K, T> {
-    // Name.
-    name: Option<String>,
-
     // Mapping from query ids to:
     //  - Sorted list of relevance scores in descending order.
     //  - Mapping from document ids to relevance scores.
@@ -86,19 +83,6 @@ where
 }
 
 impl<K, T> RelevanceStore<K, T> {
-    /// Sets the name of the relevance store.
-    pub fn with_name(self, name: &str) -> Self {
-        Self {
-            name: Some(name.to_string()),
-            ..self
-        }
-    }
-
-    /// Returns the name of the relevance store.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
     /// Returns the number of query ids in the store.
     pub fn n_queries(&self) -> usize {
         self.map.len()
@@ -177,7 +161,7 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
             sorted.sort_by(|a, b| b.score.cmp(&a.score).then(a.doc_id.cmp(&b.doc_id)));
             map.insert(query_id, RelevanceData { sorted, map: rels });
         }
-        RelevanceStore { name: None, map }
+        RelevanceStore { map }
     }
 }
 
@@ -195,14 +179,6 @@ mod tests {
         let store = RelevanceStore::from_map(map1.clone());
         let map2 = store.into_map();
         assert_eq!(map1, map2);
-    }
-
-    #[test]
-    fn test_relevance_store_name() {
-        let store = RelevanceStore::from_map([('a', [('x', 1)].into())].into());
-        assert_eq!(store.name(), None);
-        let store = store.with_name("test");
-        assert_eq!(store.name(), Some("test"));
     }
 
     #[test]

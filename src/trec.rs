@@ -32,7 +32,6 @@ use crate::PredScore;
 /// assert_eq!(gold_rels.n_queries(), 2);
 /// assert_eq!(gold_rels.n_docs(), 5);
 /// assert_eq!(gold_rels.get_score("q_1", "d_3"), Some(&2));
-/// assert_eq!(gold_rels.name(), None);
 /// # Ok(())
 /// # }
 /// ```
@@ -64,7 +63,7 @@ where
 /// # Format
 ///
 /// Each line should be `<QueryID> <Dummy> <DocID> <Rank> <Score> <RunName>`,
-/// where `<Dummy>` and `<Rank>` are ignored.
+/// where `<Dummy>`, `<Rank>`, and `<RunName>` are ignored.
 ///
 /// # Example
 ///
@@ -85,7 +84,6 @@ where
 /// assert_eq!(pred_rels.n_queries(), 2);
 /// assert_eq!(pred_rels.n_docs(), 6);
 /// assert_eq!(pred_rels.get_score("q_1", "d_3"), Some(&0.3.into()));
-/// assert_eq!(pred_rels.name(), Some("SAMPLE"));
 /// # Ok(())
 /// # }
 /// ```
@@ -94,12 +92,11 @@ where
     I: Iterator<Item = S>,
     S: AsRef<str>,
 {
-    let mut name = None;
     let mut b = PredRelStoreBuilder::new();
     for line in lines {
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
-        if rows.len() < 6 {
+        if rows.len() < 5 {
             return Err(ElinorError::InvalidFormat(line.to_string()));
         }
         let query_id = rows[0].to_string();
@@ -108,12 +105,6 @@ where
             .parse::<PredScore>()
             .map_err(|_| ElinorError::InvalidFormat(format!("Invalid score: {}", rows[4])))?;
         b.add_score(query_id, doc_id, score)?;
-        if name.is_none() {
-            name = Some(rows[5].to_string());
-        }
     }
-    name.map_or_else(
-        || Err(ElinorError::MissingEntry("No line is found".to_string())),
-        |name| Ok(b.build().with_name(name.as_str())),
-    )
+    Ok(b.build())
 }
