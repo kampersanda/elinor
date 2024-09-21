@@ -19,14 +19,19 @@ pub struct PairedStudentTTest {
 
 impl PairedStudentTTest {
     /// Computes a paired Student's t-test.
+    ///
+    /// # Errors
+    ///
+    /// * [`ElinorError::InvalidArgument`] if the input does not have at least two samples.
+    /// * [`ElinorError::Uncomputable`] if the variance is zero.
     pub fn compute<I>(paired_samples: I) -> Result<Self, ElinorError>
     where
         I: IntoIterator<Item = (f64, f64)>,
     {
         let (a, b): (Vec<f64>, Vec<f64>) = paired_samples.into_iter().unzip();
-        if a.is_empty() {
+        if a.len() <= 1 {
             return Err(ElinorError::InvalidArgument(
-                "The input samples must not be empty.".to_string(),
+                "The input must have at least two samples.".to_string(),
             ));
         }
         let diffs: Vec<f64> = a
@@ -36,11 +41,17 @@ impl PairedStudentTTest {
             .collect();
         let mean = Statistics::mean(&diffs);
         let var = Statistics::variance(&diffs);
+        if var == 0.0 {
+            return Err(ElinorError::Uncomputable(
+                "The variance of the differences is zero.".to_string(),
+            ));
+        }
         let n = diffs.len() as f64;
         let t_stat = mean / (var / n).sqrt();
         let t_dist = StudentsT::new(0.0, 1.0, n - 1.0).unwrap();
         let p_value = t_dist.sf(t_stat.abs()) * 2.0; // two-tailed
         let effect_size = mean / var.sqrt();
+        dbg!(var, n, (var / n).sqrt());
         let scaled_t_dist = StudentsT::new(0.0, (var / n).sqrt(), n - 1.0).unwrap();
         Ok(Self {
             mean,
@@ -101,7 +112,7 @@ mod tests {
     use approx::assert_abs_diff_eq;
 
     #[test]
-    fn test_compute_paired_student_t_test() {
+    fn test_paired_student_t_test_compute() {
         // From sakai's book
         let a = vec![
             0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
@@ -111,7 +122,6 @@ mod tests {
             0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
             0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
         ];
-
         let result =
             PairedStudentTTest::compute(a.into_iter().zip(b.into_iter()).map(|(x, y)| (x, y)))
                 .unwrap();
@@ -127,5 +137,39 @@ mod tests {
         assert_abs_diff_eq!(ci_95.1, 0.0750 + 0.0742, epsilon = 1e-4);
 
         assert_eq!(result.is_significant(0.05), true);
+    }
+
+    #[test]
+    fn test_paired_student_t_test_compute_empty() {
+        let result = PairedStudentTTest::compute(Vec::<(f64, f64)>::new());
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_paired_student_t_test_compute_one_sample() {
+        let result = PairedStudentTTest::compute(vec![(1.0, 2.0)]);
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_paired_student_t_test_compute_two_samples() {
+        let result = PairedStudentTTest::compute(vec![(1.0, 2.0), (3.0, 4.5)]);
+        let expected = (1.0 - 2.0 + 3.0 - 4.5) / 2.0;
+        assert_abs_diff_eq!(result.unwrap().mean(), expected, epsilon = 1e-4);
+    }
+
+    #[test]
+    fn test_paired_student_t_test_compute_zero_variance() {
+        let result = PairedStudentTTest::compute(vec![(1.0, 2.0), (2.0, 3.0)]);
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::Uncomputable("The variance of the differences is zero.".to_string())
+        );
     }
 }
