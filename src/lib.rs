@@ -126,3 +126,39 @@ where
     let mean_score = scores.values().sum::<f64>() / scores.len() as f64;
     Ok(Evaluated { scores, mean_score })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn test_evaluate() -> Result<(), errors::ElinorError> {
+        let mut b = GoldRelStoreBuilder::new();
+        b.add_score("q_1", "d_1", 1)?;
+        b.add_score("q_1", "d_2", 0)?;
+        b.add_score("q_1", "d_3", 2)?;
+        b.add_score("q_2", "d_2", 2)?;
+        b.add_score("q_2", "d_4", 1)?;
+        let gold_rels = b.build();
+
+        let mut b = PredRelStoreBuilder::new();
+        b.add_score("q_1", "d_1", 0.5.into())?;
+        b.add_score("q_1", "d_2", 0.4.into())?;
+        b.add_score("q_1", "d_3", 0.3.into())?;
+        b.add_score("q_2", "d_4", 0.1.into())?;
+        b.add_score("q_2", "d_1", 0.2.into())?;
+        b.add_score("q_2", "d_3", 0.3.into())?;
+        let pred_rels = b.build();
+
+        let evaluated = evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
+        assert_relative_eq!(evaluated.mean_score(), (2. / 3. + 1. / 3.) / 2.);
+
+        let scores = evaluated.scores();
+        assert_eq!(scores.len(), 2);
+        assert_relative_eq!(scores["q_1"], 2. / 3.);
+        assert_relative_eq!(scores["q_2"], 1. / 3.);
+
+        Ok(())
+    }
+}
