@@ -1,4 +1,4 @@
-//! # Elinor: Evaluation Library in Information Retrieval
+//! # Elinor: Evaluation Library in INfOrmation Retrieval
 //!
 //! Elinor is a Rust library for evaluating information retrieval systems,
 //! inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://www.coronasha.co.jp/np/isbn/9784339024968/).
@@ -11,10 +11,10 @@
 //!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
 //!
-//! ## Getting Started
+//! ## Example: Evaluating metrics
 //!
-//! A simple routine to prepare gold and predicted relevance scores
-//! and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
+//! This example shows how to evaluate Precision@3, MAP, MRR, and nDCG@3
+//! for given gold and predicted relevance scores.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -22,6 +22,7 @@
 //! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
 //!
 //! // Prepare gold relevance scores.
+//! // In binary-relevance metrics, 0 means non-relevant and the others mean relevant.
 //! let mut b = GoldRelStoreBuilder::new();
 //! b.add_score("q_1", "d_1", 1)?;
 //! b.add_score("q_1", "d_2", 0)?;
@@ -30,7 +31,7 @@
 //! b.add_score("q_2", "d_4", 1)?;
 //! let gold_rels = b.build();
 //!
-//! // Prepare predicted relevance scores.
+//! // Prepare predicted relevance scores. A higher score means more relevant.
 //! let mut b = PredRelStoreBuilder::new();
 //! b.add_score("q_1", "d_1", 0.5.into())?;
 //! b.add_score("q_1", "d_2", 0.4.into())?;
