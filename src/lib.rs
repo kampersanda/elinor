@@ -218,15 +218,21 @@ where
             "The two evaluated results must have the same number of queries.".to_string(),
         ));
     }
+
+    // Sort query ids to ensure the order of paired scores.
+    let mut query_ids = a.keys().cloned().collect::<Vec<_>>();
+    query_ids.sort_unstable();
+
     let mut paired_scores = vec![];
-    for (query_id, &score_a) in a.iter() {
-        let &score_b = b.get(query_id).ok_or_else(|| {
+    for query_id in query_ids {
+        let score_a = a.get(&query_id).unwrap();
+        let score_b = b.get(&query_id).ok_or_else(|| {
             ElinorError::InvalidArgument(format!(
                 "The query id {} is not found in the second evaluated result.",
                 query_id
             ))
         })?;
-        paired_scores.push((score_a, score_b));
+        paired_scores.push((*score_a, *score_b));
     }
     Ok(paired_scores)
 }
@@ -235,34 +241,53 @@ where
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    use maplit::hashmap;
 
     #[test]
-    fn test_evaluate() -> Result<(), ElinorError> {
+    fn test_evaluate() {
         let mut b = GoldRelStoreBuilder::new();
-        b.add_score("q_1", "d_1", 1)?;
-        b.add_score("q_1", "d_2", 0)?;
-        b.add_score("q_1", "d_3", 2)?;
-        b.add_score("q_2", "d_2", 2)?;
-        b.add_score("q_2", "d_4", 1)?;
+        b.add_score("q_1", "d_1", 1).unwrap();
+        b.add_score("q_1", "d_2", 0).unwrap();
+        b.add_score("q_1", "d_3", 2).unwrap();
+        b.add_score("q_2", "d_2", 2).unwrap();
+        b.add_score("q_2", "d_4", 1).unwrap();
         let gold_rels = b.build();
 
         let mut b = PredRelStoreBuilder::new();
-        b.add_score("q_1", "d_1", 0.5.into())?;
-        b.add_score("q_1", "d_2", 0.4.into())?;
-        b.add_score("q_1", "d_3", 0.3.into())?;
-        b.add_score("q_2", "d_4", 0.1.into())?;
-        b.add_score("q_2", "d_1", 0.2.into())?;
-        b.add_score("q_2", "d_3", 0.3.into())?;
+        b.add_score("q_1", "d_1", 0.5.into()).unwrap();
+        b.add_score("q_1", "d_2", 0.4.into()).unwrap();
+        b.add_score("q_1", "d_3", 0.3.into()).unwrap();
+        b.add_score("q_2", "d_4", 0.1.into()).unwrap();
+        b.add_score("q_2", "d_1", 0.2.into()).unwrap();
+        b.add_score("q_2", "d_3", 0.3.into()).unwrap();
         let pred_rels = b.build();
 
-        let evaluated = evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
+        let evaluated = evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 }).unwrap();
         assert_relative_eq!(evaluated.mean_score(), (2. / 3. + 1. / 3.) / 2.);
 
         let scores = evaluated.scores();
         assert_eq!(scores.len(), 2);
         assert_relative_eq!(scores["q_1"], 2. / 3.);
         assert_relative_eq!(scores["q_2"], 1. / 3.);
+    }
 
-        Ok(())
+    #[test]
+    fn test_paired_scores_from_evaluated() {
+        let evaluated_a = Evaluated {
+            scores: hashmap! {
+                "q_1" => 2.,
+                "q_2" => 5.,
+            },
+            mean_score: 3.5,
+        };
+        let evaluated_b = Evaluated {
+            scores: hashmap! {
+                "q_1" => 1.,
+                "q_2" => 0.,
+            },
+            mean_score: 0.5,
+        };
+        let paired_scores = paired_scores_from_evaluated(&evaluated_a, &evaluated_b).unwrap();
+        assert_eq!(paired_scores, vec![(2., 1.), (5., 0.)]);
     }
 }
