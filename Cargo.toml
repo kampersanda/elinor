@@ -21,6 +21,7 @@ serde = ["ordered-float/serde"]
 
 [dependencies]
 ordered-float = "4.2.2"
+rand = "0.8.5"
 regex = "1.10.6"
 statrs = "0.17.1"
 thiserror = "1.0.63"

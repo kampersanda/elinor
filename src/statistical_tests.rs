@@ -1,5 +1,7 @@
 //! Statistical tests.
 
-pub mod paired_student_t_test;
+pub mod bootstrap_test;
+pub mod student_t_test;
 
-pub use paired_student_t_test::PairedStudentTTest;
+pub use bootstrap_test::BootstrapTest;
+pub use student_t_test::StudentTTest;
