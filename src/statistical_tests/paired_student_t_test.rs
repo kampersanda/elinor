@@ -104,7 +104,7 @@ impl PairedStudentTTest {
         })
     }
 
-    /// Mean difference.
+    /// Mean difference, i.e., `mean(a - b)` for `(a, b)` in `paired_samples`.
     pub const fn mean(&self) -> f64 {
         self.mean
     }
@@ -133,7 +133,7 @@ impl PairedStudentTTest {
     ///
     /// # Errors
     ///
-    /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range (0, 1].
+    /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
     pub fn margin_of_error(&self, significance_level: f64) -> Result<f64, ElinorError> {
         if significance_level <= 0.0 || significance_level > 1.0 {
             return Err(ElinorError::InvalidArgument(
@@ -149,7 +149,7 @@ impl PairedStudentTTest {
     ///
     /// # Errors
     ///
-    /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range (0, 1].
+    /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
     pub fn confidence_interval(&self, significance_level: f64) -> Result<(f64, f64), ElinorError> {
         let moe = self.margin_of_error(significance_level)?;
         Ok((self.mean - moe, self.mean + moe))
