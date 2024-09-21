@@ -50,6 +50,14 @@ jobs:
         run: cargo test --release
       - name: Run cargo doc
         run: RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps
+      - name: Run cargo example
+        # MSRV should be ignored for dev-dependencies.
+        continue-on-error: ${{ matrix.rust != 'stable' }}
+        run: |
+          cargo run --release --example from_json --features serde
+          cargo run --release --example from_trec
+          cargo run --release --example paired_bootstrap_test
+          cargo run --release --example simple
 
   correctness-test:
     name: Correctness test against trec_eval
