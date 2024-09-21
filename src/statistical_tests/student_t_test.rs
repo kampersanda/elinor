@@ -154,7 +154,7 @@ impl StudentTTest {
 
     /// Returns true if the difference is significant at the given significance level.
     pub fn is_significant(&self, significance_level: f64) -> bool {
-        self.p_value < significance_level
+        self.p_value <= significance_level
     }
 }
 

@@ -13,8 +13,7 @@
 //!
 //! ## Example: Evaluating metrics
 //!
-//! This example shows how to evaluate Precision@3, MAP, MRR, and nDCG@3
-//! for given gold and predicted relevance scores.
+//! This example shows how to evaluate Precision@3, MAP, MRR, and nDCG@3.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -60,6 +59,73 @@
 //! # }
 //! ```
 //!
+//! ## Example: Performing paired Student's t-test
+//!
+//! This example shows how to perform Student's t-test for Precision scores
+//! between two systems.
+//!
+//! ```
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use approx::assert_relative_eq;
+//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+//! use elinor::paired_scores_from_evaluated;
+//! use elinor::statistical_tests::StudentTTest;
+//!
+//! // Prepare gold relevance scores.
+//! let mut b = GoldRelStoreBuilder::new();
+//! b.add_score("q_1", "d_1", 1)?;
+//! b.add_score("q_1", "d_2", 1)?;
+//! b.add_score("q_2", "d_1", 1)?;
+//! b.add_score("q_2", "d_2", 1)?;
+//! let gold_rels = b.build();
+//!
+//! // Prepare predicted relevance scores for system A.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_score("q_1", "d_1", 0.2.into())?;
+//! b.add_score("q_1", "d_2", 0.1.into())?;
+//! b.add_score("q_2", "d_1", 0.2.into())?;
+//! b.add_score("q_2", "d_2", 0.1.into())?;
+//! let pred_rels_a = b.build();
+//!
+//! // Prepare predicted relevance scores for system B.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_score("q_1", "d_3", 0.2.into())?;
+//! b.add_score("q_1", "d_2", 0.1.into())?;
+//! b.add_score("q_2", "d_3", 0.2.into())?;
+//! let pred_rels_b = b.build();
+//!
+//! // Evaluate Precision@2 for both systems.
+//! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, Metric::Precision { k: 2 })?;
+//! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, Metric::Precision { k: 2 })?;
+//!
+//! // Perform Student's t-test.
+//! let paired_scores = elinor::paired_scores_from_evaluated(&evaluated_a, &evaluated_b)?;
+//! let result = StudentTTest::from_paired_samples(paired_scores)?;
+//!
+//! // Various statistics can be obtained from the t-test result.
+//! assert!(result.mean() > 0.0);
+//! assert!(result.var() > 0.0);
+//! assert!(result.effect_size() > 0.0);
+//! assert!(result.t_stat() > 0.0);
+//! assert!(result.p_value() > 0.0);
+//!
+//! // Margin of error at a 95% confidence level.
+//! let moe95 = result.margin_of_error(0.05)?;
+//! assert!(moe95 > 0.0);
+//!
+//! // Confidence interval at a 95% confidence level.
+//! let (ci95_btm, ci95_top) = result.confidence_interval(0.05)?;
+//! assert_relative_eq!(ci95_btm, result.mean() - moe95);
+//! assert_relative_eq!(ci95_top, result.mean() + moe95);
+//!
+//! // Check if the difference is significant at a 95% confidence level.
+//! assert_eq!(result.is_significant(0.05), result.p_value() <= 0.05);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Other examples
+//!
 //! Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
 //!
 //! ## Crate features
@@ -77,6 +143,7 @@ use std::collections::HashMap;
 
 use ordered_float::OrderedFloat;
 
+pub use errors::ElinorError;
 pub use metrics::Metric;
 pub use relevance::Relevance;
 
@@ -123,7 +190,7 @@ pub fn evaluate<K>(
     gold_rels: &GoldRelStore<K>,
     pred_rels: &PredRelStore<K>,
     metric: Metric,
-) -> Result<Evaluated<K>, errors::ElinorError>
+) -> Result<Evaluated<K>, ElinorError>
 where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
@@ -132,13 +199,45 @@ where
     Ok(Evaluated { scores, mean_score })
 }
 
+/// Extracts paired scores from two [`Evaluated`] results.
+///
+/// # Errors
+///
+/// * [`ElinorError::InvalidArgument`] if the two evaluated results have different sets of queries.
+pub fn paired_scores_from_evaluated<K>(
+    a: &Evaluated<K>,
+    b: &Evaluated<K>,
+) -> Result<Vec<(f64, f64)>, ElinorError>
+where
+    K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
+{
+    let a = a.scores();
+    let b = b.scores();
+    if a.len() != b.len() {
+        return Err(ElinorError::InvalidArgument(
+            "The two evaluated results must have the same number of queries.".to_string(),
+        ));
+    }
+    let mut paired_scores = vec![];
+    for (query_id, &score_a) in a.iter() {
+        let &score_b = b.get(query_id).ok_or_else(|| {
+            ElinorError::InvalidArgument(format!(
+                "The query id {} is not found in the second evaluated result.",
+                query_id
+            ))
+        })?;
+        paired_scores.push((score_a, score_b));
+    }
+    Ok(paired_scores)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
 
     #[test]
-    fn test_evaluate() -> Result<(), errors::ElinorError> {
+    fn test_evaluate() -> Result<(), ElinorError> {
         let mut b = GoldRelStoreBuilder::new();
         b.add_score("q_1", "d_1", 1)?;
         b.add_score("q_1", "d_2", 0)?;
