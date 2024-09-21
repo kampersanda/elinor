@@ -332,35 +332,51 @@ where
     }
     let mut results = HashMap::new();
     for query_id in pred_rels.query_ids() {
-        let preds = pred_rels.get_sorted(query_id).unwrap();
+        let sorted_preds = pred_rels.get_sorted(query_id).unwrap();
         let golds = gold_rels.get_map(query_id).unwrap();
         let score = match metric {
-            Metric::Hits { k } => hits::compute_hits(golds, preds, k, RELEVANT_LEVEL),
-            Metric::Success { k } => hits::compute_success(golds, preds, k, RELEVANT_LEVEL),
+            Metric::Hits { k } => hits::compute_hits(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::Success { k } => hits::compute_success(golds, sorted_preds, k, RELEVANT_LEVEL),
             Metric::Precision { k } => {
-                precision::compute_precision(golds, preds, k, RELEVANT_LEVEL)
+                precision::compute_precision(golds, sorted_preds, k, RELEVANT_LEVEL)
             }
-            Metric::Recall { k } => recall::compute_recall(golds, preds, k, RELEVANT_LEVEL),
-            Metric::F1 { k } => f1::compute_f1(golds, preds, k, RELEVANT_LEVEL),
-            Metric::RPrecision => r_precision::compute_r_precision(golds, preds, RELEVANT_LEVEL),
+            Metric::Recall { k } => recall::compute_recall(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::F1 { k } => f1::compute_f1(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::RPrecision => {
+                r_precision::compute_r_precision(golds, sorted_preds, RELEVANT_LEVEL)
+            }
             Metric::AP { k } => {
-                average_precision::compute_average_precision(golds, preds, k, RELEVANT_LEVEL)
+                average_precision::compute_average_precision(golds, sorted_preds, k, RELEVANT_LEVEL)
             }
             Metric::RR { k } => {
-                reciprocal_rank::compute_reciprocal_rank(golds, preds, k, RELEVANT_LEVEL)
+                reciprocal_rank::compute_reciprocal_rank(golds, sorted_preds, k, RELEVANT_LEVEL)
             }
-            Metric::Bpref => bpref::compute_bpref(golds, preds, RELEVANT_LEVEL),
-            Metric::DCG { k } => ndcg::compute_dcg(golds, preds, k, ndcg::DcgWeighting::Jarvelin),
+            Metric::Bpref => bpref::compute_bpref(golds, sorted_preds, RELEVANT_LEVEL),
+            Metric::DCG { k } => {
+                ndcg::compute_dcg(golds, sorted_preds, k, ndcg::DcgWeighting::Jarvelin)
+            }
             Metric::NDCG { k } => {
-                let sorted = gold_rels.get_sorted(query_id).unwrap();
-                ndcg::compute_ndcg(golds, sorted, preds, k, ndcg::DcgWeighting::Jarvelin)
+                let sorted_golds = gold_rels.get_sorted(query_id).unwrap();
+                ndcg::compute_ndcg(
+                    golds,
+                    sorted_golds,
+                    sorted_preds,
+                    k,
+                    ndcg::DcgWeighting::Jarvelin,
+                )
             }
             Metric::DCGBurges { k } => {
-                ndcg::compute_dcg(golds, preds, k, ndcg::DcgWeighting::Burges)
+                ndcg::compute_dcg(golds, sorted_preds, k, ndcg::DcgWeighting::Burges)
             }
             Metric::NDCGBurges { k } => {
-                let sorted = gold_rels.get_sorted(query_id).unwrap();
-                ndcg::compute_ndcg(golds, sorted, preds, k, ndcg::DcgWeighting::Burges)
+                let sorted_golds = gold_rels.get_sorted(query_id).unwrap();
+                ndcg::compute_ndcg(
+                    golds,
+                    sorted_golds,
+                    sorted_preds,
+                    k,
+                    ndcg::DcgWeighting::Burges,
+                )
             }
         };
         results.insert(query_id.clone(), score);
