@@ -9,7 +9,7 @@
 //!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
 //!
-//! # Example: Evaluating metrics
+//! # Example: Evaluating several metrics
 //!
 //! This example shows how to evaluate Precision@3, MAP, MRR, and nDCG@3.
 //!
@@ -57,10 +57,9 @@
 //! # }
 //! ```
 //!
-//! # Example: Performing paired Student's t-test
+//! # Example: Testing statistical significance using paired Student's t-test
 //!
-//! This example shows how to perform Student's t-test for Precision scores
-//! between two systems.
+//! This example shows how to perform Student's t-test for Precision scores between two systems.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -92,9 +91,9 @@
 //! b.add_score("q_2", "d_3", 0.2.into())?;
 //! let pred_rels_b = b.build();
 //!
-//! // Evaluate Precision@2 for both systems.
-//! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, Metric::Precision { k: 2 })?;
-//! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, Metric::Precision { k: 2 })?;
+//! // Evaluate Precision for both systems.
+//! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, Metric::Precision { k: 0 })?;
+//! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, Metric::Precision { k: 0 })?;
 //!
 //! // Perform Student's t-test.
 //! let paired_scores = elinor::paired_scores_from_evaluated(&evaluated_a, &evaluated_b)?;
@@ -168,7 +167,7 @@ pub type PredRelStore<K> = relevance::RelevanceStore<K, PredScore>;
 /// Builder for [`PredRelStore`].
 pub type PredRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
 
-/// Data type to store evaluated scores.
+/// Struct to store evaluated results.
 pub struct Evaluated<K> {
     scores: HashMap<K, f64>,
     mean_score: f64,
