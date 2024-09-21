@@ -19,8 +19,8 @@ where
     if k == 0 {
         return 0.0;
     }
-    let n_golds = golds.values().filter(|&&rel| rel >= rel_lvl).count();
-    if n_golds == 0 {
+    let n_rels = golds.values().filter(|&&rel| rel >= rel_lvl).count();
+    if n_rels == 0 {
         return 0.0;
     }
     let mut sum = 0.0;
@@ -31,5 +31,5 @@ where
             }
         }
     }
-    sum / n_golds as f64
+    sum / n_rels as f64
 }

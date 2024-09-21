@@ -2,7 +2,7 @@ use anyhow::Result;
 
 #[cfg(not(feature = "serde"))]
 fn main() -> Result<()> {
-    println!("This example requires the 'serde' feature, such as `cargo pred_rels --example from_json --features serde`.");
+    println!("This example requires the 'serde' feature, such as `cargo run --example from_json --features serde`.");
     Ok(())
 }
 

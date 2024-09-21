@@ -12,7 +12,7 @@ q_2 0 d_4 1
     "
     .trim();
 
-    // <QueryID> <Dummy> <DocID> <Rank> <Score> <Pred_relsName>
+    // <QueryID> <Dummy> <DocID> <Rank> <Score> <RunName>
     let pred_rels_data = "
 q_1 0 d_1 1 0.5 SAMPLE
 q_1 0 d_2 2 0.4 SAMPLE
