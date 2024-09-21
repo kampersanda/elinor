@@ -91,18 +91,19 @@ pub use relevance::Relevance;
 pub type GoldScore = u32;
 
 /// Data type to store a predicted relevance score.
+/// A higher score means more relevant.
 pub type PredScore = OrderedFloat<f64>;
 
-/// Data structure to store Qrels.
+/// Data structure to store gold relevance scores.
 pub type GoldRelStore<K> = relevance::RelevanceStore<K, GoldScore>;
 
-/// Builder for [`Qrels`].
+/// Builder for [`GoldRelStore`].
 pub type GoldRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, GoldScore>;
 
-/// Data structure to store a Run.
+/// Data structure to store predicted relevance scores.
 pub type PredRelStore<K> = relevance::RelevanceStore<K, PredScore>;
 
-/// Builder for [`Run`].
+/// Builder for [`PredRelStore`].
 pub type PredRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
 
 /// Data type to store evaluated scores.

@@ -1,4 +1,4 @@
-//! Relevance store.
+//! Data structures for storing relevance scores.
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fmt::Display;

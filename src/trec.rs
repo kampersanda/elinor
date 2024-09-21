@@ -1,4 +1,4 @@
-//! TREC format parser for Qrels and Run data.
+//! TREC format parser.
 use crate::errors::ElinorError;
 use crate::GoldRelStore;
 use crate::GoldRelStoreBuilder;

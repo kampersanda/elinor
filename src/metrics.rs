@@ -44,7 +44,8 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 ///
 /// # Arguments
 ///
-/// * `k` - Number of top documents to consider. if `k` is set to 0, all documents are considered.
+/// * `k` - Number of top documents to consider.
+///   If `k` is set to 0, all documents are considered.
 ///
 /// # Conversion from/into string representation
 ///
