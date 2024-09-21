@@ -186,7 +186,9 @@ impl BootstrapTester {
             let resampled: Vec<f64> = (0..samples.len())
                 .map(|_| samples[rng.gen_range(0..samples.len())])
                 .collect();
-            let (resampled_t_stat, _, _) = compute_t_stat(&resampled)?;
+            // If samples.len() is small, the variance may be zero.
+            // In that unfortunate case, we skip the counting.
+            let (resampled_t_stat, _, _) = compute_t_stat(&resampled).unwrap_or((0.0, 0.0, 0.0));
             if resampled_t_stat.abs() >= t_stat.abs() {
                 count += 1;
             }
@@ -216,5 +218,66 @@ impl BootstrapTester {
     {
         let diffs = paired_samples.into_iter().map(|(x, y)| x - y);
         self.test(diffs)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::relative_eq;
+
+    #[test]
+    fn test_bootstrap_test_from_samples_empty() {
+        let samples = vec![];
+        let result = BootstrapTest::from_samples(samples);
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bootstrap_test_from_samples_single() {
+        let samples = vec![1.0];
+        let result = BootstrapTest::from_samples(samples);
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bootstrap_test_from_samples_zero_variance() {
+        let samples = vec![1.0, 1.0];
+        let result = BootstrapTest::from_samples(samples);
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::Uncomputable("The variance is zero.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_bootstrap_tester_with_parameters() {
+        let tester = BootstrapTester::new()
+            .with_n_resamples(334)
+            .with_random_state(42);
+        let samples = (0..10).map(|x| x as f64).collect::<Vec<f64>>();
+        let result = tester.test(samples).unwrap();
+        assert_eq!(result.n_resamples(), 334);
+        assert_eq!(result.random_state(), 42);
+    }
+
+    #[test]
+    fn test_bootstrap_tester_with_random_state_consistency() {
+        let samples = (0..10).map(|x| x as f64).collect::<Vec<f64>>();
+        let p_values: Vec<f64> = (0..10)
+            .map(|_| {
+                let tester = BootstrapTester::new().with_random_state(42);
+                let result = tester.test(samples.clone()).unwrap();
+                result.p_value()
+            })
+            .collect();
+        let x = p_values[0];
+        assert!(p_values.iter().all(|&y| relative_eq!(x, y)));
     }
 }
