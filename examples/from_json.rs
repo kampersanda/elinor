@@ -61,22 +61,10 @@ fn main() -> Result<()> {
         Metric::NDCG { k: 3 },
         Metric::NDCGBurges { k: 3 },
     ];
-    let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metrics.iter().cloned())?;
 
-    println!("=== Mean scores ===");
-    for metric in &metrics {
-        let score = evaluated.mean_scores[metric];
-        println!("{metric}: {score:.4}");
-    }
-
-    println!("\n=== Scores for each query ===");
-    for metric in &metrics {
-        println!("{metric}");
-        let qid_to_score = &evaluated.all_scores[metric];
-        for qid in ["q_1", "q_2"] {
-            let score = qid_to_score[qid];
-            println!("- {qid}: {score:.4}");
-        }
+    for metric in metrics {
+        let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
+        println!("{:?}: {:.4}", metric, evaluated.mean_score());
     }
 
     Ok(())

@@ -1,4 +1,4 @@
-# Elinor: Evaluation Library in Information Retrieval
+# Elinor: Evaluation Library in INfOrmation Retrieval
 
 <p align="left">
     <a href="https://github.com/kampersanda/elinor/actions/workflows/ci.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/kampersanda/elinor/ci.yml?branch=main&style=flat-square" alt="actions status" /></a>
@@ -14,8 +14,7 @@ inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://ww
 ## Features
 
 - **IRer-friendly**:
-  The library is designed to be easy to use for developers in information retrieval
-  by providing TREC-like data structures, such as Qrels and Run.
+  The library is designed to be easy to use for developers in information retrieval.
 - **Flexible**:
   The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
   The supported metrics are available in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
@@ -33,52 +32,47 @@ RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --open
 
 ## Getting Started
 
-A simple routine to prepare Qrels and Run data structures
+A simple routine to prepare gold and predicted relevance scores
 and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 
 ```rust
-use elinor::{QrelsBuilder, RunBuilder, Metric};
+use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+use approx::assert_abs_diff_eq;
 
-// Construct Qrels data structure.
-let mut qb = QrelsBuilder::new();
-qb.add_score("q_1", "d_1", 1)?;
-qb.add_score("q_1", "d_2", 0)?;
-qb.add_score("q_1", "d_3", 2)?;
-qb.add_score("q_2", "d_2", 2)?;
-qb.add_score("q_2", "d_4", 1)?;
-let qrels = qb.build();
+// Prepare gold relevance scores.
+let mut b = GoldRelStoreBuilder::new();
+b.add_score("q_1", "d_1", 1)?;
+b.add_score("q_1", "d_2", 0)?;
+b.add_score("q_1", "d_3", 2)?;
+b.add_score("q_2", "d_2", 2)?;
+b.add_score("q_2", "d_4", 1)?;
+let gold_rels = b.build();
 
-// Construct Run data structure.
-let mut rb = RunBuilder::new();
-rb.add_score("q_1", "d_1", 0.5.into())?;
-rb.add_score("q_1", "d_2", 0.4.into())?;
-rb.add_score("q_1", "d_3", 0.3.into())?;
-rb.add_score("q_2", "d_4", 0.1.into())?;
-rb.add_score("q_2", "d_1", 0.2.into())?;
-rb.add_score("q_2", "d_3", 0.3.into())?;
-let run = rb.build();
+// Prepare predicted relevance scores.
+let mut b = PredRelStoreBuilder::new();
+b.add_score("q_1", "d_1", 0.5.into())?;
+b.add_score("q_1", "d_2", 0.4.into())?;
+b.add_score("q_1", "d_3", 0.3.into())?;
+b.add_score("q_2", "d_4", 0.1.into())?;
+b.add_score("q_2", "d_1", 0.2.into())?;
+b.add_score("q_2", "d_3", 0.3.into())?;
+let pred_rels = b.build();
 
-// The metrics to evaluate can be specified via Metric instances.
-let metrics = vec![
-    Metric::Precision { k: 3 },
-    Metric::AP { k: 0 }, // k=0 means all documents.
-    // The instances can also be specified via strings.
-    "rr".parse()?,
-    "ndcg@3".parse()?,
-];
+// Evaluate Precision@3.
+let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
+assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
 
-// Evaluate the qrels and run data.
-let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
+// Evaluate MAP, where all documents are considered via k=0.
+let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
+assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
 
-// Macro-averaged scores.
-for metric in &metrics {
-    let score = evaluated.mean_scores[metric];
-    println!("{metric}: {score:.4}");
-}
-// => precision@3: 0.5000
-// => ap: 0.5000
-// => rr: 0.6667
-// => ndcg@3: 0.4751
+// Evaluate MRR, where the metric is specified via a string representation.
+let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
+assert_abs_diff_eq!(evaluated.mean_score(), 0.6667, epsilon = 1e-4);
+
+// Evaluate nDCG@3, where the metric is specified via a string representation.
+let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
+assert_abs_diff_eq!(evaluated.mean_score(), 0.4751, epsilon = 1e-4);
 ```
 
 Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
