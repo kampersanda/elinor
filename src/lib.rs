@@ -12,11 +12,6 @@
 //!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
 //!
-//! ## Glossary
-//!
-//! * **Qrels** - Collection of relevance judgments for a set of queries and documents.
-//! * **Run** - Collection of predicted scores for a set of queries and documents.
-//!
 //! ## Getting Started
 //!
 //! A simple routine to prepare Qrels and Run data structures

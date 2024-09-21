@@ -7,7 +7,7 @@ use crate::PredRelStore;
 use crate::PredRelStoreBuilder;
 use crate::PredScore;
 
-/// Parses the given TREC data into a Qrels data structure.
+/// Parses the Qrels data in the TREC format into a [`GoldRelStore`].
 ///
 /// # Format
 ///
@@ -59,7 +59,7 @@ where
     Ok(b.build())
 }
 
-/// Parses the given TREC data into a Run data structure.
+/// Parses the given Run data in the TREC format into a [`PredRelStore`].
 ///
 /// # Format
 ///
