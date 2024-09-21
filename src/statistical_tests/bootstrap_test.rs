@@ -7,7 +7,16 @@ use rand::SeedableRng;
 use crate::errors::ElinorError;
 use crate::statistical_tests::student_t_test::compute_t_stat;
 
-/// Paired bootstrap test.
+/// Bootstrap test.
+///
+/// # References
+///
+/// * Bradley Efron and R.J. Tibshirani.
+///   [An Introduction to the Bootstrap](https://doi.org/10.1201/9780429246593).
+///   Chapman & Hall/CRC, 1994.
+/// * Tetsuya Sakai.
+///   [Evaluating evaluation metrics based on the bootstrap](https://doi.org/10.1145/1148170.1148261).
+///   SIGIR 2006.
 #[derive(Debug, Clone, Copy)]
 pub struct BootstrapTest {
     n_resamples: usize,
@@ -19,6 +28,9 @@ pub struct BootstrapTest {
 
 impl BootstrapTest {
     /// Computes a bootstrap test for the samples.
+    ///
+    /// It uses the default parameters defined in [`BootstrapTester`].
+    /// To customize the parameters, use [`BootstrapTester`].
     ///
     /// # Errors
     ///
@@ -32,6 +44,9 @@ impl BootstrapTest {
 
     /// Computes a paired bootstrap test for differences between paired samples.
     ///
+    /// It uses the default parameters defined in [`BootstrapTester`].
+    /// To customize the parameters, use [`BootstrapTester`].
+    ///
     /// # Errors
     ///
     /// See [`BootstrapTester::test`].
@@ -39,9 +54,7 @@ impl BootstrapTest {
     where
         I: IntoIterator<Item = (f64, f64)>,
     {
-        let (a, b): (Vec<f64>, Vec<f64>) = paired_samples.into_iter().unzip();
-        let samples = a.iter().zip(b.iter()).map(|(a, b)| a - b);
-        BootstrapTester::new().test(samples)
+        BootstrapTester::new().test_for_paired_samples(paired_samples)
     }
 
     /// Mean.
@@ -76,6 +89,11 @@ impl BootstrapTest {
 }
 
 /// Bootstrap tester.
+///
+/// # Default parameters
+///
+/// * `n_resamples`: `1000`
+/// * `random_state`: `None`
 #[derive(Debug, Clone, Copy)]
 pub struct BootstrapTester {
     n_resamples: usize,
@@ -84,11 +102,6 @@ pub struct BootstrapTester {
 
 impl BootstrapTester {
     /// Creates a new bootstrap tester.
-    ///
-    /// # Default parameters
-    ///
-    /// * `n_resamples`: 1000
-    /// * `random_state`: None
     pub fn new() -> Self {
         Self {
             n_resamples: 1000,
@@ -97,7 +110,7 @@ impl BootstrapTester {
     }
 
     /// Sets the number of resamples.
-    pub fn with_resamples(mut self, n_resamples: usize) -> Self {
+    pub fn with_n_resamples(mut self, n_resamples: usize) -> Self {
         self.n_resamples = n_resamples;
         self
     }
@@ -151,5 +164,22 @@ impl BootstrapTester {
             var,
             p_value,
         })
+    }
+
+    /// Computes a paired bootstrap test for differences between paired samples.
+    ///
+    /// # Errors
+    ///
+    /// See [`BootstrapTester::test`].
+    pub fn test_for_paired_samples<I>(
+        &self,
+        paired_samples: I,
+    ) -> Result<BootstrapTest, ElinorError>
+    where
+        I: IntoIterator<Item = (f64, f64)>,
+    {
+        let (a, b): (Vec<f64>, Vec<f64>) = paired_samples.into_iter().unzip();
+        let diffs = a.into_iter().zip(b).map(|(x, y)| x - y);
+        self.test(diffs)
     }
 }
