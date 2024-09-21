@@ -1,4 +1,4 @@
-# Elinor: Evaluation Library in Information Retrieval
+# Elinor: Evaluation Library in INfOrmation Retrieval
 
 <p align="left">
     <a href="https://github.com/kampersanda/elinor/actions/workflows/ci.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/kampersanda/elinor/ci.yml?branch=main&style=flat-square" alt="actions status" /></a>
