@@ -8,6 +8,7 @@ pub(crate) mod precision;
 pub(crate) mod r_precision;
 pub(crate) mod recall;
 pub(crate) mod reciprocal_rank;
+pub(crate) mod success;
 
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -336,7 +337,9 @@ where
         let golds = gold_rels.get_map(query_id).unwrap();
         let score = match metric {
             Metric::Hits { k } => hits::compute_hits(golds, sorted_preds, k, RELEVANT_LEVEL),
-            Metric::Success { k } => hits::compute_success(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::Success { k } => {
+                success::compute_success(golds, sorted_preds, k, RELEVANT_LEVEL)
+            }
             Metric::Precision { k } => {
                 precision::compute_precision(golds, sorted_preds, k, RELEVANT_LEVEL)
             }
