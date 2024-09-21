@@ -290,4 +290,53 @@ mod tests {
         let paired_scores = paired_scores_from_evaluated(&evaluated_a, &evaluated_b).unwrap();
         assert_eq!(paired_scores, vec![(2., 1.), (5., 0.)]);
     }
+
+    #[test]
+    fn test_paired_scores_from_evaluated_different_n_queries() {
+        let evaluated_a = Evaluated {
+            scores: hashmap! {
+                "q_1" => 2.,
+                "q_2" => 5.,
+            },
+            mean_score: 3.5,
+        };
+        let evaluated_b = Evaluated {
+            scores: hashmap! {
+                "q_1" => 1.,
+            },
+            mean_score: 1.0,
+        };
+        let result = paired_scores_from_evaluated(&evaluated_a, &evaluated_b);
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::InvalidArgument(
+                "The two evaluated results must have the same number of queries.".to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn test_paired_scores_from_evaluated_missing_query_id() {
+        let evaluated_a = Evaluated {
+            scores: hashmap! {
+                "q_1" => 2.,
+                "q_2" => 5.,
+            },
+            mean_score: 3.5,
+        };
+        let evaluated_b = Evaluated {
+            scores: hashmap! {
+                "q_1" => 1.,
+                "q_3" => 0.,
+            },
+            mean_score: 0.5,
+        };
+        let result = paired_scores_from_evaluated(&evaluated_a, &evaluated_b);
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::InvalidArgument(
+                "The query id q_2 is not found in the second evaluated result.".to_string()
+            )
+        );
+    }
 }
