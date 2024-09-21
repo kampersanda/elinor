@@ -14,6 +14,9 @@ def run_trec_eval(
     command = f"./{trec_eval_dir}/trec_eval -c -m all_trec {qrels_file} {results_file}"
     print(f"Running: {command}")
     result = subprocess.run(command, capture_output=True, shell=True)
+    if result.returncode != 0:
+        print(result.stderr.decode("utf-8"), file=sys.stderr)
+        sys.exit(1)
     parsed: dict[str, str] = {}
     for line in result.stdout.decode("utf-8").split("\n"):
         if not line:
