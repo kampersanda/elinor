@@ -14,31 +14,31 @@
 //!
 //! ## Getting Started
 //!
-//! A simple routine to prepare Qrels and Run data structures
+//! A simple routine to prepare gold and predicted relevance scores
 //! and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use elinor::{QrelsBuilder, RunBuilder, Metric};
+//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
 //!
-//! // Construct Qrels data structure.
-//! let mut qb = QrelsBuilder::new();
-//! qb.add_score("q_1", "d_1", 1)?;
-//! qb.add_score("q_1", "d_2", 0)?;
-//! qb.add_score("q_1", "d_3", 2)?;
-//! qb.add_score("q_2", "d_2", 2)?;
-//! qb.add_score("q_2", "d_4", 1)?;
-//! let qrels = qb.build();
+//! // Prepare gold relevance scores.
+//! let mut b = GoldRelStoreBuilder::new();
+//! b.add_score("q_1", "d_1", 1)?;
+//! b.add_score("q_1", "d_2", 0)?;
+//! b.add_score("q_1", "d_3", 2)?;
+//! b.add_score("q_2", "d_2", 2)?;
+//! b.add_score("q_2", "d_4", 1)?;
+//! let gold_rels = b.build();
 //!
-//! // Construct Run data structure.
-//! let mut rb = RunBuilder::new();
-//! rb.add_score("q_1", "d_1", 0.5.into())?;
-//! rb.add_score("q_1", "d_2", 0.4.into())?;
-//! rb.add_score("q_1", "d_3", 0.3.into())?;
-//! rb.add_score("q_2", "d_4", 0.1.into())?;
-//! rb.add_score("q_2", "d_1", 0.2.into())?;
-//! rb.add_score("q_2", "d_3", 0.3.into())?;
-//! let run = rb.build();
+//! // Prepare predicted relevance scores.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_score("q_1", "d_1", 0.5.into())?;
+//! b.add_score("q_1", "d_2", 0.4.into())?;
+//! b.add_score("q_1", "d_3", 0.3.into())?;
+//! b.add_score("q_2", "d_4", 0.1.into())?;
+//! b.add_score("q_2", "d_1", 0.2.into())?;
+//! b.add_score("q_2", "d_3", 0.3.into())?;
+//! let pred_rels = b.build();
 //!
 //! // The metrics to evaluate can be specified via Metric instances.
 //! let metrics = vec![
@@ -49,8 +49,8 @@
 //!     "ndcg@3".parse()?,
 //! ];
 //!
-//! // Evaluate the qrels and run data.
-//! let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
+//! // Evaluate.
+//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metrics.iter().cloned())?;
 //!
 //! // Macro-averaged scores.
 //! for metric in &metrics {
@@ -110,10 +110,10 @@ pub struct Evaluated<K> {
     pub all_scores: HashMap<Metric, HashMap<K, f64>>,
 }
 
-/// Evaluates the given qrels and run data using the specified metrics.
+/// Evaluates the given gold_rels and pred_rels data using the specified metrics.
 pub fn evaluate<K, M>(
-    qrels: &GoldRelStore<K>,
-    run: &PredRelStore<K>,
+    gold_rels: &GoldRelStore<K>,
+    pred_rels: &PredRelStore<K>,
     metrics: M,
 ) -> Result<Evaluated<K>, errors::ElinorError>
 where
@@ -124,7 +124,7 @@ where
     let mut mean_scores = HashMap::new();
     let mut all_scores = HashMap::new();
     for metric in metrics {
-        let result = metrics::compute_metric(qrels, run, metric)?;
+        let result = metrics::compute_metric(gold_rels, pred_rels, metric)?;
         let mean_score = result.values().sum::<f64>() / result.len() as f64;
         mean_scores.insert(metric, mean_score);
         all_scores.insert(metric, result);
