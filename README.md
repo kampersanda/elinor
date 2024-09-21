@@ -9,7 +9,7 @@
 </p>
 
 Elinor is a Rust library for evaluating information retrieval systems,
-which is inspired by [ranx](https://github.com/AmenRa/ranx).
+inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://www.coronasha.co.jp/np/isbn/9784339024968/).
 
 ## Features
 
