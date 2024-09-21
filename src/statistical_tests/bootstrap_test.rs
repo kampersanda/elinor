@@ -129,9 +129,15 @@ pub struct BootstrapTester {
     random_state: Option<u64>,
 }
 
+impl Default for BootstrapTester {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BootstrapTester {
     /// Creates a new bootstrap tester.
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             n_resamples: 9999,
             random_state: None,
@@ -139,13 +145,13 @@ impl BootstrapTester {
     }
 
     /// Sets the number of resamples.
-    pub fn with_n_resamples(mut self, n_resamples: usize) -> Self {
+    pub const fn with_n_resamples(mut self, n_resamples: usize) -> Self {
         self.n_resamples = n_resamples;
         self
     }
 
     /// Sets the random state.
-    pub fn with_random_state(mut self, random_state: u64) -> Self {
+    pub const fn with_random_state(mut self, random_state: u64) -> Self {
         self.random_state = Some(random_state);
         self
     }
@@ -168,10 +174,9 @@ impl BootstrapTester {
         }
 
         // Prepare the random number generator.
-        let random_state = match self.random_state {
-            Some(seed) => seed,
-            None => rand::thread_rng().gen(),
-        };
+        let random_state = self
+            .random_state
+            .map_or_else(|| rand::thread_rng().gen(), |seed| seed);
         let mut rng = StdRng::seed_from_u64(random_state);
 
         // Compute the t-statistic for the original samples.
