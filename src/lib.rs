@@ -40,15 +40,6 @@
 //! b.add_score("q_2", "d_3", 0.3.into())?;
 //! let pred_rels = b.build();
 //!
-//! // The metrics to evaluate can be specified via Metric instances.
-//! let metrics = vec![
-//!     Metric::Precision { k: 3 },
-//!     Metric::AP { k: 0 }, // k=0 means all documents.
-//!     // The instances can also be specified via strings.
-//!     "rr".parse()?,
-//!     "ndcg@3".parse()?,
-//! ];
-//!
 //! // Evaluate Precision@3.
 //! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
 //! assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
@@ -64,11 +55,6 @@
 //! // Evaluate nDCG@3, where the metric is specified via a string representation.
 //! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
 //! assert_abs_diff_eq!(evaluated.mean_score(), 0.4751, epsilon = 1e-4);
-//!
-//! // => precision@3: 0.5000
-//! // => ap: 0.5000
-//! // => rr: 0.6667
-//! // => ndcg@3: 0.4751
 //! # Ok(())
 //! # }
 //! ```

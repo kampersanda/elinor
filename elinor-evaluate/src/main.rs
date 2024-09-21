@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pred_rels = trec::parse_pred_rels_in_trec(load_lines(&args.pred_file)?.into_iter())?;
 
     let metrics = all_metrics(&args.ks);
-    for metric in &metrics {
+    for metric in metrics {
         let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
         let score = evaluated.mean_score();
         println!("{metric}\t{score:.4}");

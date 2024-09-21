@@ -37,6 +37,7 @@ and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
 
 ```rust
 use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+use approx::assert_abs_diff_eq;
 
 // Prepare gold relevance scores.
 let mut b = GoldRelStoreBuilder::new();
@@ -57,27 +58,21 @@ b.add_score("q_2", "d_1", 0.2.into())?;
 b.add_score("q_2", "d_3", 0.3.into())?;
 let pred_rels = b.build();
 
-// The metrics to evaluate can be specified via Metric instances.
-let metrics = vec![
-    Metric::Precision { k: 3 },
-    Metric::AP { k: 0 }, // k=0 means all documents.
-    // The instances can also be specified via strings.
-    "rr".parse()?,
-    "ndcg@3".parse()?,
-];
+// Evaluate Precision@3.
+let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
+assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
 
-// Evaluate.
-let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metrics.iter().cloned())?;
+// Evaluate MAP, where all documents are considered via k=0.
+let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
+assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
 
-// Macro-averaged scores.
-for metric in &metrics {
-    let score = evaluated.mean_scores[metric];
-    println!("{metric}: {score:.4}");
-}
-// => precision@3: 0.5000
-// => ap: 0.5000
-// => rr: 0.6667
-// => ndcg@3: 0.4751
+// Evaluate MRR, where the metric is specified via a string representation.
+let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
+assert_abs_diff_eq!(evaluated.mean_score(), 0.6667, epsilon = 1e-4);
+
+// Evaluate nDCG@3, where the metric is specified via a string representation.
+let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
+assert_abs_diff_eq!(evaluated.mean_score(), 0.4751, epsilon = 1e-4);
 ```
 
 Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
