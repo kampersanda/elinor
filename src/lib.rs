@@ -19,6 +19,7 @@
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+//! use approx::assert_abs_diff_eq;
 //!
 //! // Prepare gold relevance scores.
 //! let mut b = GoldRelStoreBuilder::new();
@@ -48,14 +49,22 @@
 //!     "ndcg@3".parse()?,
 //! ];
 //!
-//! // Evaluate.
-//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metrics.iter().cloned())?;
+//! // Evaluate Precision@3.
+//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
+//! assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
 //!
-//! // Macro-averaged scores.
-//! for metric in &metrics {
-//!     let score = evaluated.mean_scores[metric];
-//!     println!("{metric}: {score:.4}");
-//! }
+//! // Evaluate MAP, where all documents are considered via k=0.
+//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
+//! assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
+//!
+//! // Evaluate MRR, where the metric is specified via a string representation.
+//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
+//! assert_abs_diff_eq!(evaluated.mean_score(), 0.6667, epsilon = 1e-4);
+//!
+//! // Evaluate nDCG@3, where the metric is specified via a string representation.
+//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
+//! assert_abs_diff_eq!(evaluated.mean_score(), 0.4751, epsilon = 1e-4);
+//!
 //! // => precision@3: 0.5000
 //! // => ap: 0.5000
 //! // => rr: 0.6667
@@ -73,9 +82,9 @@ pub mod relevance;
 pub mod statistical_tests;
 pub mod trec;
 
-use ordered_float::OrderedFloat;
 use std::collections::HashMap;
-use std::collections::HashSet;
+
+use ordered_float::OrderedFloat;
 
 pub use metrics::Metric;
 pub use relevance::Relevance;
@@ -102,34 +111,32 @@ pub type PredRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>
 
 /// Data type to store evaluated scores.
 pub struct Evaluated<K> {
-    /// Metric to macro-averaged score.
-    pub mean_scores: HashMap<Metric, f64>,
+    scores: HashMap<K, f64>,
+    mean_score: f64,
+}
 
-    /// Metric to mapping from query ID to the score.
-    pub all_scores: HashMap<Metric, HashMap<K, f64>>,
+impl<K> Evaluated<K> {
+    /// Returns the reference to the mappping from query ids to scores.
+    pub const fn scores(&self) -> &HashMap<K, f64> {
+        &self.scores
+    }
+
+    /// Returns the macro-averaged score.
+    pub const fn mean_score(&self) -> f64 {
+        self.mean_score
+    }
 }
 
 /// Evaluates the given gold_rels and pred_rels data using the specified metrics.
-pub fn evaluate<K, M>(
+pub fn evaluate<K>(
     gold_rels: &GoldRelStore<K>,
     pred_rels: &PredRelStore<K>,
-    metrics: M,
+    metric: Metric,
 ) -> Result<Evaluated<K>, errors::ElinorError>
 where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
-    M: IntoIterator<Item = Metric>,
 {
-    let metrics: HashSet<Metric> = metrics.into_iter().collect();
-    let mut mean_scores = HashMap::new();
-    let mut all_scores = HashMap::new();
-    for metric in metrics {
-        let result = metrics::compute_metric(gold_rels, pred_rels, metric)?;
-        let mean_score = result.values().sum::<f64>() / result.len() as f64;
-        mean_scores.insert(metric, mean_score);
-        all_scores.insert(metric, result);
-    }
-    Ok(Evaluated {
-        mean_scores,
-        all_scores,
-    })
+    let scores = metrics::compute_metric(gold_rels, pred_rels, metric)?;
+    let mean_score = scores.values().sum::<f64>() / scores.len() as f64;
+    Ok(Evaluated { scores, mean_score })
 }
