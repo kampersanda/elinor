@@ -30,52 +30,9 @@ by running the following command:
 RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --open
 ```
 
-## Getting Started
+## Examples
 
-A simple routine to prepare gold and predicted relevance scores
-and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
-
-```rust
-use approx::assert_abs_diff_eq;
-use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
-
-// Prepare gold relevance scores.
-let mut b = GoldRelStoreBuilder::new();
-b.add_score("q_1", "d_1", 1)?;
-b.add_score("q_1", "d_2", 0)?;
-b.add_score("q_1", "d_3", 2)?;
-b.add_score("q_2", "d_2", 2)?;
-b.add_score("q_2", "d_4", 1)?;
-let gold_rels = b.build();
-
-// Prepare predicted relevance scores.
-let mut b = PredRelStoreBuilder::new();
-b.add_score("q_1", "d_1", 0.5.into())?;
-b.add_score("q_1", "d_2", 0.4.into())?;
-b.add_score("q_1", "d_3", 0.3.into())?;
-b.add_score("q_2", "d_4", 0.1.into())?;
-b.add_score("q_2", "d_1", 0.2.into())?;
-b.add_score("q_2", "d_3", 0.3.into())?;
-let pred_rels = b.build();
-
-// Evaluate Precision@3.
-let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
-assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
-
-// Evaluate MAP, where all documents are considered via k=0.
-let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
-assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
-
-// Evaluate MRR, where the metric is specified via a string representation.
-let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
-assert_abs_diff_eq!(evaluated.mean_score(), 0.6667, epsilon = 1e-4);
-
-// Evaluate nDCG@3, where the metric is specified via a string representation.
-let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
-assert_abs_diff_eq!(evaluated.mean_score(), 0.4751, epsilon = 1e-4);
-```
-
-Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
+Examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
 
 ## Licensing
 

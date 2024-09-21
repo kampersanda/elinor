@@ -61,6 +61,10 @@
 //! ```
 //!
 //! Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
+//!
+//! ## Crate features
+//!
+//! * `serde` - Enables (de)serialization of [`PredScore`] using Serde.
 #![deny(missing_docs)]
 
 pub mod errors;
