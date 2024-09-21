@@ -16,9 +16,9 @@ use std::str::FromStr;
 use regex::Regex;
 
 use crate::errors::ElinorError;
+use crate::GoldRelStore;
 use crate::GoldScore;
-use crate::Qrels;
-use crate::Run;
+use crate::PredRelStore;
 
 pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 
@@ -44,7 +44,8 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 ///
 /// # Arguments
 ///
-/// * `k` - Number of top documents to consider. if `k` is set to 0, all documents are considered.
+/// * `k` - Number of top documents to consider.
+///   If `k` is set to 0, all documents are considered.
 ///
 /// # Conversion from/into string representation
 ///
@@ -165,7 +166,7 @@ pub enum Metric {
         k: usize,
     },
 
-    /// Bpref, an evaluation metric for incomplete Qrels, proposed in
+    /// Bpref, an evaluation metric for incomplete gold relevances proposed in
     /// [Buckley and Voorhees, SIGIR 2004](https://doi.org/10.1145/1008992.1009000).
     ///
     /// ```math
@@ -315,49 +316,67 @@ impl FromStr for Metric {
     }
 }
 
-/// Computes the metric scores for the given Qrels and Run data.
+/// Computes the metric scores for the given gold and predicted relevance scores.
 pub fn compute_metric<K>(
-    qrels: &Qrels<K>,
-    run: &Run<K>,
+    gold_rels: &GoldRelStore<K>,
+    pred_rels: &PredRelStore<K>,
     metric: Metric,
 ) -> Result<HashMap<K, f64>, ElinorError>
 where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
-    for query_id in run.query_ids() {
-        if qrels.get_map(query_id).is_none() {
+    for query_id in pred_rels.query_ids() {
+        if gold_rels.get_map(query_id).is_none() {
             return Err(ElinorError::MissingEntry(format!("Query ID: {query_id}")));
         }
     }
     let mut results = HashMap::new();
-    for query_id in run.query_ids() {
-        let preds = run.get_sorted(query_id).unwrap();
-        let rels = qrels.get_map(query_id).unwrap();
+    for query_id in pred_rels.query_ids() {
+        let sorted_preds = pred_rels.get_sorted(query_id).unwrap();
+        let golds = gold_rels.get_map(query_id).unwrap();
         let score = match metric {
-            Metric::Hits { k } => hits::compute_hits(rels, preds, k, RELEVANT_LEVEL),
-            Metric::Success { k } => hits::compute_success(rels, preds, k, RELEVANT_LEVEL),
-            Metric::Precision { k } => precision::compute_precision(rels, preds, k, RELEVANT_LEVEL),
-            Metric::Recall { k } => recall::compute_recall(rels, preds, k, RELEVANT_LEVEL),
-            Metric::F1 { k } => f1::compute_f1(rels, preds, k, RELEVANT_LEVEL),
-            Metric::RPrecision => r_precision::compute_r_precision(rels, preds, RELEVANT_LEVEL),
+            Metric::Hits { k } => hits::compute_hits(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::Success { k } => hits::compute_success(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::Precision { k } => {
+                precision::compute_precision(golds, sorted_preds, k, RELEVANT_LEVEL)
+            }
+            Metric::Recall { k } => recall::compute_recall(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::F1 { k } => f1::compute_f1(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::RPrecision => {
+                r_precision::compute_r_precision(golds, sorted_preds, RELEVANT_LEVEL)
+            }
             Metric::AP { k } => {
-                average_precision::compute_average_precision(rels, preds, k, RELEVANT_LEVEL)
+                average_precision::compute_average_precision(golds, sorted_preds, k, RELEVANT_LEVEL)
             }
             Metric::RR { k } => {
-                reciprocal_rank::compute_reciprocal_rank(rels, preds, k, RELEVANT_LEVEL)
+                reciprocal_rank::compute_reciprocal_rank(golds, sorted_preds, k, RELEVANT_LEVEL)
             }
-            Metric::Bpref => bpref::compute_bpref(rels, preds, RELEVANT_LEVEL),
-            Metric::DCG { k } => ndcg::compute_dcg(rels, preds, k, ndcg::DcgWeighting::Jarvelin),
+            Metric::Bpref => bpref::compute_bpref(golds, sorted_preds, RELEVANT_LEVEL),
+            Metric::DCG { k } => {
+                ndcg::compute_dcg(golds, sorted_preds, k, ndcg::DcgWeighting::Jarvelin)
+            }
             Metric::NDCG { k } => {
-                let golds = qrels.get_sorted(query_id).unwrap();
-                ndcg::compute_ndcg(rels, golds, preds, k, ndcg::DcgWeighting::Jarvelin)
+                let sorted_golds = gold_rels.get_sorted(query_id).unwrap();
+                ndcg::compute_ndcg(
+                    golds,
+                    sorted_golds,
+                    sorted_preds,
+                    k,
+                    ndcg::DcgWeighting::Jarvelin,
+                )
             }
             Metric::DCGBurges { k } => {
-                ndcg::compute_dcg(rels, preds, k, ndcg::DcgWeighting::Burges)
+                ndcg::compute_dcg(golds, sorted_preds, k, ndcg::DcgWeighting::Burges)
             }
             Metric::NDCGBurges { k } => {
-                let golds = qrels.get_sorted(query_id).unwrap();
-                ndcg::compute_ndcg(rels, golds, preds, k, ndcg::DcgWeighting::Burges)
+                let sorted_golds = gold_rels.get_sorted(query_id).unwrap();
+                ndcg::compute_ndcg(
+                    golds,
+                    sorted_golds,
+                    sorted_preds,
+                    k,
+                    ndcg::DcgWeighting::Burges,
+                )
             }
         };
         results.insert(query_id.clone(), score);
@@ -392,12 +411,12 @@ mod tests {
     #[case::hits_k_4(Metric::Hits { k: 4 }, hashmap! { 'A' => 2.0 })]
     #[case::hits_k_5(Metric::Hits { k: 5 }, hashmap! { 'A' => 2.0 })]
     // Hit rate
-    #[case::hit_rate_k_0(Metric::Success { k: 0 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_1(Metric::Success { k: 1 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_2(Metric::Success { k: 2 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_3(Metric::Success { k: 3 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_4(Metric::Success { k: 4 }, hashmap! { 'A' => 1.0 })]
-    #[case::hit_rate_k_5(Metric::Success { k: 5 }, hashmap! { 'A' => 1.0 })]
+    #[case::success_k_0(Metric::Success { k: 0 }, hashmap! { 'A' => 1.0 })]
+    #[case::success_k_1(Metric::Success { k: 1 }, hashmap! { 'A' => 1.0 })]
+    #[case::success_k_2(Metric::Success { k: 2 }, hashmap! { 'A' => 1.0 })]
+    #[case::success_k_3(Metric::Success { k: 3 }, hashmap! { 'A' => 1.0 })]
+    #[case::success_k_4(Metric::Success { k: 4 }, hashmap! { 'A' => 1.0 })]
+    #[case::success_k_5(Metric::Success { k: 5 }, hashmap! { 'A' => 1.0 })]
     // Precision
     #[case::precision_k_0(Metric::Precision { k: 0 }, hashmap! { 'A' => 2.0 / 4.0 })]
     #[case::precision_k_1(Metric::Precision { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
@@ -466,14 +485,14 @@ mod tests {
     #[case::ndcg_k_4_burges(Metric::NDCGBurges { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_5_burges(Metric::NDCGBurges { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<char, f64>) {
-        let qrels = Qrels::from_map(hashmap! {
+        let gold_rels = GoldRelStore::from_map(hashmap! {
             'A' => hashmap! {
                 'X' => 1,
                 'Y' => 0,
                 'Z' => 2,
             },
         });
-        let run = Run::from_map(hashmap! {
+        let pred_rels = PredRelStore::from_map(hashmap! {
             'A' => hashmap! {
                 'X' => 0.5.into(),
                 'Y' => 0.4.into(),
@@ -481,7 +500,7 @@ mod tests {
                 'W' => 0.2.into(),
             },
         });
-        let results = compute_metric(&qrels, &run, metric).unwrap();
+        let results = compute_metric(&gold_rels, &pred_rels, metric).unwrap();
         compare_hashmaps(&results, &expected);
     }
 

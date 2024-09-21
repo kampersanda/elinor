@@ -14,6 +14,9 @@ def run_trec_eval(
     command = f"./{trec_eval_dir}/trec_eval -c -m all_trec {qrels_file} {results_file}"
     print(f"Running: {command}")
     result = subprocess.run(command, capture_output=True, shell=True)
+    if result.returncode != 0:
+        print(result.stderr.decode("utf-8"), file=sys.stderr)
+        sys.exit(1)
     parsed: dict[str, str] = {}
     for line in result.stdout.decode("utf-8").split("\n"):
         if not line:
@@ -29,10 +32,13 @@ def run_elinor_evaluate(
     ks = [0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000]
     ks_args = " ".join([f"-k {k}" for k in ks])
     command = (
-        f"./{elinor_dir}/elinor-evaluate -q {qrels_file} -r {results_file} {ks_args}"
+        f"./{elinor_dir}/elinor-evaluate -g {qrels_file} -p {results_file} {ks_args}"
     )
     print(f"Running: {command}")
     result = subprocess.run(command, capture_output=True, shell=True)
+    if result.returncode != 0:
+        print(result.stderr.decode("utf-8"), file=sys.stderr)
+        sys.exit(1)
     parsed: dict[str, str] = {}
     for line in result.stdout.decode("utf-8").split("\n"):
         if not line:

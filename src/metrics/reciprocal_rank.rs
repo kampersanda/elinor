@@ -4,29 +4,22 @@ use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
 
-/// Computes the reciprocal rank at k for a given relevance level.
-///
-/// # Arguments
-///
-/// * `rels` - Map of relevance levels for each document.
-/// * `preds` - Slice of predicted documents with their scores.
-/// * `k` - Number of documents to consider.
-/// * `rel_lvl` - Relevance level to consider.
+/// Computes the reciprocal rank at k.
 pub fn compute_reciprocal_rank<K>(
-    rels: &HashMap<K, GoldScore>,
-    preds: &[Relevance<K, PredScore>],
+    golds: &HashMap<K, GoldScore>,
+    sorted_preds: &[Relevance<K, PredScore>],
     k: usize,
     rel_lvl: GoldScore,
 ) -> f64
 where
     K: Eq + std::hash::Hash,
 {
-    let k = if k == 0 { preds.len() } else { k };
+    let k = if k == 0 { sorted_preds.len() } else { k };
     if k == 0 {
         return 0.0;
     }
-    for (i, pred) in preds.iter().enumerate().take(k) {
-        if let Some(&rel) = rels.get(&pred.doc_id) {
+    for (i, pred) in sorted_preds.iter().enumerate().take(k) {
+        if let Some(&rel) = golds.get(&pred.doc_id) {
             if rel >= rel_lvl {
                 return 1.0 / (i as f64 + 1.0);
             }

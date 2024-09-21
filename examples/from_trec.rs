@@ -3,7 +3,7 @@ use elinor::Metric;
 
 fn main() -> Result<()> {
     // <QueryID> <Dummy> <DocID> <Relevance>
-    let qrels_data = "
+    let gold_rels_data = "
 q_1 0 d_1 1
 q_1 0 d_2 0
 q_1 0 d_3 2
@@ -13,7 +13,7 @@ q_2 0 d_4 1
     .trim();
 
     // <QueryID> <Dummy> <DocID> <Rank> <Score> <RunName>
-    let run_data = "
+    let pred_rels_data = "
 q_1 0 d_1 1 0.5 SAMPLE
 q_1 0 d_2 2 0.4 SAMPLE
 q_1 0 d_3 3 0.3 SAMPLE
@@ -23,8 +23,8 @@ q_2 0 d_4 3 0.1 SAMPLE
     "
     .trim();
 
-    let qrels = elinor::trec::parse_qrels_from_trec(qrels_data.lines())?;
-    let run = elinor::trec::parse_run_from_trec(run_data.lines())?;
+    let gold_rels = elinor::trec::parse_gold_rels_in_trec(gold_rels_data.lines())?;
+    let pred_rels = elinor::trec::parse_pred_rels_in_trec(pred_rels_data.lines())?;
 
     let metrics = vec![
         Metric::Hits { k: 3 },
@@ -37,7 +37,7 @@ q_2 0 d_4 3 0.1 SAMPLE
         Metric::NDCG { k: 3 },
         Metric::NDCGBurges { k: 3 },
     ];
-    let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
+    let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metrics.iter().cloned())?;
 
     println!("=== Mean scores ===");
     for metric in &metrics {
