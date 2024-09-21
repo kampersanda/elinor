@@ -8,11 +8,11 @@ fn main() -> Result<()> {
 
 #[cfg(feature = "serde")]
 fn main() -> Result<()> {
+    use elinor::GoldRelStore;
     use elinor::GoldScore;
     use elinor::Metric;
+    use elinor::PredRelStore;
     use elinor::PredScore;
-    use elinor::Qrels;
-    use elinor::Run;
     use std::collections::HashMap;
 
     let qrels_data = r#"
@@ -45,8 +45,8 @@ fn main() -> Result<()> {
     let qrels_map: HashMap<String, HashMap<String, GoldScore>> = serde_json::from_str(qrels_data)?;
     let run_map: HashMap<String, HashMap<String, PredScore>> = serde_json::from_str(run_data)?;
 
-    let qrels = Qrels::from_map(qrels_map);
-    let run = Run::from_map(run_map);
+    let qrels = GoldRelStore::from_map(qrels_map);
+    let run = PredRelStore::from_map(run_map);
 
     let metrics = vec![
         Metric::Hits { k: 3 },

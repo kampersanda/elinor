@@ -1,10 +1,10 @@
 use anyhow::Result;
+use elinor::GoldRelStoreBuilder;
 use elinor::Metric;
-use elinor::QrelsBuilder;
-use elinor::RunBuilder;
+use elinor::PredRelStoreBuilder;
 
 fn main() -> Result<()> {
-    let mut qb = QrelsBuilder::new();
+    let mut qb = GoldRelStoreBuilder::new();
     qb.add_score("q_1", "d_1", 1)?;
     qb.add_score("q_1", "d_2", 0)?;
     qb.add_score("q_1", "d_3", 2)?;
@@ -12,7 +12,7 @@ fn main() -> Result<()> {
     qb.add_score("q_2", "d_4", 1)?;
     let qrels = qb.build();
 
-    let mut rb = RunBuilder::new();
+    let mut rb = PredRelStoreBuilder::new();
     rb.add_score("q_1", "d_1", 0.5.into())?;
     rb.add_score("q_1", "d_2", 0.4.into())?;
     rb.add_score("q_1", "d_3", 0.3.into())?;

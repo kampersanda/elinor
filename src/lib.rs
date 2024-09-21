@@ -86,24 +86,24 @@ use std::collections::HashSet;
 pub use metrics::Metric;
 pub use relevance::Relevance;
 
-/// Data type to store a relevance score.
+/// Data type to store a gold relevance score.
 /// In binary relevance, 0 means non-relevant and the others mean relevant.
 pub type GoldScore = u32;
 
-/// Data type to store a predicted score.
+/// Data type to store a predicted relevance score.
 pub type PredScore = OrderedFloat<f64>;
 
 /// Data structure to store Qrels.
-pub type Qrels<K> = relevance::RelevanceStore<K, GoldScore>;
+pub type GoldRelStore<K> = relevance::RelevanceStore<K, GoldScore>;
 
 /// Builder for [`Qrels`].
-pub type QrelsBuilder<K> = relevance::RelevanceStoreBuilder<K, GoldScore>;
+pub type GoldRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, GoldScore>;
 
 /// Data structure to store a Run.
-pub type Run<K> = relevance::RelevanceStore<K, PredScore>;
+pub type PredRelStore<K> = relevance::RelevanceStore<K, PredScore>;
 
 /// Builder for [`Run`].
-pub type RunBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
+pub type PredRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
 
 /// Data type to store evaluated scores.
 pub struct Evaluated<K> {
@@ -116,8 +116,8 @@ pub struct Evaluated<K> {
 
 /// Evaluates the given qrels and run data using the specified metrics.
 pub fn evaluate<K, M>(
-    qrels: &Qrels<K>,
-    run: &Run<K>,
+    qrels: &GoldRelStore<K>,
+    run: &PredRelStore<K>,
     metrics: M,
 ) -> Result<Evaluated<K>, errors::ElinorError>
 where

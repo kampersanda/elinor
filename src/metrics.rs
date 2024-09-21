@@ -16,9 +16,9 @@ use std::str::FromStr;
 use regex::Regex;
 
 use crate::errors::ElinorError;
+use crate::GoldRelStore;
 use crate::GoldScore;
-use crate::Qrels;
-use crate::Run;
+use crate::PredRelStore;
 
 pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 
@@ -317,8 +317,8 @@ impl FromStr for Metric {
 
 /// Computes the metric scores for the given Qrels and Run data.
 pub fn compute_metric<K>(
-    qrels: &Qrels<K>,
-    run: &Run<K>,
+    qrels: &GoldRelStore<K>,
+    run: &PredRelStore<K>,
     metric: Metric,
 ) -> Result<HashMap<K, f64>, ElinorError>
 where
@@ -466,14 +466,14 @@ mod tests {
     #[case::ndcg_k_4_burges(Metric::NDCGBurges { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_5_burges(Metric::NDCGBurges { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<char, f64>) {
-        let qrels = Qrels::from_map(hashmap! {
+        let qrels = GoldRelStore::from_map(hashmap! {
             'A' => hashmap! {
                 'X' => 1,
                 'Y' => 0,
                 'Z' => 2,
             },
         });
-        let run = Run::from_map(hashmap! {
+        let run = PredRelStore::from_map(hashmap! {
             'A' => hashmap! {
                 'X' => 0.5.into(),
                 'Y' => 0.4.into(),

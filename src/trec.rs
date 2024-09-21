@@ -1,11 +1,11 @@
 //! TREC format parser for Qrels and Run data.
 use crate::errors::ElinorError;
+use crate::GoldRelStore;
+use crate::GoldRelStoreBuilder;
 use crate::GoldScore;
+use crate::PredRelStore;
+use crate::PredRelStoreBuilder;
 use crate::PredScore;
-use crate::Qrels;
-use crate::QrelsBuilder;
-use crate::Run;
-use crate::RunBuilder;
 
 /// Parses the given TREC data into a Qrels data structure.
 ///
@@ -36,12 +36,12 @@ use crate::RunBuilder;
 /// # Ok(())
 /// # }
 /// ```
-pub fn parse_qrels_from_trec<I, S>(lines: I) -> Result<Qrels<String>, ElinorError>
+pub fn parse_qrels_from_trec<I, S>(lines: I) -> Result<GoldRelStore<String>, ElinorError>
 where
     I: Iterator<Item = S>,
     S: AsRef<str>,
 {
-    let mut b = QrelsBuilder::new();
+    let mut b = GoldRelStoreBuilder::new();
     for line in lines {
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
@@ -89,13 +89,13 @@ where
 /// # Ok(())
 /// # }
 /// ```
-pub fn parse_run_from_trec<I, S>(lines: I) -> Result<Run<String>, ElinorError>
+pub fn parse_run_from_trec<I, S>(lines: I) -> Result<PredRelStore<String>, ElinorError>
 where
     I: Iterator<Item = S>,
     S: AsRef<str>,
 {
     let mut name = None;
-    let mut b = RunBuilder::new();
+    let mut b = PredRelStoreBuilder::new();
     for line in lines {
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
