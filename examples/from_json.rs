@@ -2,7 +2,7 @@ use anyhow::Result;
 
 #[cfg(not(feature = "serde"))]
 fn main() -> Result<()> {
-    println!("This example requires the 'serde' feature, such as `cargo run --example from_json --features serde`.");
+    println!("This example requires the 'serde' feature, such as `cargo pred_rels --example from_json --features serde`.");
     Ok(())
 }
 
@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     use elinor::PredScore;
     use std::collections::HashMap;
 
-    let qrels_data = r#"
+    let gold_rels_data = r#"
 {
     "q_1": {
         "d_1": 1,
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     }
 }"#;
 
-    let run_data = r#"
+    let pred_rels_data = r#"
 {
     "q_1": {
         "d_1": 0.5,
@@ -42,11 +42,13 @@ fn main() -> Result<()> {
     }
 }"#;
 
-    let qrels_map: HashMap<String, HashMap<String, GoldScore>> = serde_json::from_str(qrels_data)?;
-    let run_map: HashMap<String, HashMap<String, PredScore>> = serde_json::from_str(run_data)?;
+    let gold_rels_map: HashMap<String, HashMap<String, GoldScore>> =
+        serde_json::from_str(gold_rels_data)?;
+    let pred_rels_map: HashMap<String, HashMap<String, PredScore>> =
+        serde_json::from_str(pred_rels_data)?;
 
-    let qrels = GoldRelStore::from_map(qrels_map);
-    let run = PredRelStore::from_map(run_map);
+    let gold_rels = GoldRelStore::from_map(gold_rels_map);
+    let pred_rels = PredRelStore::from_map(pred_rels_map);
 
     let metrics = vec![
         Metric::Hits { k: 3 },
@@ -59,7 +61,7 @@ fn main() -> Result<()> {
         Metric::NDCG { k: 3 },
         Metric::NDCGBurges { k: 3 },
     ];
-    let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
+    let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metrics.iter().cloned())?;
 
     println!("=== Mean scores ===");
     for metric in &metrics {

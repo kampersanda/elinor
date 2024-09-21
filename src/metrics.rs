@@ -166,7 +166,7 @@ pub enum Metric {
         k: usize,
     },
 
-    /// Bpref, an evaluation metric for incomplete Qrels, proposed in
+    /// Bpref, an evaluation metric for incomplete Gold_rels, proposed in
     /// [Buckley and Voorhees, SIGIR 2004](https://doi.org/10.1145/1008992.1009000).
     ///
     /// ```math
@@ -316,24 +316,24 @@ impl FromStr for Metric {
     }
 }
 
-/// Computes the metric scores for the given Qrels and Run data.
+/// Computes the metric scores for the given Gold_rels and Pred_rels data.
 pub fn compute_metric<K>(
-    qrels: &GoldRelStore<K>,
-    run: &PredRelStore<K>,
+    gold_rels: &GoldRelStore<K>,
+    pred_rels: &PredRelStore<K>,
     metric: Metric,
 ) -> Result<HashMap<K, f64>, ElinorError>
 where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
-    for query_id in run.query_ids() {
-        if qrels.get_map(query_id).is_none() {
+    for query_id in pred_rels.query_ids() {
+        if gold_rels.get_map(query_id).is_none() {
             return Err(ElinorError::MissingEntry(format!("Query ID: {query_id}")));
         }
     }
     let mut results = HashMap::new();
-    for query_id in run.query_ids() {
-        let preds = run.get_sorted(query_id).unwrap();
-        let rels = qrels.get_map(query_id).unwrap();
+    for query_id in pred_rels.query_ids() {
+        let preds = pred_rels.get_sorted(query_id).unwrap();
+        let rels = gold_rels.get_map(query_id).unwrap();
         let score = match metric {
             Metric::Hits { k } => hits::compute_hits(rels, preds, k, RELEVANT_LEVEL),
             Metric::Success { k } => hits::compute_success(rels, preds, k, RELEVANT_LEVEL),
@@ -350,14 +350,14 @@ where
             Metric::Bpref => bpref::compute_bpref(rels, preds, RELEVANT_LEVEL),
             Metric::DCG { k } => ndcg::compute_dcg(rels, preds, k, ndcg::DcgWeighting::Jarvelin),
             Metric::NDCG { k } => {
-                let golds = qrels.get_sorted(query_id).unwrap();
+                let golds = gold_rels.get_sorted(query_id).unwrap();
                 ndcg::compute_ndcg(rels, golds, preds, k, ndcg::DcgWeighting::Jarvelin)
             }
             Metric::DCGBurges { k } => {
                 ndcg::compute_dcg(rels, preds, k, ndcg::DcgWeighting::Burges)
             }
             Metric::NDCGBurges { k } => {
-                let golds = qrels.get_sorted(query_id).unwrap();
+                let golds = gold_rels.get_sorted(query_id).unwrap();
                 ndcg::compute_ndcg(rels, golds, preds, k, ndcg::DcgWeighting::Burges)
             }
         };
@@ -467,14 +467,14 @@ mod tests {
     #[case::ndcg_k_4_burges(Metric::NDCGBurges { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_5_burges(Metric::NDCGBurges { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<char, f64>) {
-        let qrels = GoldRelStore::from_map(hashmap! {
+        let gold_rels = GoldRelStore::from_map(hashmap! {
             'A' => hashmap! {
                 'X' => 1,
                 'Y' => 0,
                 'Z' => 2,
             },
         });
-        let run = PredRelStore::from_map(hashmap! {
+        let pred_rels = PredRelStore::from_map(hashmap! {
             'A' => hashmap! {
                 'X' => 0.5.into(),
                 'Y' => 0.4.into(),
@@ -482,7 +482,7 @@ mod tests {
                 'W' => 0.2.into(),
             },
         });
-        let results = compute_metric(&qrels, &run, metric).unwrap();
+        let results = compute_metric(&gold_rels, &pred_rels, metric).unwrap();
         compare_hashmaps(&results, &expected);
     }
 

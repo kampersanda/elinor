@@ -10,7 +10,7 @@ fn main() -> Result<()> {
     qb.add_score("q_1", "d_3", 2)?;
     qb.add_score("q_2", "d_2", 2)?;
     qb.add_score("q_2", "d_4", 1)?;
-    let qrels = qb.build();
+    let gold_rels = qb.build();
 
     let mut rb = PredRelStoreBuilder::new();
     rb.add_score("q_1", "d_1", 0.5.into())?;
@@ -19,7 +19,7 @@ fn main() -> Result<()> {
     rb.add_score("q_2", "d_4", 0.1.into())?;
     rb.add_score("q_2", "d_1", 0.2.into())?;
     rb.add_score("q_2", "d_3", 0.3.into())?;
-    let run = rb.build();
+    let pred_rels = rb.build();
 
     let metrics = vec![
         Metric::Precision { k: 3 },
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
         "mrr".parse()?,
         "ndcg@3".parse()?,
     ];
-    let evaluated = elinor::evaluate(&qrels, &run, metrics.iter().cloned())?;
+    let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metrics.iter().cloned())?;
 
     println!("=== Mean scores ===");
     for metric in &metrics {
