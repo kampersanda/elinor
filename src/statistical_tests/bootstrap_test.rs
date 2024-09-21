@@ -167,14 +167,20 @@ impl BootstrapTester {
             ));
         }
 
-        let (t_stat, mean, var) = compute_t_stat(&samples)?;
-
+        // Prepare the random number generator.
         let random_state = match self.random_state {
             Some(seed) => seed,
             None => rand::thread_rng().gen(),
         };
         let mut rng = StdRng::seed_from_u64(random_state);
 
+        // Compute the t-statistic for the original samples.
+        let (t_stat, mean, var) = compute_t_stat(&samples)?;
+
+        // Shift the samples to have a mean of zero.
+        let samples: Vec<f64> = samples.iter().map(|x| x - mean).collect();
+
+        // Perform the bootstrap test.
         let mut count: usize = 0;
         for _ in 0..self.n_resamples {
             let resampled: Vec<f64> = (0..samples.len())
@@ -186,6 +192,7 @@ impl BootstrapTester {
             }
         }
         let p_value = count as f64 / self.n_resamples as f64;
+
         Ok(BootstrapTest {
             n_resamples: self.n_resamples,
             random_state,
@@ -207,8 +214,7 @@ impl BootstrapTester {
     where
         I: IntoIterator<Item = (f64, f64)>,
     {
-        let (a, b): (Vec<f64>, Vec<f64>) = paired_samples.into_iter().unzip();
-        let diffs = a.into_iter().zip(b).map(|(x, y)| x - y);
+        let diffs = paired_samples.into_iter().map(|(x, y)| x - y);
         self.test(diffs)
     }
 }

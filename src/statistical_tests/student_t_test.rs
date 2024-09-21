@@ -97,8 +97,7 @@ impl StudentTTest {
     where
         I: IntoIterator<Item = (f64, f64)>,
     {
-        let (a, b): (Vec<f64>, Vec<f64>) = paired_samples.into_iter().unzip();
-        let diffs = a.into_iter().zip(b).map(|(x, y)| x - y);
+        let diffs = paired_samples.into_iter().map(|(x, y)| x - y);
         Self::from_samples(diffs)
     }
 
