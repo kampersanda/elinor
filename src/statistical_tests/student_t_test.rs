@@ -54,7 +54,6 @@ pub struct StudentTTest {
     var: f64,
     t_stat: f64,
     p_value: f64,
-    effect_size: f64,
     scaled_t_dist: StudentsT,
 }
 
@@ -79,14 +78,12 @@ impl StudentTTest {
         let n = samples.len() as f64;
         let t_dist = StudentsT::new(0.0, 1.0, n - 1.0).unwrap();
         let p_value = t_dist.sf(t_stat.abs()) * 2.0; // two-tailed
-        let effect_size = mean / var.sqrt();
         let scaled_t_dist = StudentsT::new(0.0, (var / n).sqrt(), n - 1.0).unwrap();
         Ok(Self {
             mean,
             var,
             t_stat,
             p_value,
-            effect_size,
             scaled_t_dist,
         })
     }
@@ -95,18 +92,12 @@ impl StudentTTest {
     ///
     /// # Errors
     ///
-    /// * [`ElinorError::InvalidArgument`] if the input does not have at least two samples.
-    /// * [`ElinorError::Uncomputable`] if the variance is zero.
+    /// See [`StudentTTest::from_samples`].
     pub fn from_paired_samples<I>(paired_samples: I) -> Result<Self, ElinorError>
     where
         I: IntoIterator<Item = (f64, f64)>,
     {
         let (a, b): (Vec<f64>, Vec<f64>) = paired_samples.into_iter().unzip();
-        if a.len() <= 1 {
-            return Err(ElinorError::InvalidArgument(
-                "The input must have at least two samples.".to_string(),
-            ));
-        }
         let diffs: Vec<f64> = a.into_iter().zip(b).map(|(x, y)| x - y).collect();
         Self::from_samples(diffs)
     }
@@ -121,6 +112,11 @@ impl StudentTTest {
         self.var
     }
 
+    /// Effect size.
+    pub fn effect_size(&self) -> f64 {
+        self.mean / self.var.sqrt()
+    }
+
     /// t-statistic.
     pub const fn t_stat(&self) -> f64 {
         self.t_stat
@@ -129,11 +125,6 @@ impl StudentTTest {
     /// p-value.
     pub const fn p_value(&self) -> f64 {
         self.p_value
-    }
-
-    /// Effect size.
-    pub const fn effect_size(&self) -> f64 {
-        self.effect_size
     }
 
     /// Margin of error at a `1 - significance_level` confidence level.
