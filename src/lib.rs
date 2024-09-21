@@ -6,8 +6,7 @@
 //! ## Features
 //!
 //! * **IRer-friendly**:
-//!     The library is designed to be easy to use for developers in information retrieval
-//!     by providing TREC-like data structures, such as Qrels and Run.
+//!     The library is designed to be easy to use for developers in information retrieval.
 //! * **Flexible**:
 //!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].

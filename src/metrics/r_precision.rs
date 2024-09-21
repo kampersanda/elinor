@@ -6,24 +6,18 @@ use crate::PredScore;
 use crate::Relevance;
 
 /// Computes the R-Precision.
-///
-/// # Arguments
-///
-/// * `rels` - Map of relevance levels for each document.
-/// * `preds` - Slice of predicted documents with their scores.
-/// * `rel_lvl` - Relevance level to consider.
 pub fn compute_r_precision<K>(
-    rels: &HashMap<K, GoldScore>,
-    preds: &[Relevance<K, PredScore>],
+    golds: &HashMap<K, GoldScore>,
+    sorted_preds: &[Relevance<K, PredScore>],
     rel_lvl: GoldScore,
 ) -> f64
 where
     K: Eq + std::hash::Hash,
 {
-    let n_rels = rels.values().filter(|&&rel| rel >= rel_lvl).count();
+    let n_rels = golds.values().filter(|&&rel| rel >= rel_lvl).count();
     if n_rels == 0 {
         0.0
     } else {
-        compute_precision(rels, preds, n_rels, rel_lvl)
+        compute_precision(golds, sorted_preds, n_rels, rel_lvl)
     }
 }

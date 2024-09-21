@@ -18,7 +18,7 @@ use crate::PredScore;
 ///
 /// ```rust
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// use elinor::trec::parse_qrels_from_trec;
+/// use elinor::trec::parse_gold_rels_in_trec;
 ///
 /// let data = "
 /// q_1 0 d_1 1
@@ -28,15 +28,15 @@ use crate::PredScore;
 /// q_2 0 d_4 1
 /// ".trim();
 ///
-/// let qrels = parse_qrels_from_trec(data.lines())?;
-/// assert_eq!(qrels.n_queries(), 2);
-/// assert_eq!(qrels.n_docs(), 5);
-/// assert_eq!(qrels.get_score("q_1", "d_3"), Some(&2));
-/// assert_eq!(qrels.name(), None);
+/// let gold_rels = parse_gold_rels_in_trec(data.lines())?;
+/// assert_eq!(gold_rels.n_queries(), 2);
+/// assert_eq!(gold_rels.n_docs(), 5);
+/// assert_eq!(gold_rels.get_score("q_1", "d_3"), Some(&2));
+/// assert_eq!(gold_rels.name(), None);
 /// # Ok(())
 /// # }
 /// ```
-pub fn parse_qrels_from_trec<I, S>(lines: I) -> Result<GoldRelStore<String>, ElinorError>
+pub fn parse_gold_rels_in_trec<I, S>(lines: I) -> Result<GoldRelStore<String>, ElinorError>
 where
     I: Iterator<Item = S>,
     S: AsRef<str>,
@@ -59,7 +59,7 @@ where
     Ok(b.build())
 }
 
-/// Parses the given Run data in the TREC format into a [`PredRelStore`].
+/// Parses the Run data in the TREC format into a [`PredRelStore`].
 ///
 /// # Format
 ///
@@ -70,7 +70,7 @@ where
 ///
 /// ```rust
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// use elinor::trec::parse_run_from_trec;
+/// use elinor::trec::parse_pred_rels_in_trec;
 ///
 /// let data = "
 /// q_1 0 d_1 1 0.5 SAMPLE
@@ -81,15 +81,15 @@ where
 /// q_2 0 d_4 3 0.1 SAMPLE
 /// ".trim();
 ///
-/// let run = parse_run_from_trec(data.lines())?;
-/// assert_eq!(run.n_queries(), 2);
-/// assert_eq!(run.n_docs(), 6);
-/// assert_eq!(run.get_score("q_1", "d_3"), Some(&0.3.into()));
-/// assert_eq!(run.name(), Some("SAMPLE"));
+/// let pred_rels = parse_pred_rels_in_trec(data.lines())?;
+/// assert_eq!(pred_rels.n_queries(), 2);
+/// assert_eq!(pred_rels.n_docs(), 6);
+/// assert_eq!(pred_rels.get_score("q_1", "d_3"), Some(&0.3.into()));
+/// assert_eq!(pred_rels.name(), Some("SAMPLE"));
 /// # Ok(())
 /// # }
 /// ```
-pub fn parse_run_from_trec<I, S>(lines: I) -> Result<PredRelStore<String>, ElinorError>
+pub fn parse_pred_rels_in_trec<I, S>(lines: I) -> Result<PredRelStore<String>, ElinorError>
 where
     I: Iterator<Item = S>,
     S: AsRef<str>,

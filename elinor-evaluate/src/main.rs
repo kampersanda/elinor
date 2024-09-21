@@ -12,10 +12,10 @@ use elinor::Metric;
 #[command(version, about)]
 struct Args {
     #[arg(short, long)]
-    gold_rels_file: PathBuf,
+    gold_file: PathBuf,
 
     #[arg(short, long)]
-    pred_rels_file: PathBuf,
+    pred_file: PathBuf,
 
     #[arg(short, long, default_values_t = &[0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000])]
     ks: Vec<usize>,
@@ -24,8 +24,8 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let gold_rels = trec::parse_gold_rels_from_trec(load_lines(&args.gold_rels_file)?.into_iter())?;
-    let pred_rels = trec::parse_pred_rels_from_trec(load_lines(&args.pred_rels_file)?.into_iter())?;
+    let gold_rels = trec::parse_gold_rels_in_trec(load_lines(&args.gold_file)?.into_iter())?;
+    let pred_rels = trec::parse_pred_rels_in_trec(load_lines(&args.pred_file)?.into_iter())?;
 
     let metrics = all_metrics(&args.ks);
     let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metrics.iter().cloned())?;

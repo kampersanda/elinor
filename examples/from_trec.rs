@@ -23,8 +23,8 @@ q_2 0 d_4 3 0.1 SAMPLE
     "
     .trim();
 
-    let gold_rels = elinor::trec::parse_gold_rels_from_trec(gold_rels_data.lines())?;
-    let pred_rels = elinor::trec::parse_pred_rels_from_trec(pred_rels_data.lines())?;
+    let gold_rels = elinor::trec::parse_gold_rels_in_trec(gold_rels_data.lines())?;
+    let pred_rels = elinor::trec::parse_pred_rels_in_trec(pred_rels_data.lines())?;
 
     let metrics = vec![
         Metric::Hits { k: 3 },
