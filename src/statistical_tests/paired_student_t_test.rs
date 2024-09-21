@@ -36,10 +36,10 @@ use crate::errors::ElinorError;
 /// assert_abs_diff_eq!(result.p_value(), 0.048, epsilon = 1e-3);
 ///
 /// // Margin of error at a 95% confidence level.
-/// assert_abs_diff_eq!(result.margin_of_error(0.05), 0.0742, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.margin_of_error(0.05)?, 0.0742, epsilon = 1e-4);
 ///
 /// // Confidence interval at a 95% confidence level.
-/// let (ci95_btm, ci95_top) = result.confidence_interval(0.05);
+/// let (ci95_btm, ci95_top) = result.confidence_interval(0.05)?;
 /// assert_abs_diff_eq!(ci95_btm, 0.0750 - 0.0742, epsilon = 1e-4);
 /// assert_abs_diff_eq!(ci95_top, 0.0750 + 0.0742, epsilon = 1e-4);
 ///
@@ -130,15 +130,29 @@ impl PairedStudentTTest {
     }
 
     /// Margin of error at a `1 - significance_level` confidence level.
-    pub fn margin_of_error(&self, significance_level: f64) -> f64 {
-        self.scaled_t_dist
-            .inverse_cdf(1.0 - (significance_level / 2.0))
+    ///
+    /// # Errors
+    ///
+    /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range (0, 1].
+    pub fn margin_of_error(&self, significance_level: f64) -> Result<f64, ElinorError> {
+        if significance_level <= 0.0 || significance_level > 1.0 {
+            return Err(ElinorError::InvalidArgument(
+                "The significance level must be in the range (0, 1].".to_string(),
+            ));
+        }
+        Ok(self
+            .scaled_t_dist
+            .inverse_cdf(1.0 - (significance_level / 2.0)))
     }
 
     /// Confidence interval at a `1 - significance_level` confidence level.
-    pub fn confidence_interval(&self, significance_level: f64) -> (f64, f64) {
-        let moe = self.margin_of_error(significance_level);
-        (self.mean - moe, self.mean + moe)
+    ///
+    /// # Errors
+    ///
+    /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range (0, 1].
+    pub fn confidence_interval(&self, significance_level: f64) -> Result<(f64, f64), ElinorError> {
+        let moe = self.margin_of_error(significance_level)?;
+        Ok((self.mean - moe, self.mean + moe))
     }
 
     /// Returns true if the difference is significant at the given significance level.
@@ -184,5 +198,36 @@ mod tests {
             result.unwrap_err(),
             ElinorError::Uncomputable("The variance of the differences is zero.".to_string())
         );
+    }
+
+    #[test]
+    fn test_paired_student_t_test_margin_of_error_invalid_argument() {
+        let result = PairedStudentTTest::compute(vec![(1.0, 2.0), (3.0, 4.5)]);
+        let result = result.unwrap();
+        let moe = result.margin_of_error(0.0);
+        assert_eq!(
+            moe.unwrap_err(),
+            ElinorError::InvalidArgument(
+                "The significance level must be in the range (0, 1].".to_string()
+            )
+        );
+        let moe = result.margin_of_error(1.0).unwrap();
+        assert_abs_diff_eq!(moe, 0.0, epsilon = 1e-4);
+    }
+
+    #[test]
+    fn test_paired_student_t_test_confidence_interval_invalid_argument() {
+        let result = PairedStudentTTest::compute(vec![(1.0, 2.0), (3.0, 4.5)]);
+        let result = result.unwrap();
+        let ci = result.confidence_interval(0.0);
+        assert_eq!(
+            ci.unwrap_err(),
+            ElinorError::InvalidArgument(
+                "The significance level must be in the range (0, 1].".to_string()
+            )
+        );
+        let (ci95_btm, ci95_top) = result.confidence_interval(1.0).unwrap();
+        assert_abs_diff_eq!(ci95_btm, result.mean(), epsilon = 1e-4);
+        assert_abs_diff_eq!(ci95_top, result.mean(), epsilon = 1e-4);
     }
 }
