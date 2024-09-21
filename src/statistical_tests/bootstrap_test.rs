@@ -9,6 +9,35 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 
 /// Bootstrap test.
 ///
+/// # Examples
+///
+/// ```
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// use approx::assert_abs_diff_eq;
+/// use elinor::statistical_tests::BootstrapTest;
+///
+/// // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
+/// let a = vec![
+///     0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
+///     0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
+/// ];
+/// let b = vec![
+///     0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
+///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
+/// ];
+///
+/// let paired_samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| (x, y));
+/// let result = BootstrapTest::from_paired_samples(paired_samples)?;
+///
+/// // Various statistics can be obtained.
+/// assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.var(), 0.0251, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.effect_size(), 0.473, epsilon = 1e-3);
+/// assert!((0.0..1.0).contains(&result.p_value()));
+/// # Ok(())
+/// # }
+/// ```
+///
 /// # References
 ///
 /// * Bradley Efron and R.J. Tibshirani.
