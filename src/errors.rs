@@ -12,6 +12,10 @@ pub enum ElinorError {
     #[error("{0}")]
     MissingEntry(String),
 
+    /// Error when the argument is invalid.
+    #[error("{0}")]
+    InvalidArgument(String),
+
     /// Error when the format is invalid.
     #[error("{0}")]
     InvalidFormat(String),
