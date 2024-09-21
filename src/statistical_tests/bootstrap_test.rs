@@ -121,7 +121,7 @@ impl BootstrapTest {
 ///
 /// # Default parameters
 ///
-/// * `n_resamples`: `1000`
+/// * `n_resamples`: `9999`
 /// * `random_state`: `None`
 #[derive(Debug, Clone, Copy)]
 pub struct BootstrapTester {
@@ -133,7 +133,7 @@ impl BootstrapTester {
     /// Creates a new bootstrap tester.
     pub fn new() -> Self {
         Self {
-            n_resamples: 1000,
+            n_resamples: 9999,
             random_state: None,
         }
     }
