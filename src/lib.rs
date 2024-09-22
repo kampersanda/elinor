@@ -60,6 +60,8 @@
 //! # Example: Testing statistical significance using paired Student's t-test
 //!
 //! This example shows how to perform Student's t-test for Precision scores between two systems.
+//! Not only the p-value but also various statistics, such as variance and effect size, can be obtained,
+//! which are useful for reporting the results.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
