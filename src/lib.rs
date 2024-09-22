@@ -4,7 +4,7 @@
 //! It provides a comprehensive set of tools and metrics tailored for information retrieval engineers,
 //! offering an intuitive and easy-to-use interface.
 //!
-//! # Key Features
+//! # Key features
 //!
 //! * **IR-focused design:**
 //!     Elinor is tailored specifically for evaluating information retrieval systems, with an intuitive interface designed for IR engineers.

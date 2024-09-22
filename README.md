@@ -14,7 +14,7 @@ inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://ww
 It provides a comprehensive set of tools and metrics tailored for information retrieval engineers,
 offering an intuitive and easy-to-use interface.
 
-## Key Features
+## Key features
 
 - **IR-focused design:**
   Elinor is tailored specifically for evaluating information retrieval systems, with an intuitive interface designed for IR engineers.
@@ -27,7 +27,7 @@ offering an intuitive and easy-to-use interface.
   Elinor includes several statistical tests such as Student's t-test to verify the generalizability of results.
   It provides not only p-values but also effect sizes and confidence intervals for thorough reporting.
 
-## Documentation
+## API documentation
 
 See https://docs.rs/elinor/.
 
