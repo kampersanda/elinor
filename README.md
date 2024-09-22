@@ -25,7 +25,7 @@ offering an intuitive and easy-to-use interface.
   The supported metrics are available in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
   The evaluation results are validated against trec_eval to ensure accuracy and reliability.
 
-- **Robust statistical testing:**
+- **Statistical testing:**
   Elinor includes several statistical tests such as Student's t-test to verify the generalizability of results.
   It provides not only p-values but also effect sizes and confidence intervals for thorough reporting.
 
