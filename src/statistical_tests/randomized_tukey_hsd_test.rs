@@ -1,7 +1,4 @@
 //! Randomized Tukey HSD test.
-//!
-//! https://doi.org/10.1145/2094072.2094076
-
 use std::collections::HashMap;
 
 use itertools::Itertools;
@@ -14,6 +11,55 @@ use statrs::statistics::Statistics;
 use crate::errors::ElinorError;
 
 /// Randomized Tukey HSD test.
+///
+/// # Examples
+///
+/// ```
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// use approx::assert_abs_diff_eq;
+/// use elinor::statistical_tests::RandomizedTukeyHsdTest;
+///
+/// // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
+/// let x = vec![
+///     0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
+///     0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
+/// ];
+/// let y = vec![
+///     0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
+///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
+/// ];
+/// let z = vec![
+///     0.00, 0.00, 0.20, 0.10, 0.30, 0.30, 0.10, 0.20, 0.40, 0.40, //
+///     0.40, 0.30, 0.30, 0.20, 0.20, 0.20, 0.10, 0.50, 0.40, 0.30,
+/// ];
+///
+/// // Comparing two systems, equivalent to Fisher’s randomization test.
+/// let tupled_samples = x.iter().zip(y.iter()).map(|(&x, &y)| [x, y]);
+/// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 2)?;
+/// assert!((0.0..1.0).contains(&result.p_value(0, 1)?));
+///
+/// // Comparing three systems.
+/// let tupled_samples = x
+///     .iter()
+///     .zip(y.iter())
+///     .zip(z.iter())
+///     .map(|((&x, &y), &z)| [x, y, z]);
+/// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 3)?;
+/// assert!((0.0..1.0).contains(&result.p_value(0, 1)?));  // x vs. y
+/// assert!((0.0..1.0).contains(&result.p_value(0, 2)?));  // x vs. z
+/// assert!((0.0..1.0).contains(&result.p_value(1, 2)?));  // y vs. z
+/// # Ok(())
+/// # }
+/// ```
+///
+/// # References
+///
+/// * Mark D. Smucker, James Allan, and Ben Carterette.
+///   [A comparison of statistical significance tests for information retrieval evaluation](https://doi.org/10.1145/1321440.1321528).
+///   CIKM 2007.
+/// * Benjamin A. Carterette.
+///   [Multiple testing in statistical analysis of systems-based information retrieval experiments](https://doi.org/10.1145/2094072.2094076).
+///   TOIS 2012.
 #[derive(Debug, Clone)]
 pub struct RandomizedTukeyHsdTest {
     n_systems: usize,
