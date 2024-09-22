@@ -25,7 +25,7 @@ offering an intuitive and easy-to-use interface.
   The evaluation results are validated against trec_eval to ensure accuracy and reliability.
 - **Statistical testing:**
   Elinor includes several statistical tests such as Student's t-test to verify the generalizability of results.
-  It provides not only p-values but also effect sizes and confidence intervals for thorough reporting.
+  It provides not only p-values but also other statistics, such as effect sizes and confidence intervals, for thorough reporting.
 
 ## API documentation
 
