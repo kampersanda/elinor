@@ -268,7 +268,7 @@ impl<K> Evaluated<K> {
     }
 }
 
-/// Evaluates the given gold_rels and pred_rels data using the specified metrics.
+/// Evaluates the given predicted relevance scores against the gold relevance scores.
 pub fn evaluate<K>(
     gold_rels: &GoldRelStore<K>,
     pred_rels: &PredRelStore<K>,
