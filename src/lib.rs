@@ -1,13 +1,23 @@
 //! Elinor is a library for evaluating information retrieval systems,
 //! inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://www.coronasha.co.jp/np/isbn/9784339024968/).
 //!
-//! # Features
+//! It provides a comprehensive set of tools and metrics tailored for information retrieval engineers,
+//! offering an intuitive and easy-to-use interface.
 //!
-//! * **IRer-friendly**:
-//!     The library is designed to be easy to use for developers in information retrieval.
-//! * **Flexible**:
-//!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
+//! # Key Features
+//!
+//! * **IR-focused design:**
+//!     Elinor is tailored specifically for evaluating information retrieval systems, with an intuitive interface designed for IR engineers.
+//!     It offers a streamlined workflow that simplifies common IR evaluation tasks.
+//!
+//! * **Comprehensive evaluation metrics:**
+//!     Elinor supports a wide range of key evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
+//!     The evaluation results are validated against trec_eval to ensure accuracy and reliability.
+//!
+//! * **Robust statistical testing:**
+//!     Elinor includes several statistical tests such as Student's t-test to verify the generalizability of results.
+//!     It provides not only p-values but also effect sizes and confidence intervals for thorough reporting.
 //!
 //! # Basic usage in evaluating several metrics
 //!
@@ -70,8 +80,7 @@
 //! such as Student's t-test and bootstrap resampling.
 //!
 //! This example shows how to perform Student's t-test for Precision scores between two systems.
-//! Not only the p-value but also various statistics, such as variance and effect size, can be obtained,
-//! which are useful for understanding and reporting the results.
+//! Not only the p-value but also various statistics, such as variance and effect size, are provided for thorough reporting.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -133,13 +142,80 @@
 //! # }
 //! ```
 //!
-//! ## Other examples
+//! # Instantiating relevance stores from [`HashMap`]
 //!
-//! Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
+//! [`GoldRelStore`] and [`PredRelStore`] can also be instantiated from [`HashMap`]s.
+//! The following mapping structure is expected:
+//!
+//! ```text
+//! query_id => { doc_id => score }
+//! ```
+//!
+//! It allows you to prepare data in JSON or other formats via [Serde](https://serde.rs/).
+//! If you use Serde, enable the `serde` feature in the `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! elinor = { version = "*", features = ["serde"] }
+//! ```
+//!
+//! An example to instantiate relevance stores from JSON is shown below:
+//!
+//! ```
+//! # #[cfg(not(feature = "serde"))]
+//! # fn main() {}
+//! #
+//! # #[cfg(feature = "serde")]
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use std::collections::HashMap;
+//! use elinor::{GoldRelStore, GoldScore, PredRelStore, PredScore};
+//!
+//! let gold_rels_data = r#"
+//! {
+//!     "q_1": {
+//!         "d_1": 1,
+//!         "d_2": 0,
+//!         "d_3": 2
+//!     },
+//!     "q_2": {
+//!         "d_2": 2,
+//!         "d_4": 1
+//!     }
+//! }"#;
+//!
+//! let pred_rels_data = r#"
+//! {
+//!     "q_1": {
+//!         "d_1": 0.5,
+//!         "d_2": 0.4,
+//!         "d_3": 0.3
+//!     },
+//!     "q_2": {
+//!         "d_3": 0.3,
+//!         "d_1": 0.2,
+//!         "d_4": 0.1
+//!     }
+//! }"#;
+//!
+//! let gold_rels_map: HashMap<String, HashMap<String, GoldScore>> =
+//!     serde_json::from_str(gold_rels_data)?;
+//! let pred_rels_map: HashMap<String, HashMap<String, PredScore>> =
+//!     serde_json::from_str(pred_rels_data)?;
+//!
+//! let gold_rels = GoldRelStore::from_map(gold_rels_map);
+//! let pred_rels = PredRelStore::from_map(pred_rels_map);
+//!
+//! assert_eq!(gold_rels.n_queries(), 2);
+//! assert_eq!(gold_rels.n_docs(), 5);
+//! assert_eq!(pred_rels.n_queries(), 2);
+//! assert_eq!(pred_rels.n_docs(), 6);
+//! # Ok(())
+//! # }
+//! ```
 //!
 //! # Crate features
 //!
-//! * `serde` - Enables (de)serialization of [`PredScore`] using Serde.
+//! * `serde` - Enables Serde for [`PredScore`].
 #![deny(missing_docs)]
 
 pub mod errors;

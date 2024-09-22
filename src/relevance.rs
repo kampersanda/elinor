@@ -39,7 +39,19 @@ where
     K: Eq + Ord + Hash + Clone,
     T: Ord + Clone,
 {
-    /// Creates a relevance store from a map of query ids to relevance maps.
+    /// Creates a relevance store from a map of query ids to relevance maps, such as
+    ///
+    /// ```json
+    /// {
+    ///     "q_1": {
+    ///         "d_1": 1,
+    ///         "d_2": 2
+    ///     },
+    ///     "q_2": {
+    ///         "d_1": 1
+    ///     }
+    /// }
+    /// ```
     pub fn from_map(map: HashMap<K, HashMap<K, T>>) -> Self
     where
         K: Display,

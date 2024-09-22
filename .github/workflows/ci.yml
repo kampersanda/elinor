@@ -47,7 +47,7 @@ jobs:
       - name: Run cargo test
         # MSRV should be ignored for dev-dependencies.
         continue-on-error: ${{ matrix.rust != 'stable' }}
-        run: cargo test --release
+        run: cargo test --release --features serde
       - name: Run cargo doc
         run: RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps
       - name: Run cargo example
