@@ -38,10 +38,6 @@ by running the following command:
 RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --open
 ```
 
-## Examples
-
-Examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
-
 ## Licensing
 
 Licensed under either of
