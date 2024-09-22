@@ -23,6 +23,15 @@ pub struct RandomizedTukeyHsdTest {
 }
 
 impl RandomizedTukeyHsdTest {
+    /// Creates a new randomized Tukey HSD test.
+    pub fn from_tupled_samples<I, S>(samples: I, n_systems: usize) -> Result<Self, ElinorError>
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<[f64]>,
+    {
+        RandomizedTukeyHsdTester::new(n_systems).test(samples)
+    }
+
     /// Number of systems.
     pub const fn n_systems(&self) -> usize {
         self.n_systems
