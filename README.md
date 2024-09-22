@@ -8,7 +8,7 @@
     <a href="https://docs.rs/elinor"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
 </p>
 
-Elinor is a library for evaluating information retrieval systems,
+Elinor is a Rust library for evaluating information retrieval systems,
 inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://www.coronasha.co.jp/np/isbn/9784339024968/).
 
 It provides a comprehensive set of tools and metrics tailored for information retrieval engineers,
