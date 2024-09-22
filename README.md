@@ -8,18 +8,26 @@
     <a href="https://docs.rs/elinor"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
 </p>
 
-Elinor is a Rust library for evaluating information retrieval systems,
+Elinor is a library for evaluating information retrieval systems,
 inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://www.coronasha.co.jp/np/isbn/9784339024968/).
 
-## Features
+It provides a comprehensive set of tools and metrics tailored for information retrieval engineers,
+offering an intuitive and easy-to-use interface.
 
-- **IRer-friendly**:
-  The library is designed to be easy to use for developers in information retrieval.
-- **Flexible**:
-  The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
+## Key features
+
+- **IR-focused design:**
+  Elinor is tailored specifically for evaluating information retrieval systems, with an intuitive interface designed for IR engineers.
+  It offers a streamlined workflow that simplifies common IR evaluation tasks.
+- **Comprehensive evaluation metrics:**
+  Elinor supports a wide range of key evaluation metrics, such as Precision, MAP, MRR, and nDCG.
   The supported metrics are available in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
+  The evaluation results are validated against trec_eval to ensure accuracy and reliability.
+- **Statistical testing:**
+  Elinor includes several statistical tests such as Student's t-test to verify the generalizability of results.
+  It provides not only p-values but also effect sizes and confidence intervals for thorough reporting.
 
-## Documentation
+## API documentation
 
 See https://docs.rs/elinor/.
 
@@ -29,53 +37,6 @@ by running the following command:
 ```sh
 RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --open
 ```
-
-## Getting Started
-
-A simple routine to prepare gold and predicted relevance scores
-and evaluate them using Precision@3, MAP, MRR, and nDCG@3:
-
-```rust
-use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
-use approx::assert_abs_diff_eq;
-
-// Prepare gold relevance scores.
-let mut b = GoldRelStoreBuilder::new();
-b.add_score("q_1", "d_1", 1)?;
-b.add_score("q_1", "d_2", 0)?;
-b.add_score("q_1", "d_3", 2)?;
-b.add_score("q_2", "d_2", 2)?;
-b.add_score("q_2", "d_4", 1)?;
-let gold_rels = b.build();
-
-// Prepare predicted relevance scores.
-let mut b = PredRelStoreBuilder::new();
-b.add_score("q_1", "d_1", 0.5.into())?;
-b.add_score("q_1", "d_2", 0.4.into())?;
-b.add_score("q_1", "d_3", 0.3.into())?;
-b.add_score("q_2", "d_4", 0.1.into())?;
-b.add_score("q_2", "d_1", 0.2.into())?;
-b.add_score("q_2", "d_3", 0.3.into())?;
-let pred_rels = b.build();
-
-// Evaluate Precision@3.
-let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
-assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
-
-// Evaluate MAP, where all documents are considered via k=0.
-let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
-assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
-
-// Evaluate MRR, where the metric is specified via a string representation.
-let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
-assert_abs_diff_eq!(evaluated.mean_score(), 0.6667, epsilon = 1e-4);
-
-// Evaluate nDCG@3, where the metric is specified via a string representation.
-let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
-assert_abs_diff_eq!(evaluated.mean_score(), 0.4751, epsilon = 1e-4);
-```
-
-Other examples are available in the [`examples`](https://github.com/kampersanda/elinor/tree/main/examples) directory.
 
 ## Licensing
 
