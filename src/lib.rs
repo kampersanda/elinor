@@ -1,4 +1,4 @@
-//! Elinor (Evaluation Library in INfOrmation Retrieval) is a library for evaluating information retrieval systems,
+//! Elinor is a library for evaluating information retrieval systems,
 //! inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://www.coronasha.co.jp/np/isbn/9784339024968/).
 //!
 //! # Features
@@ -9,9 +9,16 @@
 //!     The library supports various evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
 //!
-//! # Example: Evaluating several metrics
+//! # Basic usage in evaluating several metrics
 //!
-//! This example shows how to evaluate Precision@3, MAP, MRR, and nDCG@3.
+//! You first need to prepare gold relevance judgments and predicted relevance scores through
+//! [`GoldRelStore`] and [`PredRelStore`], respectively.
+//! You can build these instances using [`GoldRelStoreBuilder`] and [`PredRelStoreBuilder`].
+//!
+//! Then, you can evaluate the predicted relevance scores using the [`evaluate`] function and
+//! the specified metric. The available metrics are defined in the [`Metric`] enum.
+//!
+//! An example is shown below:
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,7 +35,7 @@
 //! b.add_score("q_2", "d_4", 1)?;
 //! let gold_rels = b.build();
 //!
-//! // Prepare predicted relevance scores. A higher score means more relevant.
+//! // Prepare predicted relevance scores.
 //! let mut b = PredRelStoreBuilder::new();
 //! b.add_score("q_1", "d_1", 0.5.into())?;
 //! b.add_score("q_1", "d_2", 0.4.into())?;
@@ -57,11 +64,14 @@
 //! # }
 //! ```
 //!
-//! # Example: Testing statistical significance using paired Student's t-test
+//! # Statistical tests for comparing two systems
+//!
+//! The [`statistical_tests`] module provides statistical tests for comparing systems,
+//! such as Student's t-test and bootstrap resampling.
 //!
 //! This example shows how to perform Student's t-test for Precision scores between two systems.
 //! Not only the p-value but also various statistics, such as variance and effect size, can be obtained,
-//! which are useful for reporting the results.
+//! which are useful for understanding and reporting the results.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -122,9 +132,6 @@
 //! # Ok(())
 //! # }
 //! ```
-//!
-//! Other statistical tests such as bootstrap resampling are available
-//! in the [`statistical_tests`] module.
 //!
 //! ## Other examples
 //!
