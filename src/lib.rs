@@ -469,4 +469,32 @@ mod tests {
             )
         );
     }
+
+    #[test]
+    fn test_tupled_scores_from_evaluated() {
+        let evaluated_a = Evaluated {
+            scores: hashmap! {
+                "q_1" => 2.,
+                "q_2" => 5.,
+            },
+            mean_score: 3.5,
+        };
+        let evaluated_b = Evaluated {
+            scores: hashmap! {
+                "q_1" => 1.,
+                "q_2" => 0.,
+            },
+            mean_score: 0.5,
+        };
+        let evaluated_c = Evaluated {
+            scores: hashmap! {
+                "q_1" => 2.,
+                "q_2" => 1.,
+            },
+            mean_score: 1.5,
+        };
+        let tupled_scores =
+            tupled_scores_from_evaluated(&[evaluated_a, evaluated_b, evaluated_c]).unwrap();
+        assert_eq!(tupled_scores, vec![vec![2., 1., 2.], vec![5., 0., 1.]]);
+    }
 }
