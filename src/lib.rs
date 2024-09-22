@@ -320,6 +320,53 @@ where
     Ok(paired_scores)
 }
 
+/// Extracts tupled scores from multiple [`Evaluated`] results.
+///
+/// # Errors
+///
+/// * [`ElinorError::InvalidArgument`] if the evaluated results have different sets of queries.
+pub fn tupled_scores_from_evaluated<K>(
+    evaluateds: &[Evaluated<K>],
+) -> Result<Vec<Vec<f64>>, ElinorError>
+where
+    K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
+{
+    if evaluateds.len() < 2 {
+        return Err(ElinorError::InvalidArgument(
+            "The number of evaluated results must be at least 2.".to_string(),
+        ));
+    }
+
+    let score_maps = evaluateds.iter().map(|e| e.scores()).collect::<Vec<_>>();
+    for i in 1..score_maps.len() {
+        if score_maps[i].len() != score_maps[0].len() {
+            return Err(ElinorError::InvalidArgument(
+                "The evaluated results must have the same number of queries.".to_string(),
+            ));
+        }
+    }
+
+    let mut query_ids = score_maps[0].keys().cloned().collect::<Vec<_>>();
+    query_ids.sort_unstable();
+
+    let mut tupled_scores = vec![];
+    for query_id in query_ids {
+        let mut scores = vec![];
+        for score_map in &score_maps {
+            if let Some(score) = score_map.get(&query_id) {
+                scores.push(*score);
+            } else {
+                return Err(ElinorError::InvalidArgument(format!(
+                    "The query id {} is not found in the evaluated results.",
+                    query_id
+                )));
+            }
+        }
+        tupled_scores.push(scores);
+    }
+    Ok(tupled_scores)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
