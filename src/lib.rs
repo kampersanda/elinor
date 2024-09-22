@@ -9,12 +9,10 @@
 //! * **IR-focused design:**
 //!     Elinor is tailored specifically for evaluating information retrieval systems, with an intuitive interface designed for IR engineers.
 //!     It offers a streamlined workflow that simplifies common IR evaluation tasks.
-//!
 //! * **Comprehensive evaluation metrics:**
 //!     Elinor supports a wide range of key evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
 //!     The evaluation results are validated against trec_eval to ensure accuracy and reliability.
-//!
 //! * **Statistical testing:**
 //!     Elinor includes several statistical tests such as Student's t-test to verify the generalizability of results.
 //!     It provides not only p-values but also effect sizes and confidence intervals for thorough reporting.
