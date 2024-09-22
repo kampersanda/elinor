@@ -33,7 +33,7 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 /// assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.var(), 0.0251, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.effect_size(), 0.473, epsilon = 1e-3);
-/// assert!((0.0..1.0).contains(&result.p_value()));
+/// assert!((0.0..=1.0).contains(&result.p_value()));
 /// # Ok(())
 /// # }
 /// ```

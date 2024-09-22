@@ -74,17 +74,11 @@
 //!
 //! # Statistical tests for comparing two systems
 //!
-//! The [`statistical_tests`] module provides statistical tests for comparing systems,
-//! such as Student's t-test and bootstrap resampling.
-//!
-//! This example shows how to perform Student's t-test for Precision scores between two systems.
-//! Not only the p-value but also various statistics, such as variance and effect size, are provided for thorough reporting.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use approx::assert_relative_eq;
 //! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
-//! use elinor::paired_scores_from_evaluated;
 //! use elinor::statistical_tests::StudentTTest;
 //!
 //! // Prepare gold relevance scores.
@@ -111,8 +105,9 @@
 //! let pred_rels_b = b.build();
 //!
 //! // Evaluate Precision for both systems.
-//! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, Metric::Precision { k: 0 })?;
-//! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, Metric::Precision { k: 0 })?;
+//! let metric = Metric::Precision { k: 0 };
+//! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
+//! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
 //!
 //! // Perform Student's t-test.
 //! let paired_scores = elinor::paired_scores_from_evaluated(&evaluated_a, &evaluated_b)?;
@@ -123,7 +118,7 @@
 //! assert!(result.var() > 0.0);
 //! assert!(result.effect_size() > 0.0);
 //! assert!(result.t_stat() > 0.0);
-//! assert!(result.p_value() > 0.0);
+//! assert!((0.0..=1.0).contains(&result.p_value()));
 //!
 //! // Margin of error at a 95% confidence level.
 //! let moe95 = result.margin_of_error(0.05)?;
@@ -136,6 +131,65 @@
 //!
 //! // Check if the difference is significant at a 95% confidence level.
 //! assert_eq!(result.is_significant(0.05), result.p_value() <= 0.05);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Statistical tests for comparing three or more systems
+//!
+//! The [`statistical_tests`] module provides statistical tests for comparing systems,
+//! such as Student's t-test and bootstrap resampling.
+//!
+//! This example shows how to perform Student's t-test for Precision scores between two systems.
+//! Not only the p-value but also various statistics, such as variance and effect size, are provided for thorough reporting.
+//!
+//! ```
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+//! use elinor::statistical_tests::RandomizedTukeyHsdTest;
+//!
+//! // Prepare gold relevance scores.
+//! let mut b = GoldRelStoreBuilder::new();
+//! b.add_score("q_1", "d_1", 1)?;
+//! b.add_score("q_1", "d_2", 1)?;
+//! b.add_score("q_2", "d_1", 1)?;
+//! b.add_score("q_2", "d_2", 1)?;
+//! let gold_rels = b.build();
+//!
+//! // Prepare predicted relevance scores for system A.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_score("q_1", "d_1", 0.2.into())?;
+//! b.add_score("q_1", "d_2", 0.1.into())?;
+//! b.add_score("q_2", "d_1", 0.2.into())?;
+//! b.add_score("q_2", "d_2", 0.1.into())?;
+//! let pred_rels_a = b.build();
+//!
+//! // Prepare predicted relevance scores for system B.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_score("q_1", "d_3", 0.2.into())?;
+//! b.add_score("q_1", "d_2", 0.1.into())?;
+//! b.add_score("q_2", "d_3", 0.2.into())?;
+//! let pred_rels_b = b.build();
+//!
+//! // Prepare predicted relevance scores for system C.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_score("q_1", "d_1", 0.2.into())?;
+//! b.add_score("q_2", "d_2", 0.1.into())?;
+//! b.add_score("q_2", "d_4", 0.2.into())?;
+//! let pred_rels_c = b.build();
+//!
+//! // Evaluate Precision for both systems.
+//! let metric = Metric::Precision { k: 0 };
+//! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
+//! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
+//! let evaluated_c = elinor::evaluate(&gold_rels, &pred_rels_c, metric)?;
+//!
+//! // Perform Student's t-test.
+//! let tupled_scores = elinor::tupled_scores_from_evaluated(&[evaluated_a, evaluated_b, evaluated_c])?;
+//! let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores, 3)?;
+//! assert!((0.0..=1.0).contains(&result.p_value(0, 1)?));  // A vs. B
+//! assert!((0.0..=1.0).contains(&result.p_value(0, 2)?));  // A vs. C
+//! assert!((0.0..=1.0).contains(&result.p_value(1, 2)?));  // B vs. C
 //! # Ok(())
 //! # }
 //! ```
