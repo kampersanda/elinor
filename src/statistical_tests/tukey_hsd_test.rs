@@ -208,18 +208,16 @@ impl TukeyHsdTest {
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
-    pub fn confidence_interval(
+    pub fn confidence_intervals(
         &self,
-        i: usize,
         significance_level: f64,
-    ) -> Result<(f64, f64), ElinorError> {
-        if i >= self.n_systems {
-            return Err(ElinorError::InvalidArgument(
-                "The system index is out of range.".to_string(),
-            ));
-        }
+    ) -> Result<Vec<(f64, f64)>, ElinorError> {
         let moe = self.margin_of_error(significance_level)?;
-        Ok((self.system_means[i] - moe, self.system_means[i] + moe))
+        Ok(self
+            .system_means
+            .iter()
+            .map(|&mean| (mean - moe, mean + moe))
+            .collect())
     }
 
     fn check_indices(&self, i: usize, j: usize) -> Result<(), ElinorError> {
