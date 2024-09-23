@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use itertools::Itertools;
 use statrs::distribution::ContinuousCDF;
 use statrs::distribution::StudentsT;
+use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
 
@@ -65,7 +66,7 @@ impl TukeyHsdTest {
         // Mean of each topic (x_{*.j}).
         let topic_means = samples
             .iter()
-            .map(|sample| sample.iter().sum::<f64>() / n_systems as f64)
+            .map(|sample| sample.mean())
             .collect::<Vec<_>>();
 
         // Residual sum of squares S_E.
@@ -123,8 +124,8 @@ impl TukeyHsdTest {
     }
 
     /// Means of each system.
-    pub fn system_means(&self) -> &[f64] {
-        &self.system_means
+    pub fn system_means(&self) -> Vec<f64> {
+        self.system_means.clone()
     }
 
     /// Residual variance.
