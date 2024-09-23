@@ -58,14 +58,14 @@ impl TukeyHsdTest {
             / (n_systems * samples.len()) as f64;
 
         // Mean of each system (x_{i.*}).
-        let system_means = samples
-            .iter()
-            .map(|sample| sample.iter().sum::<f64>() / n_systems as f64)
+        let system_means = (0..n_systems)
+            .map(|j| samples.iter().map(|sample| sample[j]).sum::<f64>() / n_samples)
             .collect::<Vec<_>>();
 
         // Mean of each topic (x_{*.j}).
-        let topic_means = (0..n_systems)
-            .map(|j| samples.iter().map(|sample| sample[j]).sum::<f64>() / n_samples)
+        let topic_means = samples
+            .iter()
+            .map(|sample| sample.iter().sum::<f64>() / n_systems as f64)
             .collect::<Vec<_>>();
 
         // Residual sum of squares S_E.

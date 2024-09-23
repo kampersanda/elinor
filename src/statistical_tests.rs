@@ -133,3 +133,4 @@ pub mod tukey_hsd_test;
 pub use bootstrap_test::BootstrapTest;
 pub use randomized_tukey_hsd_test::RandomizedTukeyHsdTest;
 pub use student_t_test::StudentTTest;
+pub use tukey_hsd_test::TukeyHsdTest;
