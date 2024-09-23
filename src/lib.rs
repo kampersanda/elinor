@@ -12,7 +12,7 @@
 //!     Elinor supports a wide range of key evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
 //!     The evaluation results are validated against trec_eval to ensure accuracy and reliability.
-//! * **Several statistical testing:**
+//! * **Statistical testing with in-depth reporting:**
 //!     Elinor includes several statistical tests, such as Student's t-test or Randomized Tukey HSD test, to verify the generalizability of results.
 //!     Not only p-values but also other statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
 //!     See the [`statistical_tests`] module for more details.
