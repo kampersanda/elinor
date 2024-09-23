@@ -12,6 +12,9 @@ use crate::errors::ElinorError;
 
 /// Randomized Tukey HSD test.
 ///
+/// It can be used to compare two or more systems.
+/// When comparing two systems, it is equivalent to Fisher’s randomization test.
+///
 /// # Examples
 ///
 /// ```
