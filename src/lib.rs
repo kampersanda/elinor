@@ -74,6 +74,11 @@
 //!
 //! # Statistical tests for comparing two systems
 //!
+//! The [`statistical_tests`] module provides statistical tests for comparing systems,
+//! such as Student's t-test and bootstrap resampling.
+//!
+//! This example shows how to perform Student's t-test for Precision scores between two systems.
+//! Not only the p-value but also various statistics, such as variance and effect size, are provided for thorough reporting.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -137,12 +142,6 @@
 //!
 //! # Statistical tests for comparing three or more systems
 //!
-//! The [`statistical_tests`] module provides statistical tests for comparing systems,
-//! such as Student's t-test and bootstrap resampling.
-//!
-//! This example shows how to perform Student's t-test for Precision scores between two systems.
-//! Not only the p-value but also various statistics, such as variance and effect size, are provided for thorough reporting.
-//!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
@@ -184,7 +183,7 @@
 //! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
 //! let evaluated_c = elinor::evaluate(&gold_rels, &pred_rels_c, metric)?;
 //!
-//! // Perform Student's t-test.
+//! // Perform Randomized Tukey HSD test.
 //! let tupled_scores = elinor::tupled_scores_from_evaluated(&[evaluated_a, evaluated_b, evaluated_c])?;
 //! let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores, 3)?;
 //! assert!((0.0..=1.0).contains(&result.p_value(0, 1)?));  // A vs. B
