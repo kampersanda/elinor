@@ -100,7 +100,7 @@ impl RandomizedTukeyHsdTest {
         self.random_state
     }
 
-    /// p-value for the pair of systems.
+    /// p-value between systems i and j.
     ///
     /// # Errors
     ///
