@@ -265,4 +265,33 @@ impl RandomizedTukeyHsdTester {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_randomized_tukey_hsd_test_from_tupled_samples_empty() {
+        let samples: Vec<[f64; 2]> = vec![];
+        let result = RandomizedTukeyHsdTest::from_tupled_samples(samples, 2);
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::InvalidArgument("The input must have at least one sample.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_randomized_tukey_hsd_test_from_tupled_samples_single() {
+        let samples = vec![[1.0, 2.0]];
+        let result = RandomizedTukeyHsdTest::from_tupled_samples(samples, 2).unwrap();
+        assert_eq!(result.n_systems(), 2);
+    }
+
+    #[test]
+    fn test_randomized_tukey_hsd_test_from_tupled_samples_invalid_length() {
+        let samples = vec![vec![1.0, 2.0], vec![3.0]];
+        let result = RandomizedTukeyHsdTest::from_tupled_samples(samples, 2);
+        assert_eq!(
+            result.unwrap_err(),
+            ElinorError::InvalidArgument(
+                "The length of each sample must be equal to the number of systems.".to_string()
+            )
+        );
+    }
 }
