@@ -1,21 +1,21 @@
-//! Elinor is a library for evaluating information retrieval systems,
-//! inspired by [ranx](https://github.com/AmenRa/ranx) and [Sakai's book](https://www.coronasha.co.jp/np/isbn/9784339024968/).
-//!
-//! It provides a comprehensive set of tools and metrics tailored for information retrieval engineers,
+//! Elinor (**E**valuation **l**ibrary in **in**f**o**rmation **r**etrieval) is a library
+//! for evaluating information retrieval (IR) systems.
+//! It provides a comprehensive set of tools and metrics tailored for IR engineers,
 //! offering an intuitive and easy-to-use interface.
 //!
 //! # Key features
 //!
-//! * **IR-focused design:**
-//!     Elinor is tailored specifically for evaluating information retrieval systems, with an intuitive interface designed for IR engineers.
+//! * **IR-specific design:**
+//!     Elinor is tailored specifically for evaluating IR systems, with an intuitive interface designed for IR engineers.
 //!     It offers a streamlined workflow that simplifies common IR evaluation tasks.
 //! * **Comprehensive evaluation metrics:**
 //!     Elinor supports a wide range of key evaluation metrics, such as Precision, MAP, MRR, and nDCG.
 //!     The supported metrics are available in [`Metric`].
 //!     The evaluation results are validated against trec_eval to ensure accuracy and reliability.
-//! * **Statistical testing:**
-//!     Elinor includes several statistical tests such as Student's t-test to verify the generalizability of results.
-//!     It provides not only p-values but also other statistics, such as effect sizes and confidence intervals, for thorough reporting.
+//! * **In-depth statistical testing:**
+//!     Elinor includes several statistical tests, such as Student's t-test or Randomized Tukey HSD test, to verify the generalizability of results.
+//!     Not only p-values but also other statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
+//!     See the [`statistical_tests`] module for more details.
 //!
 //! # Basic usage in evaluating several metrics
 //!
@@ -72,75 +72,7 @@
 //! # }
 //! ```
 //!
-//! # Statistical tests for comparing two systems
-//!
-//! The [`statistical_tests`] module provides statistical tests for comparing systems,
-//! such as Student's t-test and bootstrap resampling.
-//!
-//! This example shows how to perform Student's t-test for Precision scores between two systems.
-//! Not only the p-value but also various statistics, such as variance and effect size, are provided for thorough reporting.
-//!
-//! ```
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use approx::assert_relative_eq;
-//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
-//! use elinor::paired_scores_from_evaluated;
-//! use elinor::statistical_tests::StudentTTest;
-//!
-//! // Prepare gold relevance scores.
-//! let mut b = GoldRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 1)?;
-//! b.add_score("q_1", "d_2", 1)?;
-//! b.add_score("q_2", "d_1", 1)?;
-//! b.add_score("q_2", "d_2", 1)?;
-//! let gold_rels = b.build();
-//!
-//! // Prepare predicted relevance scores for system A.
-//! let mut b = PredRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 0.2.into())?;
-//! b.add_score("q_1", "d_2", 0.1.into())?;
-//! b.add_score("q_2", "d_1", 0.2.into())?;
-//! b.add_score("q_2", "d_2", 0.1.into())?;
-//! let pred_rels_a = b.build();
-//!
-//! // Prepare predicted relevance scores for system B.
-//! let mut b = PredRelStoreBuilder::new();
-//! b.add_score("q_1", "d_3", 0.2.into())?;
-//! b.add_score("q_1", "d_2", 0.1.into())?;
-//! b.add_score("q_2", "d_3", 0.2.into())?;
-//! let pred_rels_b = b.build();
-//!
-//! // Evaluate Precision for both systems.
-//! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, Metric::Precision { k: 0 })?;
-//! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, Metric::Precision { k: 0 })?;
-//!
-//! // Perform Student's t-test.
-//! let paired_scores = elinor::paired_scores_from_evaluated(&evaluated_a, &evaluated_b)?;
-//! let result = StudentTTest::from_paired_samples(paired_scores)?;
-//!
-//! // Various statistics can be obtained from the t-test result.
-//! assert!(result.mean() > 0.0);
-//! assert!(result.var() > 0.0);
-//! assert!(result.effect_size() > 0.0);
-//! assert!(result.t_stat() > 0.0);
-//! assert!(result.p_value() > 0.0);
-//!
-//! // Margin of error at a 95% confidence level.
-//! let moe95 = result.margin_of_error(0.05)?;
-//! assert!(moe95 > 0.0);
-//!
-//! // Confidence interval at a 95% confidence level.
-//! let (ci95_btm, ci95_top) = result.confidence_interval(0.05)?;
-//! assert_relative_eq!(ci95_btm, result.mean() - moe95);
-//! assert_relative_eq!(ci95_top, result.mean() + moe95);
-//!
-//! // Check if the difference is significant at a 95% confidence level.
-//! assert_eq!(result.is_significant(0.05), result.p_value() <= 0.05);
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! # Instantiating relevance stores from [`HashMap`]
+//! # Relevance stores from [`HashMap`]
 //!
 //! [`GoldRelStore`] and [`PredRelStore`] can also be instantiated from [`HashMap`]s.
 //! The following mapping structure is expected:
@@ -320,6 +252,53 @@ where
     Ok(paired_scores)
 }
 
+/// Extracts tupled scores from multiple [`Evaluated`] results.
+///
+/// # Errors
+///
+/// * [`ElinorError::InvalidArgument`] if the evaluated results have different sets of queries.
+pub fn tupled_scores_from_evaluated<K>(
+    evaluateds: &[Evaluated<K>],
+) -> Result<Vec<Vec<f64>>, ElinorError>
+where
+    K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
+{
+    if evaluateds.len() < 2 {
+        return Err(ElinorError::InvalidArgument(
+            "The number of evaluated results must be at least 2.".to_string(),
+        ));
+    }
+
+    let score_maps = evaluateds.iter().map(|e| e.scores()).collect::<Vec<_>>();
+    for i in 1..score_maps.len() {
+        if score_maps[i].len() != score_maps[0].len() {
+            return Err(ElinorError::InvalidArgument(
+                "The evaluated results must have the same number of queries.".to_string(),
+            ));
+        }
+    }
+
+    let mut query_ids = score_maps[0].keys().cloned().collect::<Vec<_>>();
+    query_ids.sort_unstable();
+
+    let mut tupled_scores = vec![];
+    for query_id in query_ids {
+        let mut scores = vec![];
+        for score_map in &score_maps {
+            if let Some(score) = score_map.get(&query_id) {
+                scores.push(*score);
+            } else {
+                return Err(ElinorError::InvalidArgument(format!(
+                    "The query id {} is not found in the evaluated results.",
+                    query_id
+                )));
+            }
+        }
+        tupled_scores.push(scores);
+    }
+    Ok(tupled_scores)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -421,5 +400,33 @@ mod tests {
                 "The query id q_2 is not found in the second evaluated result.".to_string()
             )
         );
+    }
+
+    #[test]
+    fn test_tupled_scores_from_evaluated() {
+        let evaluated_a = Evaluated {
+            scores: hashmap! {
+                "q_1" => 2.,
+                "q_2" => 5.,
+            },
+            mean_score: 3.5,
+        };
+        let evaluated_b = Evaluated {
+            scores: hashmap! {
+                "q_1" => 1.,
+                "q_2" => 0.,
+            },
+            mean_score: 0.5,
+        };
+        let evaluated_c = Evaluated {
+            scores: hashmap! {
+                "q_1" => 2.,
+                "q_2" => 1.,
+            },
+            mean_score: 1.5,
+        };
+        let tupled_scores =
+            tupled_scores_from_evaluated(&[evaluated_a, evaluated_b, evaluated_c]).unwrap();
+        assert_eq!(tupled_scores, vec![vec![2., 1., 2.], vec![5., 0., 1.]]);
     }
 }

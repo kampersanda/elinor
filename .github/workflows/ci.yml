@@ -57,6 +57,7 @@ jobs:
           cargo run --release --example from_json --features serde
           cargo run --release --example from_trec
           cargo run --release --example paired_bootstrap_test
+          cargo run --release --example randomized_tukey_hsd_test
 
   correctness-test:
     name: Correctness test against trec_eval

@@ -33,7 +33,7 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 /// assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.var(), 0.0251, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.effect_size(), 0.473, epsilon = 1e-3);
-/// assert!((0.0..1.0).contains(&result.p_value()));
+/// assert!((0.0..=1.0).contains(&result.p_value()));
 /// # Ok(())
 /// # }
 /// ```
@@ -121,8 +121,16 @@ impl BootstrapTest {
 ///
 /// # Default parameters
 ///
-/// * `n_resamples`: `9999`
+/// * `n_resamples`: `1000`
 /// * `random_state`: `None`
+///
+/// # References
+///
+/// The default parameter `n_resamples = 1000` is based on the paper:
+///
+/// * Tetsuya Sakai.
+///   [Evaluation with informational and navigational intents](https://doi.org/10.1145/2187836.2187904).
+///   WWW 2012.
 #[derive(Debug, Clone, Copy)]
 pub struct BootstrapTester {
     n_resamples: usize,
@@ -139,14 +147,16 @@ impl BootstrapTester {
     /// Creates a new bootstrap tester.
     pub const fn new() -> Self {
         Self {
-            n_resamples: 9999,
+            n_resamples: 1000,
             random_state: None,
         }
     }
 
     /// Sets the number of resamples.
-    pub const fn with_n_resamples(mut self, n_resamples: usize) -> Self {
-        self.n_resamples = n_resamples;
+    ///
+    /// If the input is less than `1`, it is modified to `1`.
+    pub fn with_n_resamples(mut self, n_resamples: usize) -> Self {
+        self.n_resamples = n_resamples.max(1);
         self
     }
 
