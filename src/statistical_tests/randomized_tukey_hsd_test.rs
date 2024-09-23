@@ -13,7 +13,7 @@ use crate::errors::ElinorError;
 /// Randomized Tukey HSD test.
 ///
 /// It can be used to compare two or more systems.
-/// When comparing two systems, it is equivalent to Fisher’s randomization test.
+/// When comparing two systems, it is equivalent to Fisher's randomization test.
 ///
 /// # Examples
 ///
@@ -36,7 +36,7 @@ use crate::errors::ElinorError;
 ///     0.40, 0.30, 0.30, 0.20, 0.20, 0.20, 0.10, 0.50, 0.40, 0.30,
 /// ];
 ///
-/// // Comparing two systems, equivalent to Fisher’s randomization test.
+/// // Comparing two systems, equivalent to Fisher's randomization test.
 /// let tupled_samples = a.iter().zip(b.iter()).map(|(&a, &b)| [a, b]);
 /// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 2)?;
 /// assert!((0.0..=1.0).contains(&result.p_value(0, 1)?));
