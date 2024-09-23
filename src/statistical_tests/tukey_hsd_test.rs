@@ -1,6 +1,5 @@
 //!
-//! https://codapi.org/embed/?sandbox=r&code=data%3A%3Bbase64%2CZZExD8IgEIV3fsWNkGADpdXFbg7udTdYQI2aJkibsPjbTbEkZ1heLpfHu4%2B75%2F3itY803E30jJB3fAf7krDfwEBFtRMcRKWS1km3SRukIunPKZG%2FLTxb1FfI36J8KdgKUWeIFlkFsjYoSBTRqgCVqK5RRyK4%2FNUMoTKEKMbLYpgs4JoCFO%2ByLtLaPz8jxLgFwOigK%2Bf1y9L1QBzWJeVCMWLceTnj8uCqw816ahyHh41dnywcZv2cbNcPo7eMkNP0sPHYH6geZ5qa8AGnhzB6%2BnvBeBoNHazZjH0B
-
+//! https://codapi.org/embed/?sandbox=r&code=data%3A%3Bbase64%2CZZFNawMhEIbv%2FoohvSg1i%2B5HWkr3Vkrvm3uxqyZLErYYE%2FDS3150V5jgZZDhmXce9Tz9OOUC9ZMOjhFyDVdvLhLetzBSUb0IDqJqUq1T3aXaoipSXUiJ%2BK5gdqjfIL5D%2BVKwVaLOEh1CBUJbFCSK6KYQlehco45EcvmqWaLJEqJYL4tlspBrC1H8lnWR1j3wjBBto4BWXlXWqYuh6wdxWB8pHxpWsvv5dxp7%2BRY3aBuB7%2FjPkToofzSOasvhZEI%2FpAwOd3W%2BmX4YZ2c4bNM8I%2BQJPqcDtNUr2d9OJnwNH1TNd5ow%2BAOrRj87umQweM6NZZwnI%2Bhh3c44bB4nNuwf
 use std::collections::HashMap;
 
 use itertools::Itertools;
