@@ -73,6 +73,10 @@ pub struct RandomizedTukeyHsdTest {
 
 impl RandomizedTukeyHsdTest {
     /// Creates a new randomized Tukey HSD test.
+    ///
+    /// # Errors
+    ///
+    /// See [`RandomizedTukeyHsdTester::test`].
     pub fn from_tupled_samples<I, S>(samples: I, n_systems: usize) -> Result<Self, ElinorError>
     where
         I: IntoIterator<Item = S>,
@@ -96,7 +100,11 @@ impl RandomizedTukeyHsdTest {
         self.random_state
     }
 
-    /// p-values.
+    /// p-value for the pair of systems.
+    ///
+    /// # Errors
+    ///
+    /// * [`ElinorError::InvalidArgument`] if the indices are out of bounds or the indices are the same.
     pub fn p_value(&self, i: usize, j: usize) -> Result<f64, ElinorError> {
         if i >= self.n_systems || j >= self.n_systems {
             return Err(ElinorError::InvalidArgument(
@@ -112,7 +120,9 @@ impl RandomizedTukeyHsdTest {
         Ok(*self.p_values.get(&(i, j)).unwrap())
     }
 
-    /// p-values.
+    /// p-values for all pairs of systems, returning `(i, j, p-value)` such that `i < j`.
+    ///
+    /// The results are sorted by `(i, j)`.
     pub fn p_values(&self) -> Vec<(usize, usize, f64)> {
         let mut p_values = self
             .p_values
@@ -160,6 +170,10 @@ impl RandomizedTukeyHsdTester {
     }
 
     /// Computes a randomized Tukey HSD test for the samples.
+    ///
+    /// # Errors
+    ///
+    /// * [`ElinorError::InvalidArgument`] if the length of each sample is not equal to the number of systems.
     pub fn test<I, S>(&self, samples: I) -> Result<RandomizedTukeyHsdTest, ElinorError>
     where
         I: IntoIterator<Item = S>,

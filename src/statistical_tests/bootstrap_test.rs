@@ -126,8 +126,11 @@ impl BootstrapTest {
 ///
 /// # References
 ///
-/// The default parameter `n_resamples = 1000` is based on the paper,
-/// [Tetsuya Sakai. Evaluation with informational and navigational intents. WWW 2012](https://doi.org/10.1145/2187836.2187904).
+/// The default parameter `n_resamples = 1000` is based on the paper:
+///
+/// * Tetsuya Sakai.
+///   [Evaluation with informational and navigational intents](https://doi.org/10.1145/2187836.2187904).
+///   WWW 2012.
 #[derive(Debug, Clone, Copy)]
 pub struct BootstrapTester {
     n_resamples: usize,
