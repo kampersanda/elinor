@@ -158,8 +158,10 @@ impl RandomizedTukeyHsdTester {
     }
 
     /// Sets the number of iterations.
-    pub const fn with_n_iters(mut self, n_iters: usize) -> Self {
-        self.n_iters = n_iters;
+    ///
+    /// If the input is less than `1`, it is modified to `1`.
+    pub fn with_n_iters(mut self, n_iters: usize) -> Self {
+        self.n_iters = n_iters.max(1);
         self
     }
 
@@ -192,6 +194,13 @@ impl RandomizedTukeyHsdTester {
                 Ok(sample.to_vec())
             })
             .collect::<Result<_, _>>()?;
+
+        if samples.is_empty() {
+            return Err(ElinorError::InvalidArgument(
+                "The input must have at least one sample.".to_string(),
+            ));
+        }
+
         let n_samples = samples.len() as f64;
 
         // Prepare the random number generator.
@@ -251,4 +260,9 @@ impl RandomizedTukeyHsdTester {
             p_values,
         })
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 }

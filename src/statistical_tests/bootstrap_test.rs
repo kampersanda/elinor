@@ -153,8 +153,10 @@ impl BootstrapTester {
     }
 
     /// Sets the number of resamples.
-    pub const fn with_n_resamples(mut self, n_resamples: usize) -> Self {
-        self.n_resamples = n_resamples;
+    ///
+    /// If the input is less than `1`, it is modified to `1`.
+    pub fn with_n_resamples(mut self, n_resamples: usize) -> Self {
+        self.n_resamples = n_resamples.max(1);
         self
     }
 
