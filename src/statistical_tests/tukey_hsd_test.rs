@@ -18,6 +18,7 @@ pub struct TukeyHsdTest {
     scaled_t_dist: StudentsT,
     t_stats: HashMap<(usize, usize), f64>,
     p_values: HashMap<(usize, usize), f64>,
+    effect_sizes: HashMap<(usize, usize), f64>,
 }
 
 impl TukeyHsdTest {
@@ -90,6 +91,7 @@ impl TukeyHsdTest {
 
         let mut t_stats = HashMap::new();
         let mut p_values = HashMap::new();
+        let mut effect_sizes = HashMap::new();
         let scale = (v_e / n_samples).sqrt();
 
         for combi in (0..n_systems).combinations(2) {
@@ -98,8 +100,10 @@ impl TukeyHsdTest {
             let t_stat = (system_means[ai] - system_means[bi]) / scale;
             let t_dist = StudentsT::new(0.0, 1.0, freedom).unwrap();
             let p_value = t_dist.sf(t_stat.abs()) * 2.0; // two-tailed
+            let effect_size = (system_means[ai] - system_means[bi]) / v_e.sqrt();
             t_stats.insert((ai, bi), t_stat);
             p_values.insert((ai, bi), p_value);
+            effect_sizes.insert((ai, bi), effect_size);
         }
 
         Ok(Self {
@@ -109,12 +113,13 @@ impl TukeyHsdTest {
             scaled_t_dist: StudentsT::new(0.0, scale, freedom).unwrap(),
             t_stats,
             p_values,
+            effect_sizes,
         })
     }
 
-    /// Mean of system i.
-    pub fn system_mean(&self, i: usize) -> f64 {
-        self.system_means[i]
+    /// Means of each system.
+    pub fn system_means(&self) -> &[f64] {
+        &self.system_means
     }
 
     /// Residual variance.
@@ -126,7 +131,20 @@ impl TukeyHsdTest {
     pub fn effect_size(&self, i: usize, j: usize) -> Result<f64, ElinorError> {
         self.check_indices(i, j)?;
         let (i, j) = if i < j { (i, j) } else { (j, i) };
-        Ok((self.system_means[i] - self.system_means[j]) / self.residual_var.sqrt())
+        Ok(*self.effect_sizes.get(&(i, j)).unwrap())
+    }
+
+    /// Effect sizes for all pairs of systems, returning `(i, j, effect size)` such that `i < j`.
+    ///
+    /// The results are sorted by `(i, j)`.
+    pub fn effect_sizes(&self) -> Vec<(usize, usize, f64)> {
+        let mut effect_sizes = self
+            .effect_sizes
+            .iter()
+            .map(|(&(i, j), &effect_size)| (i, j, effect_size))
+            .collect_vec();
+        effect_sizes.sort_unstable_by(|(ai, aj, _), (bi, bj, _)| ai.cmp(bi).then(aj.cmp(bj)));
+        effect_sizes
     }
 
     /// t-statistic between systems i and j.
