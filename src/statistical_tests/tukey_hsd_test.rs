@@ -1,5 +1,5 @@
 //!
-//!
+//! https://codapi.org/embed/?sandbox=r&code=data%3A%3Bbase64%2CZZExD8IgEIV3fsWNkGADpdXFbg7udTdYQI2aJkibsPjbTbEkZ1heLpfHu4%2B75%2F3itY803E30jJB3fAf7krDfwEBFtRMcRKWS1km3SRukIunPKZG%2FLTxb1FfI36J8KdgKUWeIFlkFsjYoSBTRqgCVqK5RRyK4%2FNUMoTKEKMbLYpgs4JoCFO%2ByLtLaPz8jxLgFwOigK%2Bf1y9L1QBzWJeVCMWLceTnj8uCqw816ahyHh41dnywcZv2cbNcPo7eMkNP0sPHYH6geZ5qa8AGnhzB6%2BnvBeBoNHazZjH0B
 
 use std::collections::HashMap;
 
