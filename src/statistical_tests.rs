@@ -127,6 +127,7 @@
 //! ```
 pub mod bootstrap_test;
 pub mod randomized_tukey_hsd_test;
+pub mod stats;
 pub mod student_t_test;
 pub mod tukey_hsd_test;
 

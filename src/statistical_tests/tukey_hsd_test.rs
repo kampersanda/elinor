@@ -1,5 +1,11 @@
 //!
 //! https://codapi.org/embed/?sandbox=r&code=data%3A%3Bbase64%2CZZFNawMhEIbv%2FoohvSg1i%2B5HWkr3Vkrvm3uxqyZLErYYE%2FDS3150V5jgZZDhmXce9Tz9OOUC9ZMOjhFyDVdvLhLetzBSUb0IDqJqUq1T3aXaoipSXUiJ%2BK5gdqjfIL5D%2BVKwVaLOEh1CBUJbFCSK6KYQlehco45EcvmqWaLJEqJYL4tlspBrC1H8lnWR1j3wjBBto4BWXlXWqYuh6wdxWB8pHxpWsvv5dxp7%2BRY3aBuB7%2FjPkToofzSOasvhZEI%2FpAwOd3W%2BmX4YZ2c4bNM8I%2BQJPqcDtNUr2d9OJnwNH1TNd5ow%2BAOrRj87umQweM6NZZwnI%2Bhh3c44bB4nNuwf
+//!
+//!
+//!                   diff        lwr        upr     p adj
+//! system2-system1 -0.075 -0.1890942 0.03909423 0.2566977
+//! system3-system1 -0.100 -0.2140942 0.01409423 0.0956868
+//! system3-system2 -0.025 -0.1390942 0.08909423 0.8549632
 use std::collections::HashMap;
 
 use itertools::Itertools;
@@ -8,6 +14,7 @@ use statrs::distribution::StudentsT;
 use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
+use crate::statistical_tests::stats::studentized_range;
 
 /// Tukey Hsd Test with Paired Observations.
 #[derive(Debug, Clone)]
@@ -94,8 +101,7 @@ impl TukeyHsdTest {
             let ai = combi[0];
             let bi = combi[1];
             let t_stat = (system_means[ai] - system_means[bi]) / scale;
-            let t_dist = StudentsT::new(0.0, 1.0, freedom).unwrap();
-            let p_value = t_dist.sf(t_stat.abs()) * 2.0; // two-tailed
+            let p_value = studentized_range(n_systems, freedom, t_stat.abs()) * 2.0; // two-tailed
             let effect_size = (system_means[ai] - system_means[bi]) / v_e.sqrt();
             t_stats.insert((ai, bi), t_stat);
             p_values.insert((ai, bi), p_value);
