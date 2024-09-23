@@ -52,11 +52,7 @@ impl TukeyHsdTest {
         let n_samples = samples.len() as f64;
 
         // Mean of all samples (x_{..}).
-        let overall_mean = samples
-            .iter()
-            .map(|sample| sample.iter().sum::<f64>())
-            .sum::<f64>()
-            / (n_systems * samples.len()) as f64;
+        let overall_mean = samples.iter().flatten().mean();
 
         // Mean of each system (x_{i.*}).
         let system_means = (0..n_systems)
