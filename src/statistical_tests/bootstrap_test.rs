@@ -121,8 +121,13 @@ impl BootstrapTest {
 ///
 /// # Default parameters
 ///
-/// * `n_resamples`: `9999`
+/// * `n_resamples`: `1000`
 /// * `random_state`: `None`
+///
+/// # References
+///
+/// The default parameter `n_resamples = 1000` is based on the paper,
+/// [Tetsuya Sakai. Evaluation with informational and navigational intents. WWW 2012](https://doi.org/10.1145/2187836.2187904).
 #[derive(Debug, Clone, Copy)]
 pub struct BootstrapTester {
     n_resamples: usize,
@@ -139,7 +144,7 @@ impl BootstrapTester {
     /// Creates a new bootstrap tester.
     pub const fn new() -> Self {
         Self {
-            n_resamples: 9999,
+            n_resamples: 1000,
             random_state: None,
         }
     }
