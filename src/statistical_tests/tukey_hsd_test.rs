@@ -117,6 +117,11 @@ impl TukeyHsdTest {
         })
     }
 
+    /// Number of systems.
+    pub const fn n_systems(&self) -> usize {
+        self.n_systems
+    }
+
     /// Means of each system.
     pub fn system_means(&self) -> &[f64] {
         &self.system_means
@@ -203,7 +208,7 @@ impl TukeyHsdTest {
             .inverse_cdf(1.0 - (significance_level / 2.0)))
     }
 
-    /// Confidence interval of system i at a `1 - significance_level` confidence level.
+    /// Confidence intervals at a `1 - significance_level` confidence level.
     ///
     /// # Errors
     ///
