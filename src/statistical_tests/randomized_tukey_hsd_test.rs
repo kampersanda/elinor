@@ -6,6 +6,8 @@ use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use rand::SeedableRng;
+use statrs::distribution::ContinuousCDF;
+use statrs::distribution::StudentsT;
 use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
@@ -68,7 +70,12 @@ pub struct RandomizedTukeyHsdTest {
     n_systems: usize,
     n_iters: usize,
     random_state: u64,
-    p_values: HashMap<(usize, usize), f64>,
+    system_means: Vec<f64>,
+    scaled_t_dist: StudentsT,
+    residual_variance: f64,      // V_E
+    mean_diffs: Vec<Vec<f64>>,   // n_systems * n_systems
+    effect_sizes: Vec<Vec<f64>>, // n_systems * n_systems
+    p_values: Vec<Vec<f64>>,     // n_systems * n_systems
 }
 
 impl RandomizedTukeyHsdTest {
@@ -181,6 +188,7 @@ impl RandomizedTukeyHsdTester {
         I: IntoIterator<Item = S>,
         S: AsRef<[f64]>,
     {
+        // n_samples * n_systems
         let samples: Vec<Vec<f64>> = samples
             .into_iter()
             .map(|sample| {
@@ -201,32 +209,65 @@ impl RandomizedTukeyHsdTester {
             ));
         }
 
-        let n_samples = samples.len() as f64;
-
         // Prepare the random number generator.
         let random_state = self
             .random_state
             .map_or_else(|| rand::thread_rng().gen(), |seed| seed);
         let mut rng = StdRng::seed_from_u64(random_state);
 
-        // Compute the means of each system.
-        let means = (0..self.n_systems)
+        // Compute the means of each system (x_{i.*}).
+        let n_samples = samples.len() as f64;
+        let system_means = (0..self.n_systems)
             .map(|i| samples.iter().map(|sample| sample[i]).sum::<f64>() / n_samples)
             .collect_vec();
 
-        // All possible combinations of two systems.
-        let combis = (0..self.n_systems)
-            .combinations(2)
-            .map(|c| (c[0], c[1]))
-            .collect_vec();
-
-        // Compute the differences between the means for each pair of systems.
-        let diffs = combis
+        // Compute the means of each topic (x_{*.j}).
+        let topic_means = samples
             .iter()
-            .map(|&(a, b)| means[a] - means[b])
-            .collect_vec();
+            .map(|sample| sample.mean())
+            .collect::<Vec<_>>();
 
-        let mut counts = vec![0usize; diffs.len()];
+        // Residual sum of squares S_E.
+        let overall_mean = samples.iter().flatten().mean();
+        let rss = samples
+            .iter()
+            .enumerate()
+            .map(|(j, topic_samples)| {
+                topic_samples
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &x_ij)| {
+                        let x_i_dot = system_means[i];
+                        let x_dot_j = topic_means[j];
+                        (x_ij - x_i_dot - x_dot_j + overall_mean).powi(2)
+                    })
+                    .sum::<f64>()
+            })
+            .sum::<f64>();
+
+        // Residual variance V_E.
+        let freedom = ((self.n_systems - 1) * (samples.len() - 1)) as f64;
+        let residual_variance = rss / freedom;
+
+        // Two-way ANOVA.
+        let scale = (residual_variance / n_samples).sqrt();
+        let scaled_t_dist = StudentsT::new(0.0, scale, freedom).unwrap();
+
+        // Basic statistics.
+        let mut mean_diffs = vec![vec![0.0; self.n_systems]; self.n_systems];
+        let mut effect_sizes = vec![vec![0.0; self.n_systems]; self.n_systems];
+        for ai in 0..self.n_systems {
+            for bi in (ai + 1)..self.n_systems {
+                let diff = system_means[ai] - system_means[bi];
+                mean_diffs[ai][bi] = diff;
+                effect_sizes[ai][bi] = diff / residual_variance.sqrt();
+                mean_diffs[bi][ai] = -mean_diffs[ai][bi];
+                effect_sizes[bi][ai] = -effect_sizes[ai][bi];
+            }
+        }
+
+        // Randomized Tukey HSD test.
+        let mut counts = vec![vec![0usize; self.n_systems]; self.n_systems];
         for _ in 0..self.n_iters {
             let mut shuffled_samples = Vec::with_capacity(samples.len());
             for sample in &samples {
@@ -240,23 +281,32 @@ impl RandomizedTukeyHsdTester {
                 .collect_vec();
 
             let shuffled_diff = shuffled_means.as_slice().max() - shuffled_means.as_slice().min();
-            for (&diff, count) in diffs.iter().zip(counts.iter_mut()) {
-                if shuffled_diff >= diff.abs() {
-                    *count += 1;
+            for ai in 0..self.n_systems {
+                for bi in (ai + 1)..self.n_systems {
+                    let diff = system_means[ai] - system_means[bi];
+                    if shuffled_diff >= diff.abs() {
+                        counts[ai][bi] += 1;
+                    }
                 }
             }
         }
-
-        let p_values: HashMap<_, _> = combis
-            .iter()
-            .zip(counts.iter())
-            .map(|(&(a, b), &count)| ((a, b), count as f64 / self.n_iters as f64))
-            .collect();
+        let mut p_values = vec![vec![0.0; self.n_systems]; self.n_systems];
+        for ai in 0..self.n_systems {
+            for bi in (ai + 1)..self.n_systems {
+                p_values[ai][bi] = counts[ai][bi] as f64 / self.n_iters as f64;
+                p_values[bi][ai] = p_values[ai][bi];
+            }
+        }
 
         Ok(RandomizedTukeyHsdTest {
             n_systems: self.n_systems,
             n_iters: self.n_iters,
             random_state,
+            system_means,
+            scaled_t_dist,
+            residual_variance,
+            mean_diffs,
+            effect_sizes,
             p_values,
         })
     }
