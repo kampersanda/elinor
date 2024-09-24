@@ -14,7 +14,7 @@ use statrs::distribution::StudentsT;
 use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
-use crate::statistical_tests::stats::studentized_range;
+use crate::statistical_tests::stats::studentized_range_p_value;
 
 /// Tukey Hsd Test with Paired Observations.
 #[derive(Debug, Clone)]
@@ -101,7 +101,7 @@ impl TukeyHsdTest {
             let ai = combi[0];
             let bi = combi[1];
             let t_stat = (system_means[ai] - system_means[bi]) / scale;
-            let p_value = studentized_range(n_systems, freedom, t_stat.abs()) * 2.0; // two-tailed
+            let p_value = studentized_range_p_value(n_systems, freedom, t_stat.abs()) * 2.0; // two-tailed
             let effect_size = (system_means[ai] - system_means[bi]) / v_e.sqrt();
             t_stats.insert((ai, bi), t_stat);
             p_values.insert((ai, bi), p_value);
