@@ -9,8 +9,8 @@ use crate::errors::ElinorError;
 /// Two-Way ANOVA without replication.
 #[derive(Debug, Clone)]
 pub struct TwoWayAnovaWithoutReplication {
-    n_topics: usize, // i.e., number of tuples
     n_systems: usize,
+    n_topics: usize,
     between_system_sum_of_squares: f64, // S_A
     between_system_mean_square: f64,    // V_A
     between_topic_sum_of_squares: f64,  // S_B
@@ -140,14 +140,14 @@ impl TwoWayAnovaWithoutReplication {
         })
     }
 
-    /// Number of topics.
-    pub const fn n_topics(&self) -> usize {
-        self.n_topics
-    }
-
     /// Number of systems.
     pub const fn n_systems(&self) -> usize {
         self.n_systems
+    }
+
+    /// Number of topics.
+    pub const fn n_topics(&self) -> usize {
+        self.n_topics
     }
 
     /// Between-system sum of squares.
