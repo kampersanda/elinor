@@ -128,7 +128,9 @@
 pub mod bootstrap_test;
 pub mod randomized_tukey_hsd_test;
 pub mod student_t_test;
+pub mod two_way_anova_without_replication;
 
 pub use bootstrap_test::BootstrapTest;
 pub use randomized_tukey_hsd_test::RandomizedTukeyHsdTest;
 pub use student_t_test::StudentTTest;
+pub use two_way_anova_without_replication::TwoWayAnovaWithoutReplication;
