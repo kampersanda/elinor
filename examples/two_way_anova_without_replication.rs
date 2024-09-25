@@ -37,14 +37,14 @@ fn main() -> Result<()> {
         result.residual_sum_of_squares()
     );
     println!(
-        "between_system_mean_square: {:.4}",
-        result.between_system_mean_square()
+        "between_system_variance: {:.4}",
+        result.between_system_variance()
     );
     println!(
-        "between_topic_mean_square: {:.4}",
-        result.between_topic_mean_square()
+        "between_topic_variance: {:.4}",
+        result.between_topic_variance()
     );
-    println!("residual_mean_square: {:.4}", result.residual_mean_square());
+    println!("residual_variance: {:.4}", result.residual_variance());
     println!(
         "between_system_f_stat: {:.4}",
         result.between_system_f_stat()
