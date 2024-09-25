@@ -59,5 +59,12 @@ fn main() -> Result<()> {
         result.between_topic_p_value()
     );
 
+    let system_means = result.system_means();
+    let ci95s = result.confidence_intervals(0.05)?;
+    for (i, (mean, ci95)) in system_means.iter().zip(ci95s.iter()).enumerate() {
+        let (ci95_btm, ci95_top) = ci95;
+        println!("Mean and CI 95% of system {i}: {mean:.4} [{ci95_btm:.4}, {ci95_top:.4}]");
+    }
+
     Ok(())
 }

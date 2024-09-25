@@ -2,6 +2,7 @@
 
 use statrs::distribution::ContinuousCDF;
 use statrs::distribution::FisherSnedecor;
+use statrs::distribution::StudentsT;
 use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
@@ -22,6 +23,7 @@ pub struct TwoWayAnovaWithoutReplication {
     between_system_p_value: f64,        // p-value (between-system factor)
     between_topic_p_value: f64,         // p-value (between-topic factor)
     system_means: Vec<f64>,
+    scaled_t_dist: StudentsT,
 }
 
 impl TwoWayAnovaWithoutReplication {
@@ -123,6 +125,13 @@ impl TwoWayAnovaWithoutReplication {
         let between_topic_f_stat = between_topic_mean_square / residual_mean_square;
         let between_topic_p_value = between_topic_f_dist.sf(between_topic_f_stat);
 
+        let scaled_t_dist = StudentsT::new(
+            0.0,
+            (residual_mean_square / n_topics_f).sqrt(),
+            residual_freedom,
+        )
+        .expect("Failed to create a Student's t distribution.");
+
         Ok(Self {
             n_topics: samples.len(),
             n_systems,
@@ -137,6 +146,7 @@ impl TwoWayAnovaWithoutReplication {
             between_system_p_value,
             between_topic_p_value,
             system_means,
+            scaled_t_dist,
         })
     }
 
@@ -203,5 +213,38 @@ impl TwoWayAnovaWithoutReplication {
     /// Means of each system.
     pub fn system_means(&self) -> Vec<f64> {
         self.system_means.clone()
+    }
+
+    /// Margin of error at a `1 - significance_level` confidence level.
+    ///
+    /// # Errors
+    ///
+    /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
+    pub fn margin_of_error(&self, significance_level: f64) -> Result<f64, ElinorError> {
+        if significance_level <= 0.0 || significance_level > 1.0 {
+            return Err(ElinorError::InvalidArgument(
+                "The significance level must be in the range (0, 1].".to_string(),
+            ));
+        }
+        Ok(self
+            .scaled_t_dist
+            .inverse_cdf(1.0 - (significance_level / 2.0)))
+    }
+
+    /// Confidence intervals at a `1 - significance_level` confidence level.
+    ///
+    /// # Errors
+    ///
+    /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
+    pub fn confidence_intervals(
+        &self,
+        significance_level: f64,
+    ) -> Result<Vec<(f64, f64)>, ElinorError> {
+        let moe = self.margin_of_error(significance_level)?;
+        Ok(self
+            .system_means
+            .iter()
+            .map(|&mean| (mean - moe, mean + moe))
+            .collect())
     }
 }
