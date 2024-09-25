@@ -247,4 +247,18 @@ impl TwoWayAnovaWithoutReplication {
             .map(|&mean| (mean - moe, mean + moe))
             .collect())
     }
+
+    /// Effect sizes for all combinations of systems.
+    pub fn effect_sizes(self) -> Vec<Vec<f64>> {
+        let mut effect_sizes = vec![vec![0.0; self.n_systems]; self.n_systems];
+        for i in 0..self.n_systems {
+            for j in 0..self.n_systems {
+                let diff = self.system_means[i] - self.system_means[j];
+                let effect_size = diff / self.residual_mean_square.sqrt();
+                effect_sizes[i][j] = effect_size;
+                effect_sizes[j][i] = -effect_size;
+            }
+        }
+        effect_sizes
+    }
 }
