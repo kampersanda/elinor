@@ -1,5 +1,4 @@
-//!
-
+//! Two-Way ANOVA without replication.
 use statrs::distribution::ContinuousCDF;
 use statrs::distribution::FisherSnedecor;
 use statrs::distribution::StudentsT;
@@ -56,6 +55,11 @@ use crate::errors::ElinorError;
 /// // p-values.
 /// assert_abs_diff_eq!(result.between_system_p_value(), 0.098, epsilon = 1e-3);
 /// assert_abs_diff_eq!(result.between_topic_p_value(), 0.009, epsilon = 1e-3);
+///
+/// // 95% confidence intervals for the means of each system.
+/// let ci95s = result.confidence_intervals(0.05)?;
+/// assert_eq!(ci95s.len(), 3);
+///
 /// # Ok(())
 /// # }
 /// ```
