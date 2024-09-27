@@ -38,16 +38,24 @@ use crate::errors::ElinorError;
 ///     .map(|((&a, &b), &c)| [a, b, c]);
 /// let result = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_samples, 3)?;
 ///
+/// // Variations.
 /// assert_abs_diff_eq!(result.between_system_variation(), 0.1083, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.between_topic_variation(), 1.0293, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.residual_variation(), 0.8317, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.total_variation(), 1.9693, epsilon = 1e-4);
 ///
+/// // Variances.
 /// assert_abs_diff_eq!(result.between_system_variance(), 0.0542, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.between_topic_variance(), 0.0542, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.residual_variance(), 0.0219, epsilon = 1e-4);
 ///
+/// // F-statistics.
 /// assert_abs_diff_eq!(result.between_system_f_stat(), 2.475, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.between_system_f_stat(), 2.475, epsilon = 1e-4);
+///
+/// // p-values.
+/// assert_abs_diff_eq!(result.between_system_p_value(), 0.098, epsilon = 1e-3);
+/// assert_abs_diff_eq!(result.between_topic_p_value(), 0.009, epsilon = 1e-3);
 /// # Ok(())
 /// # }
 /// ```
@@ -203,32 +211,37 @@ impl TwoWayAnovaWithoutReplication {
         self.n_topics
     }
 
-    /// Between-system sum of squares.
+    /// Between-system variation.
     pub const fn between_system_variation(&self) -> f64 {
         self.between_system_variation
     }
 
-    /// Between-system mean square.
-    pub const fn between_system_variance(&self) -> f64 {
-        self.between_system_variance
-    }
-
-    /// Between-topic sum of squares.
+    /// Between-topic variation.
     pub const fn between_topic_variation(&self) -> f64 {
         self.between_topic_variation
     }
 
-    /// Between-topic mean square.
-    pub const fn between_topic_variance(&self) -> f64 {
-        self.between_topic_variance
-    }
-
-    /// Residual sum of squares.
+    /// Residual variation.
     pub const fn residual_variation(&self) -> f64 {
         self.residual_variation
     }
 
-    /// Residual mean square.
+    /// Total variation.
+    pub fn total_variation(&self) -> f64 {
+        self.between_system_variation + self.between_topic_variation + self.residual_variation
+    }
+
+    /// Between-system variance.
+    pub const fn between_system_variance(&self) -> f64 {
+        self.between_system_variance
+    }
+
+    /// Between-topic variance.
+    pub const fn between_topic_variance(&self) -> f64 {
+        self.between_topic_variance
+    }
+
+    /// Residual variance.
     pub const fn residual_variance(&self) -> f64 {
         self.residual_variance
     }
