@@ -25,17 +25,14 @@ fn main() -> Result<()> {
     println!("n_systems: {}", result.n_systems());
     println!("n_topics: {}", result.n_topics());
     println!(
-        "between_system_sum_of_squares: {:.4}",
-        result.between_system_sum_of_squares()
+        "between_system_variation: {:.4}",
+        result.between_system_variation()
     );
     println!(
-        "between_topic_sum_of_squares: {:.4}",
-        result.between_topic_sum_of_squares()
+        "between_topic_variation: {:.4}",
+        result.between_topic_variation()
     );
-    println!(
-        "residual_sum_of_squares: {:.4}",
-        result.residual_sum_of_squares()
-    );
+    println!("residual_variation: {:.4}", result.residual_variation());
     println!(
         "between_system_variance: {:.4}",
         result.between_system_variance()

@@ -38,9 +38,9 @@ use crate::errors::ElinorError;
 ///     .map(|((&a, &b), &c)| [a, b, c]);
 /// let result = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_samples, 3)?;
 ///
-/// assert_abs_diff_eq!(result.between_system_sum_of_squares(), 0.1083, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.between_topic_sum_of_squares(), 1.0293, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.residual_sum_of_squares(), 0.8317, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.between_system_variation(), 0.1083, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.between_topic_variation(), 1.0293, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.residual_variation(), 0.8317, epsilon = 1e-4);
 ///
 /// assert_abs_diff_eq!(result.between_system_variance(), 0.0542, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.between_topic_variance(), 0.0542, epsilon = 1e-4);
@@ -55,16 +55,16 @@ use crate::errors::ElinorError;
 pub struct TwoWayAnovaWithoutReplication {
     n_systems: usize,
     n_topics: usize,
-    between_system_sum_of_squares: f64, // S_A
-    between_system_variance: f64,       // V_A
-    between_topic_sum_of_squares: f64,  // S_B
-    between_topic_variance: f64,        // V_B
-    residual_sum_of_squares: f64,       // S_E
-    residual_variance: f64,             // V_E
-    between_system_f_stat: f64,         // F (between-system factor)
-    between_topic_f_stat: f64,          // F (between-topic factor)
-    between_system_p_value: f64,        // p-value (between-system factor)
-    between_topic_p_value: f64,         // p-value (between-topic factor)
+    between_system_variation: f64, // S_A
+    between_system_variance: f64,  // V_A
+    between_topic_variation: f64,  // S_B
+    between_topic_variance: f64,   // V_B
+    residual_variation: f64,       // S_E
+    residual_variance: f64,        // V_E
+    between_system_f_stat: f64,    // F (between-system factor)
+    between_topic_f_stat: f64,     // F (between-topic factor)
+    between_system_p_value: f64,   // p-value (between-system factor)
+    between_topic_p_value: f64,    // p-value (between-topic factor)
     system_means: Vec<f64>,
     scaled_t_dist: StudentsT,
 }
@@ -114,21 +114,21 @@ impl TwoWayAnovaWithoutReplication {
             .collect::<Vec<_>>();
 
         // S_A
-        let between_system_sum_of_squares = system_means
+        let between_system_variation = system_means
             .iter()
             .map(|&x_i_dot| (x_i_dot - overall_mean).powi(2))
             .sum::<f64>()
             * n_topics_f;
 
         // S_B
-        let between_topic_sum_of_squares = topic_means
+        let between_topic_variation = topic_means
             .iter()
             .map(|&x_dot_j| (x_dot_j - overall_mean).powi(2))
             .sum::<f64>()
             * n_systems_f;
 
         // S_E
-        let residual_sum_of_squares = samples
+        let residual_variation = samples
             .iter()
             .enumerate()
             .map(|(j, topic_samples)| {
@@ -146,15 +146,15 @@ impl TwoWayAnovaWithoutReplication {
 
         // V_A
         let between_system_freedom = n_systems_f - 1.;
-        let between_system_variance = between_system_sum_of_squares / between_system_freedom;
+        let between_system_variance = between_system_variation / between_system_freedom;
 
         // V_B
         let between_topic_freedom = n_topics_f - 1.;
-        let between_topic_variance = between_topic_sum_of_squares / between_topic_freedom;
+        let between_topic_variance = between_topic_variation / between_topic_freedom;
 
         // V_E
         let residual_freedom = (n_systems_f - 1.) * (n_topics_f - 1.);
-        let residual_variance = residual_sum_of_squares / residual_freedom;
+        let residual_variance = residual_variation / residual_freedom;
 
         // F and p-value for the between-system factor.
         let between_system_f_dist = FisherSnedecor::new(between_system_freedom, residual_freedom)
@@ -178,11 +178,11 @@ impl TwoWayAnovaWithoutReplication {
         Ok(Self {
             n_topics: samples.len(),
             n_systems,
-            between_system_sum_of_squares,
+            between_system_variation,
             between_system_variance,
-            between_topic_sum_of_squares,
+            between_topic_variation,
             between_topic_variance,
-            residual_sum_of_squares,
+            residual_variation,
             residual_variance,
             between_system_f_stat,
             between_topic_f_stat,
@@ -204,8 +204,8 @@ impl TwoWayAnovaWithoutReplication {
     }
 
     /// Between-system sum of squares.
-    pub const fn between_system_sum_of_squares(&self) -> f64 {
-        self.between_system_sum_of_squares
+    pub const fn between_system_variation(&self) -> f64 {
+        self.between_system_variation
     }
 
     /// Between-system mean square.
@@ -214,8 +214,8 @@ impl TwoWayAnovaWithoutReplication {
     }
 
     /// Between-topic sum of squares.
-    pub const fn between_topic_sum_of_squares(&self) -> f64 {
-        self.between_topic_sum_of_squares
+    pub const fn between_topic_variation(&self) -> f64 {
+        self.between_topic_variation
     }
 
     /// Between-topic mean square.
@@ -224,8 +224,8 @@ impl TwoWayAnovaWithoutReplication {
     }
 
     /// Residual sum of squares.
-    pub const fn residual_sum_of_squares(&self) -> f64 {
-        self.residual_sum_of_squares
+    pub const fn residual_variation(&self) -> f64 {
+        self.residual_variation
     }
 
     /// Residual mean square.
