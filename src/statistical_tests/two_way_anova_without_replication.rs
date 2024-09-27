@@ -8,6 +8,49 @@ use statrs::statistics::Statistics;
 use crate::errors::ElinorError;
 
 /// Two-Way ANOVA without replication.
+///
+/// # Examples
+///
+/// ```
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// use approx::assert_abs_diff_eq;
+/// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+///
+/// // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
+/// let a = vec![
+///     0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
+///     0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
+/// ];
+/// let b = vec![
+///     0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
+///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
+/// ];
+/// let c = vec![
+///     0.00, 0.00, 0.20, 0.10, 0.30, 0.30, 0.10, 0.20, 0.40, 0.40, //
+///     0.40, 0.30, 0.30, 0.20, 0.20, 0.20, 0.10, 0.50, 0.40, 0.30,
+/// ];
+///
+/// // Comparing three systems.
+/// let tupled_samples = a
+///     .iter()
+///     .zip(b.iter())
+///     .zip(c.iter())
+///     .map(|((&a, &b), &c)| [a, b, c]);
+/// let result = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_samples, 3)?;
+///
+/// assert_abs_diff_eq!(result.between_system_sum_of_squares(), 0.1083, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.between_topic_sum_of_squares(), 1.0293, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.residual_sum_of_squares(), 0.8317, epsilon = 1e-4);
+///
+/// assert_abs_diff_eq!(result.between_system_variance(), 0.0542, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.between_topic_variance(), 0.0542, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.residual_variance(), 0.0219, epsilon = 1e-4);
+///
+/// assert_abs_diff_eq!(result.between_system_f_stat(), 2.475, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.between_system_f_stat(), 2.475, epsilon = 1e-4);
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Debug, Clone)]
 pub struct TwoWayAnovaWithoutReplication {
     n_systems: usize,
