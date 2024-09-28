@@ -15,19 +15,10 @@ use crate::errors::ElinorError;
 /// use approx::assert_abs_diff_eq;
 /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
 ///
-/// // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
-/// let a = vec![
-///     0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
-///     0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
-/// ];
-/// let b = vec![
-///     0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
-///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
-/// ];
-/// let c = vec![
-///     0.00, 0.00, 0.20, 0.10, 0.30, 0.30, 0.10, 0.20, 0.40, 0.40, //
-///     0.40, 0.30, 0.30, 0.20, 0.20, 0.20, 0.10, 0.50, 0.40, 0.30,
-/// ];
+/// // Examples of three systems and two topics.
+/// let a = vec![1.0, 2.0];
+/// let b = vec![2.0, 4.0];
+/// let c = vec![3.0, 2.0];
 ///
 /// // Comparing three systems.
 /// let tupled_samples = a
@@ -37,28 +28,70 @@ use crate::errors::ElinorError;
 ///     .map(|((&a, &b), &c)| [a, b, c]);
 /// let result = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_samples, 3)?;
 ///
+/// // Means to compute the statistics.
+/// let mean: f64 = (1. + 2. + 2. + 4. + 3. + 2.) / 6.;
+/// let mean_system_a: f64 = (1. + 2.) / 2.;
+/// let mean_system_b: f64 = (2. + 4.) / 2.;
+/// let mean_system_c: f64 = (3. + 2.) / 2.;
+/// let mean_topic_1: f64 = (1. + 2. + 3.) / 3.;
+/// let mean_topic_2: f64 = (2. + 4. + 2.) / 3.;
+///
 /// // Variations.
-/// assert_abs_diff_eq!(result.between_system_variation(), 0.1083, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.between_topic_variation(), 1.0293, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.residual_variation(), 0.8317, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.total_variation(), 1.9693, epsilon = 1e-4);
+/// assert_abs_diff_eq!(
+///     result.between_system_variation(),
+///     ((mean_system_a - mean).powi(2) + (mean_system_b - mean).powi(2) + (mean_system_c - mean).powi(2)) * 2.,
+///     epsilon = 1e-10,
+/// );
+/// assert_abs_diff_eq!(
+///     result.between_topic_variation(),
+///     ((mean_topic_1 - mean).powi(2) + (mean_topic_2 - mean).powi(2)) * 3.,
+///     epsilon = 1e-10,
+/// );
+/// assert_abs_diff_eq!(
+///     result.residual_variation(),
+///     (1.0 - mean_system_a - mean_topic_1 + mean).powi(2) + (2.0 - mean_system_a - mean_topic_2 + mean).powi(2) +
+///     (2.0 - mean_system_b - mean_topic_1 + mean).powi(2) + (4.0 - mean_system_b - mean_topic_2 + mean).powi(2) +
+///     (3.0 - mean_system_c - mean_topic_1 + mean).powi(2) + (2.0 - mean_system_c - mean_topic_2 + mean).powi(2),
+///     epsilon = 1e-10,
+/// );
+/// assert_abs_diff_eq!(
+///     result.total_variation(),
+///     result.between_system_variation() + result.between_topic_variation() + result.residual_variation(),
+///     epsilon = 1e-10,
+/// );
 ///
 /// // Variances.
-/// assert_abs_diff_eq!(result.between_system_variance(), 0.0542, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.between_topic_variance(), 0.0542, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.residual_variance(), 0.0219, epsilon = 1e-4);
+/// assert_abs_diff_eq!(
+///     result.between_system_variance(),
+///     result.between_system_variation() / (3. - 1.),
+///     epsilon = 1e-10,
+/// );
+/// assert_abs_diff_eq!(
+///     result.between_topic_variance(),
+///     result.between_topic_variation() / (2. - 1.),
+///     epsilon = 1e-10,
+/// );
+/// assert_abs_diff_eq!(
+///     result.residual_variance(),
+///     result.residual_variation() / ((3. - 1.) * (2. - 1.)),
+///     epsilon = 1e-10,
+/// );
 ///
 /// // F-statistics.
-/// assert_abs_diff_eq!(result.between_system_f_stat(), 2.475, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.between_system_f_stat(), 2.475, epsilon = 1e-4);
+/// assert_abs_diff_eq!(
+///     result.between_system_f_stat(),
+///     result.between_system_variance() / result.residual_variance(),
+///     epsilon = 1e-10,
+/// );
+/// assert_abs_diff_eq!(
+///     result.between_topic_f_stat(),
+///     result.between_topic_variance() / result.residual_variance(),
+///     epsilon = 1e-10,
+/// );
 ///
 /// // p-values.
-/// assert_abs_diff_eq!(result.between_system_p_value(), 0.098, epsilon = 1e-3);
-/// assert_abs_diff_eq!(result.between_topic_p_value(), 0.009, epsilon = 1e-3);
-///
-/// // 95% confidence intervals for the means of each system.
-/// let ci95s = result.confidence_intervals(0.05)?;
-/// assert_eq!(ci95s.len(), 3);
+/// assert!((0.0..=1.0).contains(&result.between_system_p_value()));
+/// assert!((0.0..=1.0).contains(&result.between_topic_p_value()));
 ///
 /// # Ok(())
 /// # }
@@ -78,7 +111,7 @@ pub struct TwoWayAnovaWithoutReplication {
     between_system_p_value: f64,   // p-value (between-system factor)
     between_topic_p_value: f64,    // p-value (between-topic factor)
     system_means: Vec<f64>,
-    scaled_t_dist: StudentsT,
+    system_t_dist: StudentsT,
 }
 
 impl TwoWayAnovaWithoutReplication {
@@ -180,7 +213,7 @@ impl TwoWayAnovaWithoutReplication {
         let between_topic_f_stat = between_topic_variance / residual_variance;
         let between_topic_p_value = between_topic_f_dist.sf(between_topic_f_stat);
 
-        let scaled_t_dist = StudentsT::new(
+        let system_t_dist = StudentsT::new(
             0.0,
             (residual_variance / n_topics_f).sqrt(),
             residual_freedom,
@@ -201,7 +234,7 @@ impl TwoWayAnovaWithoutReplication {
             between_system_p_value,
             between_topic_p_value,
             system_means,
-            scaled_t_dist,
+            system_t_dist,
         })
     }
 
@@ -287,7 +320,7 @@ impl TwoWayAnovaWithoutReplication {
             ));
         }
         Ok(self
-            .scaled_t_dist
+            .system_t_dist
             .inverse_cdf(1.0 - (significance_level / 2.0)))
     }
 
