@@ -21,55 +21,50 @@ fn main() -> Result<()> {
         .zip(b.iter())
         .zip(c.iter())
         .map(|((&a, &b), &c)| [a, b, c]);
-    let result = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_samples, 3)?;
-    println!("n_systems: {}", result.n_systems());
-    println!("n_topics: {}", result.n_topics());
+    let stat = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_samples, 3)?;
+    println!("n_systems: {}", stat.n_systems());
+    println!("n_topics: {}", stat.n_topics());
     println!(
         "between_system_variation: {:.4}",
-        result.between_system_variation()
+        stat.between_system_variation()
     );
     println!(
         "between_topic_variation: {:.4}",
-        result.between_topic_variation()
+        stat.between_topic_variation()
     );
-    println!("residual_variation: {:.4}", result.residual_variation());
+    println!("residual_variation: {:.4}", stat.residual_variation());
     println!(
         "between_system_variance: {:.4}",
-        result.between_system_variance()
+        stat.between_system_variance()
     );
     println!(
         "between_topic_variance: {:.4}",
-        result.between_topic_variance()
+        stat.between_topic_variance()
     );
-    println!("residual_variance: {:.4}", result.residual_variance());
-    println!(
-        "between_system_f_stat: {:.4}",
-        result.between_system_f_stat()
-    );
-    println!("between_topic_f_stat: {:.4}", result.between_topic_f_stat());
+    println!("residual_variance: {:.4}", stat.residual_variance());
+    println!("between_system_f_stat: {:.4}", stat.between_system_f_stat());
+    println!("between_topic_f_stat: {:.4}", stat.between_topic_f_stat());
     println!(
         "between_system_p_value: {:.4}",
-        result.between_system_p_value()
+        stat.between_system_p_value()
     );
-    println!(
-        "between_topic_p_value: {:.4}",
-        result.between_topic_p_value()
-    );
+    println!("between_topic_p_value: {:.4}", stat.between_topic_p_value());
 
-    // let system_means = result.system_means();
-    // let ci95s = result.confidence_intervals(0.05)?;
-    // for (i, (mean, ci95)) in system_means.iter().zip(ci95s.iter()).enumerate() {
-    //     let (ci95_btm, ci95_top) = ci95;
-    //     println!("Mean and 95% CI of system {i}: {mean:.4} [{ci95_btm:.4}, {ci95_top:.4}]");
-    // }
+    let moe95 = stat.margin_of_error(0.05)?;
+    let system_means = stat.system_means();
+    for (i, mean) in system_means.iter().enumerate() {
+        let ci95_btm = mean - moe95;
+        let ci95_top = mean + moe95;
+        println!("Mean and 95% CI of system {i}: {mean:.4} [{ci95_btm:.4}, {ci95_top:.4}]");
+    }
 
-    // let effect_sizes = result.effect_sizes();
-    // for i in 0..result.n_systems() {
-    //     for j in (i + 1)..result.n_systems() {
-    //         let effect_size = effect_sizes[i][j];
-    //         println!("Effect size between system {i} and {j}: {effect_size:.4}");
-    //     }
-    // }
+    let effect_sizes = stat.between_system_effect_sizes();
+    for i in 0..stat.n_systems() {
+        for j in (i + 1)..stat.n_systems() {
+            let effect_size = effect_sizes[i][j];
+            println!("Effect size between system {i} and {j}: {effect_size:.4}");
+        }
+    }
 
     Ok(())
 }
