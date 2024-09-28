@@ -8,7 +8,7 @@ use crate::errors::ElinorError;
 
 /// Two-Way ANOVA without replication.
 ///
-/// # Notations to be used
+/// # Notations
 ///
 /// * $`m`$: Number of systems.
 /// * $`n`$: Number of topics.
@@ -547,7 +547,7 @@ impl TwoWayAnovaWithoutReplication {
         self.between_topic_p_value
     }
 
-    /// Margin of error at a given significance level for the system means.
+    /// Margin of error at a given significance level.
     ///
     /// # Errors
     ///
@@ -560,7 +560,7 @@ impl TwoWayAnovaWithoutReplication {
     /// ```
     ///
     /// where $`t_{\alpha/2}((m - 1)(n - 1))`$ is the $`1 - \alpha/2`$ quantile of the Student's $`t`$ distribution with $`(m - 1)(n - 1)`$ degrees of freedom.
-    pub fn system_margin_of_error(&self, significance_level: f64) -> Result<f64, ElinorError> {
+    pub fn margin_of_error(&self, significance_level: f64) -> Result<f64, ElinorError> {
         if significance_level <= 0.0 || significance_level > 1.0 {
             return Err(ElinorError::InvalidArgument(
                 "The significance level must be in the range (0, 1].".to_string(),
