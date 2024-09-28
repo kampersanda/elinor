@@ -35,7 +35,7 @@ rstest = "0.22.0"
 serde_json = "1.0.128"
 
 [workspace]
-members = ["elinor-evaluate"]
+members = ["elinor-convert", "elinor-evaluate"]
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--html-in-header", "katex.html"]

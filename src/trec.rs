@@ -37,7 +37,7 @@ use crate::PredScore;
 /// ```
 pub fn parse_gold_rels_in_trec<I, S>(lines: I) -> Result<GoldRelStore<String>, ElinorError>
 where
-    I: Iterator<Item = S>,
+    I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
     let mut b = GoldRelStoreBuilder::new();
@@ -89,7 +89,7 @@ where
 /// ```
 pub fn parse_pred_rels_in_trec<I, S>(lines: I) -> Result<PredRelStore<String>, ElinorError>
 where
-    I: Iterator<Item = S>,
+    I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
     let mut b = PredRelStoreBuilder::new();

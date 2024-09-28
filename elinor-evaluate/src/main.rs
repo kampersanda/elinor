@@ -38,7 +38,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn load_lines<P: AsRef<Path>>(file: P) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+fn load_lines<P: AsRef<Path>>(file: P) -> Result<Vec<String>> {
     let file = File::open(file)?;
     let reader = BufReader::new(file);
     let lines = reader.lines().collect::<Result<Vec<_>, _>>()?;
