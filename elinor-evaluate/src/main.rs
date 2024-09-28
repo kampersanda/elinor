@@ -1,6 +1,6 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -25,6 +25,9 @@ enum SubCommand {
         #[arg(short, long)]
         pred_json: PathBuf,
 
+        #[arg(short, long)]
+        output_json: PathBuf,
+
         #[arg(
             short,
             long,
@@ -41,85 +44,20 @@ fn main() -> Result<()> {
         SubCommand::Measure {
             gold_json,
             pred_json,
+            output_json,
             metrics,
-        } => main_measure(gold_json, pred_json, metrics)?,
+        } => main_measure(gold_json, pred_json, output_json, metrics)?,
     }
-
-    // let metrics = args
-    //     .metrics
-    //     .iter()
-    //     .map(|s| s.parse::<Metric>())
-    //     .collect::<Result<Vec<_>, _>>()?;
-
-    // if metrics.is_empty() {
-    //     return Err(anyhow::anyhow!("No metrics specified"));
-    // }
-
-    // let reader = BufReader::new(File::open(&args.gold_json)?);
-    // let gold_map = serde_json::from_reader(reader)?;
-    // let gold_store = GoldRelStore::<String>::from_map(gold_map);
-
-    // let mut pred_stores = Vec::new();
-    // for pred_json in &args.pred_jsons {
-    //     let reader = BufReader::new(File::open(pred_json)?);
-    //     let pred_map = serde_json::from_reader(reader)?;
-    //     let pred_store = PredRelStore::<String>::from_map(pred_map);
-    //     pred_stores.push(pred_store);
-    // }
-
-    // let mut evaluated_results = Vec::new();
-    // for pred_store in &pred_stores {
-    //     let mut evaluated_result = HashMap::new();
-    //     for &metric in &metrics {
-    //         let evaluated = elinor::evaluate(&gold_store, pred_store, metric)?;
-    //         evaluated_result.insert(metric.clone(), evaluated);
-    //     }
-    //     evaluated_results.push(evaluated_result);
-    // }
-
-    // let n_systems = pred_stores.len();
-    // let system_aliases: Vec<_> = (1..=n_systems).map(|i| format!("System {i}")).collect();
-
-    // // Show alias.
-    // let mut table = Table::new();
-    // table.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
-    // table.set_titles(row!["Alias", "File"]);
-    // for (alias, pred_json) in system_aliases.iter().zip(args.pred_jsons.iter()) {
-    //     table.add_row(row![alias, format!("{}", pred_json.display())]);
-    // }
-    // table.printstd();
-
-    // let mut table = Table::new();
-    // table.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
-    // table.set_titles(Row::new(
-    //     vec![Cell::new("Metric")]
-    //         .into_iter()
-    //         .chain(system_aliases.iter().map(|alias| Cell::new(alias)))
-    //         .collect(),
-    // ));
-    // for metric in metrics {
-    //     let mut mean_scores = Vec::new();
-    //     for evaluated_result in &evaluated_results {
-    //         let evaluated = evaluated_result.get(&metric).unwrap();
-    //         mean_scores.push(evaluated.mean_score());
-    //     }
-    //     table.add_row(Row::new(
-    //         vec![Cell::new(&format!("{metric}"))]
-    //             .into_iter()
-    //             .chain(
-    //                 mean_scores
-    //                     .iter()
-    //                     .map(|score| Cell::new(&format!("{score:.4}"))),
-    //             )
-    //             .collect(),
-    //     ));
-    // }
-    // table.printstd();
 
     Ok(())
 }
 
-fn main_measure(gold_json: PathBuf, pred_json: PathBuf, metrics: Vec<String>) -> Result<()> {
+fn main_measure(
+    gold_json: PathBuf,
+    pred_json: PathBuf,
+    output_json: PathBuf,
+    metrics: Vec<String>,
+) -> Result<()> {
     if metrics.is_empty() {
         return Err(anyhow::anyhow!("No metrics specified"));
     }
@@ -141,11 +79,15 @@ fn main_measure(gold_json: PathBuf, pred_json: PathBuf, metrics: Vec<String>) ->
 
     let mut rows = Vec::new();
     rows.push(vec![S("Metric"), S("Score")]);
-    for (metric, result) in results {
+    for (metric, result) in &results {
         let mean_score = result.mean_score();
         rows.push(vec![format!("{metric}"), format!("{mean_score:.4}")]);
     }
     create_table(rows).printstd();
+
+    let json = results_to_json(results);
+    let writer = BufWriter::new(File::create(&output_json)?);
+    serde_json::to_writer(writer, &json)?;
 
     Ok(())
 }
@@ -162,6 +104,21 @@ fn parse_metrics(metrics: Vec<String>) -> Result<Vec<Metric>> {
         parsed.push(metric);
     }
     Ok(parsed)
+}
+
+fn results_to_json(results: Vec<(Metric, elinor::Evaluated<String>)>) -> serde_json::Value {
+    let mut metric_to_scores = serde_json::Map::new();
+    for (metric, result) in results {
+        let mut qid_to_score = serde_json::Map::new();
+        for (k, v) in result.scores() {
+            qid_to_score.insert(
+                k.clone(),
+                serde_json::Value::Number(serde_json::Number::from_f64(*v).unwrap()),
+            );
+        }
+        metric_to_scores.insert(format!("{metric}"), serde_json::Value::Object(qid_to_score));
+    }
+    serde_json::Value::Object(metric_to_scores)
 }
 
 fn create_table(rows: Vec<Vec<String>>) -> Table {
