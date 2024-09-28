@@ -48,26 +48,26 @@
 //!
 //! // Perform Student's t-test.
 //! let paired_scores = elinor::paired_scores_from_evaluated(&evaluated_a, &evaluated_b)?;
-//! let result = StudentTTest::from_paired_samples(paired_scores)?;
+//! let stat = StudentTTest::from_paired_samples(paired_scores)?;
 //!
 //! // Various statistics can be obtained from the t-test result.
-//! assert!(result.mean() > 0.0);
-//! assert!(result.var() > 0.0);
-//! assert!(result.effect_size() > 0.0);
-//! assert!(result.t_stat() > 0.0);
-//! assert!((0.0..=1.0).contains(&result.p_value()));
+//! assert!(stat.mean() > 0.0);
+//! assert!(stat.var() > 0.0);
+//! assert!(stat.effect_size() > 0.0);
+//! assert!(stat.t_stat() > 0.0);
+//! assert!((0.0..=1.0).contains(&stat.p_value()));
 //!
 //! // Margin of error at a 95% confidence level.
-//! let moe95 = result.margin_of_error(0.05)?;
+//! let moe95 = stat.margin_of_error(0.05)?;
 //! assert!(moe95 > 0.0);
 //!
 //! // Confidence interval at a 95% confidence level.
-//! let (ci95_btm, ci95_top) = result.confidence_interval(0.05)?;
-//! assert_relative_eq!(ci95_btm, result.mean() - moe95);
-//! assert_relative_eq!(ci95_top, result.mean() + moe95);
+//! let (ci95_btm, ci95_top) = stat.confidence_interval(0.05)?;
+//! assert_relative_eq!(ci95_btm, stat.mean() - moe95);
+//! assert_relative_eq!(ci95_top, stat.mean() + moe95);
 //!
 //! // Check if the difference is significant at a 95% confidence level.
-//! assert_eq!(result.is_significant(0.05), result.p_value() <= 0.05);
+//! assert_eq!(stat.is_significant(0.05), stat.p_value() <= 0.05);
 //! # Ok(())
 //! # }
 //! ```
@@ -79,7 +79,7 @@
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
-//! use elinor::statistical_tests::RandomizedTukeyHsdTest;
+//! use elinor::statistical_tests::{RandomizedTukeyHsdTest, TwoWayAnovaWithoutReplication};
 //!
 //! // Prepare gold relevance scores.
 //! let mut b = GoldRelStoreBuilder::new();
@@ -111,18 +111,30 @@
 //! b.add_score("q_2", "d_4", 0.2.into())?;
 //! let pred_rels_c = b.build();
 //!
-//! // Evaluate Precision for both systems.
+//! // Evaluate Precision for all systems.
 //! let metric = Metric::Precision { k: 0 };
 //! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
 //! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
 //! let evaluated_c = elinor::evaluate(&gold_rels, &pred_rels_c, metric)?;
 //!
-//! // Perform Randomized Tukey HSD test.
+//! // Perform Randomized Tukey HSD test and Two-way ANOVA without replication.
 //! let tupled_scores = elinor::tupled_scores_from_evaluated(&[evaluated_a, evaluated_b, evaluated_c])?;
-//! let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores, 3)?;
-//! assert!((0.0..=1.0).contains(&result.p_value(0, 1)?));  // A vs. B
-//! assert!((0.0..=1.0).contains(&result.p_value(0, 2)?));  // A vs. C
-//! assert!((0.0..=1.0).contains(&result.p_value(1, 2)?));  // B vs. C
+//! let hsd_stat = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores.iter(), 3)?;
+//! let anova_stat = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), 3)?;
+//!
+//! // p-values and effect sizes for all pairs of systems.
+//! let effect_sizes = anova_stat.between_system_effect_sizes();
+//! for (i, j) in [(0, 1), (0, 2), (1, 2)] {
+//!     assert!((0.0..=1.0).contains(&hsd_stat.p_value(i, j)?));
+//!     assert!(effect_sizes[i][j] != 0.0);
+//! }
+//!
+//! // 95% CI of system means.
+//! let moe95 = anova_stat.margin_of_error(0.05)?;
+//! let system_means = anova_stat.system_means();
+//! for (i, mean) in system_means.iter().enumerate() {
+//!     assert!(mean - moe95 <= mean + moe95);
+//! }
 //! # Ok(())
 //! # }
 //! ```
