@@ -31,13 +31,13 @@ impl FromStr for RelevanceType {
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
-    #[arg(short, long)]
+    #[arg(short, long, help = "Path to the input TREC file")]
     input_trec: PathBuf,
 
-    #[arg(short, long)]
+    #[arg(short, long, help = "Path to the output JSON file")]
     output_json: PathBuf,
 
-    #[arg(short, long)]
+    #[arg(short, long, help = "Relevance type from 'gold' or 'pred'")]
     rel_type: RelevanceType,
 }
 
