@@ -4,6 +4,7 @@ use std::io::BufReader;
 use std::path::Path;
 use std::path::PathBuf;
 
+use anyhow::Result;
 use clap::Parser;
 use elinor::trec;
 use elinor::Metric;
@@ -21,7 +22,7 @@ struct Args {
     ks: Vec<usize>,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
     let args = Args::parse();
 
     let gold_rels = trec::parse_gold_rels_in_trec(load_lines(&args.gold_file)?.into_iter())?;
