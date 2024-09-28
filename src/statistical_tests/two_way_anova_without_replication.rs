@@ -1,4 +1,4 @@
-//! Two-Way ANOVA without replication.
+//! Two-way ANOVA without replication.
 use statrs::distribution::ContinuousCDF;
 use statrs::distribution::FisherSnedecor;
 use statrs::distribution::StudentsT;
@@ -6,7 +6,7 @@ use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
 
-/// Two-Way ANOVA without replication.
+/// Two-way ANOVA without replication.
 ///
 /// # Notations
 ///
@@ -34,7 +34,7 @@ pub struct TwoWayAnovaWithoutReplication {
 }
 
 impl TwoWayAnovaWithoutReplication {
-    /// Computes a new Two-Way ANOVA without replication
+    /// Computes a new Two-way ANOVA without replication
     /// from scores $`x_{ij}`$ of $`i \in [1,m]`$ systems and $`j \in [1,n]`$ topics.
     ///
     /// # Arguments
