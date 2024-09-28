@@ -7,113 +7,6 @@ use statrs::statistics::Statistics;
 use crate::errors::ElinorError;
 
 /// Two-Way ANOVA without replication.
-///
-/// # Examples
-///
-/// ```
-/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// use approx::assert_abs_diff_eq;
-/// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
-///
-/// // Examples of three systems and two topics.
-/// let a = vec![1.0, 2.0];
-/// let b = vec![2.0, 4.0];
-/// let c = vec![3.0, 2.0];
-///
-/// // Comparing three systems.
-/// let tupled_samples = a
-///     .iter()
-///     .zip(b.iter())
-///     .zip(c.iter())
-///     .map(|((&a, &b), &c)| [a, b, c]);
-/// let result = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_samples, 3)?;
-///
-/// // Means to compute the statistics.
-/// let mean: f64 = (1. + 2. + 2. + 4. + 3. + 2.) / 6.;
-/// let mean_system_a: f64 = (1. + 2.) / 2.;
-/// let mean_system_b: f64 = (2. + 4.) / 2.;
-/// let mean_system_c: f64 = (3. + 2.) / 2.;
-/// let mean_topic_1: f64 = (1. + 2. + 3.) / 3.;
-/// let mean_topic_2: f64 = (2. + 4. + 2.) / 3.;
-///
-/// // Variations.
-/// assert_abs_diff_eq!(
-///     result.between_system_variation(),
-///     ((mean_system_a - mean).powi(2) + (mean_system_b - mean).powi(2) + (mean_system_c - mean).powi(2)) * 2.,
-///     epsilon = 1e-10,
-/// );
-/// assert_abs_diff_eq!(
-///     result.between_topic_variation(),
-///     ((mean_topic_1 - mean).powi(2) + (mean_topic_2 - mean).powi(2)) * 3.,
-///     epsilon = 1e-10,
-/// );
-/// assert_abs_diff_eq!(
-///     result.residual_variation(),
-///     (1.0 - mean_system_a - mean_topic_1 + mean).powi(2) + (2.0 - mean_system_a - mean_topic_2 + mean).powi(2) +
-///     (2.0 - mean_system_b - mean_topic_1 + mean).powi(2) + (4.0 - mean_system_b - mean_topic_2 + mean).powi(2) +
-///     (3.0 - mean_system_c - mean_topic_1 + mean).powi(2) + (2.0 - mean_system_c - mean_topic_2 + mean).powi(2),
-///     epsilon = 1e-10,
-/// );
-/// assert_abs_diff_eq!(
-///     result.total_variation(),
-///     result.between_system_variation() + result.between_topic_variation() + result.residual_variation(),
-///     epsilon = 1e-10,
-/// );
-///
-/// // Variances.
-/// assert_abs_diff_eq!(
-///     result.between_system_variance(),
-///     result.between_system_variation() / (3. - 1.),
-///     epsilon = 1e-10,
-/// );
-/// assert_abs_diff_eq!(
-///     result.between_topic_variance(),
-///     result.between_topic_variation() / (2. - 1.),
-///     epsilon = 1e-10,
-/// );
-/// assert_abs_diff_eq!(
-///     result.residual_variance(),
-///     result.residual_variation() / ((3. - 1.) * (2. - 1.)),
-///     epsilon = 1e-10,
-/// );
-///
-/// // F-statistics.
-/// assert_abs_diff_eq!(
-///     result.between_system_f_stat(),
-///     result.between_system_variance() / result.residual_variance(),
-///     epsilon = 1e-10,
-/// );
-/// assert_abs_diff_eq!(
-///     result.between_topic_f_stat(),
-///     result.between_topic_variance() / result.residual_variance(),
-///     epsilon = 1e-10,
-/// );
-///
-/// // p-values.
-/// assert!((0.0..=1.0).contains(&result.between_system_p_value()));
-/// assert!((0.0..=1.0).contains(&result.between_topic_p_value()));
-///
-/// // Margin of error at a 95% confidence level for the system means.
-/// assert!(result.system_margin_of_error(0.05)? > 0.0);
-///
-/// // Effect sizes for all combinations of systems.
-/// let effect_sizes = result.between_system_effect_sizes();
-/// assert_eq!(effect_sizes.len(), 3);
-/// assert_eq!(effect_sizes[0].len(), 3);
-/// assert_eq!(effect_sizes[1].len(), 3);
-/// assert_eq!(effect_sizes[2].len(), 3);
-/// assert_abs_diff_eq!(effect_sizes[0][0], 0.0);
-/// assert_abs_diff_eq!(effect_sizes[1][1], 0.0);
-/// assert_abs_diff_eq!(effect_sizes[2][2], 0.0);
-/// assert_abs_diff_eq!(
-///     effect_sizes[0][1],
-///     (mean_system_a - mean_system_b) / result.residual_variance().sqrt(),
-///     epsilon = 1e-10
-/// );
-///
-/// # Ok(())
-/// # }
-/// ```
 #[derive(Debug, Clone)]
 pub struct TwoWayAnovaWithoutReplication {
     n_systems: usize,
@@ -134,7 +27,13 @@ pub struct TwoWayAnovaWithoutReplication {
 }
 
 impl TwoWayAnovaWithoutReplication {
-    /// Computes a new Two-Way ANOVA without replication.
+    /// Computes a new Two-Way ANOVA without replication
+    /// from scores $`x_{ij}`$ of $`i \in [1,m]`$ systems and $`j \in [1,n]`$ topics.
+    ///
+    /// # Arguments
+    ///
+    /// * `samples` - Iterator of tupled samples, where each sample is $`m`$ system scores.
+    /// * `n_systems` - Number of systems, $`m`$.
     ///
     /// # Errors
     ///
@@ -263,7 +162,7 @@ impl TwoWayAnovaWithoutReplication {
         })
     }
 
-    /// Number of systems.
+    /// Number of systems, $`m`$.
     ///
     /// # Examples
     ///
@@ -271,8 +170,8 @@ impl TwoWayAnovaWithoutReplication {
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
     ///
-    /// let result = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
-    /// assert_eq!(result.n_systems(), 3);
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert_eq!(stat.n_systems(), 3);
     /// # Ok(())
     /// # }
     /// ```
@@ -280,7 +179,7 @@ impl TwoWayAnovaWithoutReplication {
         self.n_systems
     }
 
-    /// Number of topics.
+    /// Number of topics, $`n`$.
     ///
     /// # Examples
     ///
@@ -288,8 +187,8 @@ impl TwoWayAnovaWithoutReplication {
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
     ///
-    /// let result = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
-    /// assert_eq!(result.n_topics(), 2);
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert_eq!(stat.n_topics(), 2);
     /// # Ok(())
     /// # }
     /// ```
@@ -298,75 +197,374 @@ impl TwoWayAnovaWithoutReplication {
     }
 
     /// Means of each system.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \bar{x}_{i*} = \frac{1}{n} \sum_{i=1}^{m} x_{ij}
+    /// ```
+    ///
+    /// where:
+    ///
+    /// - $`m`$ is the number of systems.
+    /// - $`n`$ is the number of topics.
+    /// - $`x_{ij}`$ is the score of system $`i`$ on topic $`j`$.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// let system_means = stat.system_means();
+    /// assert_eq!(system_means.len(), 3);
+    /// assert_abs_diff_eq!(system_means[0], (1. + 2.) / 2., epsilon = 1e-10);
+    /// assert_abs_diff_eq!(system_means[1], (2. + 4.) / 2., epsilon = 1e-10);
+    /// assert_abs_diff_eq!(system_means[2], (3. + 2.) / 2., epsilon = 1e-10);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn system_means(&self) -> Vec<f64> {
         self.system_means.clone()
     }
 
     /// Means of each topic.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \bar{x}_{*j} = \frac{1}{m} \sum_{j=1}^{n} x_{ij}
+    /// ```
+    ///
+    /// where:
+    ///
+    /// - $`m`$ is the number of systems.
+    /// - $`n`$ is the number of topics.
+    /// - $`x_{ij}`$ is the score of system $`i`$ on topic $`j`$.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// let topic_means = stat.topic_means();
+    /// assert_eq!(topic_means.len(), 2);
+    /// assert_abs_diff_eq!(topic_means[0], (1. + 2. + 3.) / 3., epsilon = 1e-10);
+    /// assert_abs_diff_eq!(topic_means[1], (2. + 4. + 2.) / 3., epsilon = 1e-10);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn topic_means(&self) -> Vec<f64> {
         self.topic_means.clone()
     }
 
     /// Between-system variation.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// S_A = n \sum_{i=1}^{m} (\bar{x}_{i*} - \bar{x})^2
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// let mean: f64 = (1. + 2. + 2. + 4. + 3. + 2.) / 6.;
+    /// let mean_system_a: f64 = (1. + 2.) / 2.;
+    /// let mean_system_b: f64 = (2. + 4.) / 2.;
+    /// let mean_system_c: f64 = (3. + 2.) / 2.;
+    /// assert_abs_diff_eq!(
+    ///     stat.between_system_variation(),
+    ///     ((mean_system_a - mean).powi(2) + (mean_system_b - mean).powi(2) + (mean_system_c - mean).powi(2)) * 2.,
+    ///     epsilon = 1e-10,
+    /// );
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn between_system_variation(&self) -> f64 {
         self.between_system_variation
     }
 
     /// Between-topic variation.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// S_B = m \sum_{j=1}^{n} (\bar{x}_{*j} - \bar{x})^2
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// let mean: f64 = (1. + 2. + 2. + 4. + 3. + 2.) / 6.;
+    /// let mean_topic_1: f64 = (1. + 2. + 3.) / 3.;
+    /// let mean_topic_2: f64 = (2. + 4. + 2.) / 3.;
+    /// assert_abs_diff_eq!(
+    ///     stat.between_topic_variation(),
+    ///     ((mean_topic_1 - mean).powi(2) + (mean_topic_2 - mean).powi(2)) * 3.,
+    ///     epsilon = 1e-10,
+    /// );
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn between_topic_variation(&self) -> f64 {
         self.between_topic_variation
     }
 
     /// Residual variation.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// S_E = \sum_{j=1}^{n} \sum_{i=1}^{m} (x_{ij} - \bar{x}_{i*} - \bar{x}_{*j} + \bar{x})^2
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// let mean: f64 = (1. + 2. + 2. + 4. + 3. + 2.) / 6.;
+    /// let mean_system_a: f64 = (1. + 2.) / 2.;
+    /// let mean_system_b: f64 = (2. + 4.) / 2.;
+    /// let mean_system_c: f64 = (3. + 2.) / 2.;
+    /// let mean_topic_1: f64 = (1. + 2. + 3.) / 3.;
+    /// let mean_topic_2: f64 = (2. + 4. + 2.) / 3.;
+    /// assert_abs_diff_eq!(
+    ///     stat.residual_variation(),
+    ///     (1.0 - mean_system_a - mean_topic_1 + mean).powi(2) + (2.0 - mean_system_a - mean_topic_2 + mean).powi(2) +
+    ///     (2.0 - mean_system_b - mean_topic_1 + mean).powi(2) + (4.0 - mean_system_b - mean_topic_2 + mean).powi(2) +
+    ///     (3.0 - mean_system_c - mean_topic_1 + mean).powi(2) + (2.0 - mean_system_c - mean_topic_2 + mean).powi(2),
+    ///     epsilon = 1e-10,
+    /// );
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn residual_variation(&self) -> f64 {
         self.residual_variation
     }
 
-    /// Total variation.
-    pub fn total_variation(&self) -> f64 {
-        self.between_system_variation + self.between_topic_variation + self.residual_variation
-    }
-
     /// Between-system variance.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// V_A = \frac{S_A}{m - 1}
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert_abs_diff_eq!(
+    ///     stat.between_system_variance(),
+    ///     stat.between_system_variation() / (3. - 1.),
+    ///     epsilon = 1e-10,
+    /// );
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn between_system_variance(&self) -> f64 {
         self.between_system_variance
     }
 
     /// Between-topic variance.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// V_B = \frac{S_B}{n - 1}
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert_abs_diff_eq!(
+    ///     stat.between_topic_variance(),
+    ///     stat.between_topic_variation() / (2. - 1.),
+    ///     epsilon = 1e-10,
+    /// );
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn between_topic_variance(&self) -> f64 {
         self.between_topic_variance
     }
 
     /// Residual variance.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// V_E = \frac{S_E}{(m - 1)(n - 1)}
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert_abs_diff_eq!(
+    ///     stat.residual_variance(),
+    ///     stat.residual_variation() / ((3. - 1.) * (2. - 1.)),
+    ///     epsilon = 1e-10,
+    /// );
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn residual_variance(&self) -> f64 {
         self.residual_variance
     }
 
     /// Between-system F-statistic.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// F_A = \frac{V_A}{V_E}
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert_abs_diff_eq!(
+    ///     stat.between_system_f_stat(),
+    ///     stat.between_system_variance() / stat.residual_variance(),
+    ///     epsilon = 1e-10,
+    /// );
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn between_system_f_stat(&self) -> f64 {
         self.between_system_f_stat
     }
 
     /// Between-topic F-statistic.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// F_B = \frac{V_B}{V_E}
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert_abs_diff_eq!(
+    ///     stat.between_topic_f_stat(),
+    ///     stat.between_topic_variance() / stat.residual_variance(),
+    ///     epsilon = 1e-10,
+    /// );
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn between_topic_f_stat(&self) -> f64 {
         self.between_topic_f_stat
     }
 
     /// Between-system p-value.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// p_A = P(F_A > F_{\alpha}(m - 1, (m - 1)(n - 1)))
+    /// ```
+    ///
+    /// where $`F_{\alpha}(m - 1, (m - 1)(n - 1))`$ is the $`1 - \alpha`$ quantile of the $`F`$ distribution with $`m - 1`$ and $`(m - 1)(n - 1)`$ degrees of freedom.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert!((0.0..=1.0).contains(&stat.between_system_p_value()));
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn between_system_p_value(&self) -> f64 {
         self.between_system_p_value
     }
 
     /// Between-topic p-value.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// p_B = P(F_B > F_{\alpha}(n - 1, (m - 1)(n - 1)))
+    /// ```
+    ///
+    /// where $`F_{\alpha}(n - 1, (m - 1)(n - 1))`$ is the $`1 - \alpha`$ quantile of the $`F`$ distribution with $`n - 1`$ and $`(m - 1)(n - 1)`$ degrees of freedom.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert!((0.0..=1.0).contains(&stat.between_topic_p_value()));
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn between_topic_p_value(&self) -> f64 {
         self.between_topic_p_value
     }
 
-    /// Margin of error at a `1 - significance_level` confidence level.
+    /// Margin of error at a given significance level for the system means.
     ///
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \text{MOE} = t_{\alpha/2}((m - 1)(n - 1)) \times \sqrt{\frac{V_E}{n}}
+    /// ```
+    ///
+    /// where $`t_{\alpha/2}((m - 1)(n - 1))`$ is the $`1 - \alpha/2`$ quantile of the Student's $`t`$ distribution with $`(m - 1)(n - 1)`$ degrees of freedom.
     pub fn system_margin_of_error(&self, significance_level: f64) -> Result<f64, ElinorError> {
         if significance_level <= 0.0 || significance_level > 1.0 {
             return Err(ElinorError::InvalidArgument(
@@ -378,7 +576,47 @@ impl TwoWayAnovaWithoutReplication {
             .inverse_cdf(1.0 - (significance_level / 2.0)))
     }
 
-    /// Effect sizes for all combinations of systems.
+    /// Effect sizes for all combinations of systems,
+    /// returning a matrix of size $`m \times m`$.
+    ///
+    /// The $`(i, j)`$-th element is $`\text{ES}_{ij}`$.
+    /// The diagonal elements are always zero.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \text{ES}_{ij} = \frac{\bar{x}_{i*} - \bar{x}_{j*}}{\sqrt{V_E}}
+    /// ```
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use approx::assert_abs_diff_eq;
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// let effect_sizes = stat.between_system_effect_sizes();
+    /// let mean_system_a: f64 = (1. + 2.) / 2.;
+    /// let mean_system_b: f64 = (2. + 4.) / 2.;
+    /// let mean_system_c: f64 = (3. + 2.) / 2.;
+    ///
+    /// assert_eq!(effect_sizes.len(), 3);
+    /// assert_eq!(effect_sizes[0].len(), 3);
+    /// assert_eq!(effect_sizes[1].len(), 3);
+    /// assert_eq!(effect_sizes[2].len(), 3);
+    /// assert_abs_diff_eq!(effect_sizes[0][0], 0.0);
+    /// assert_abs_diff_eq!(effect_sizes[1][1], 0.0);
+    /// assert_abs_diff_eq!(effect_sizes[2][2], 0.0);
+    /// assert_abs_diff_eq!(effect_sizes[0][1], (mean_system_a - mean_system_b) / stat.residual_variance().sqrt(), epsilon = 1e-10);
+    /// assert_abs_diff_eq!(effect_sizes[0][2], (mean_system_a - mean_system_c) / stat.residual_variance().sqrt(), epsilon = 1e-10);
+    /// assert_abs_diff_eq!(effect_sizes[1][2], (mean_system_b - mean_system_c) / stat.residual_variance().sqrt(), epsilon = 1e-10);
+    /// assert_abs_diff_eq!(effect_sizes[1][0], -effect_sizes[0][1], epsilon = 1e-10);
+    /// assert_abs_diff_eq!(effect_sizes[2][0], -effect_sizes[0][2], epsilon = 1e-10);
+    /// assert_abs_diff_eq!(effect_sizes[2][1], -effect_sizes[1][2], epsilon = 1e-10);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn between_system_effect_sizes(&self) -> Vec<Vec<f64>> {
         let mut effect_sizes = vec![vec![0.0; self.n_systems]; self.n_systems];
         for i in 0..self.n_systems {

@@ -5,6 +5,7 @@
 //! * [Student's t-test](StudentTTest) for comparing two systems.
 //! * [Bootstrap test](BootstrapTest) for comparing two systems.
 //! * [Randomized Tukey HSD test](RandomizedTukeyHsdTest) for comparing two or more systems.
+//! * [Two-way ANOVA without replication](TwoWayAnovaWithoutReplication) for comparing three or more systems.
 //!
 //! # Example: Statistical tests for comparing two systems
 //!
