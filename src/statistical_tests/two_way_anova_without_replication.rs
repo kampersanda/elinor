@@ -93,6 +93,24 @@ use crate::errors::ElinorError;
 /// assert!((0.0..=1.0).contains(&result.between_system_p_value()));
 /// assert!((0.0..=1.0).contains(&result.between_topic_p_value()));
 ///
+/// // Margin of error at a 95% confidence level for the system means.
+/// assert!(result.system_margin_of_error(0.05)? > 0.0);
+///
+/// // Effect sizes for all combinations of systems.
+/// let effect_sizes = result.between_system_effect_sizes();
+/// assert_eq!(effect_sizes.len(), 3);
+/// assert_eq!(effect_sizes[0].len(), 3);
+/// assert_eq!(effect_sizes[1].len(), 3);
+/// assert_eq!(effect_sizes[2].len(), 3);
+/// assert_abs_diff_eq!(effect_sizes[0][0], 0.0);
+/// assert_abs_diff_eq!(effect_sizes[1][1], 0.0);
+/// assert_abs_diff_eq!(effect_sizes[2][2], 0.0);
+/// assert_abs_diff_eq!(
+///     effect_sizes[0][1],
+///     (mean_system_a - mean_system_b) / result.residual_variance().sqrt(),
+///     epsilon = 1e-10
+/// );
+///
 /// # Ok(())
 /// # }
 /// ```
@@ -100,6 +118,8 @@ use crate::errors::ElinorError;
 pub struct TwoWayAnovaWithoutReplication {
     n_systems: usize,
     n_topics: usize,
+    system_means: Vec<f64>,
+    topic_means: Vec<f64>,
     between_system_variation: f64, // S_A
     between_system_variance: f64,  // V_A
     between_topic_variation: f64,  // S_B
@@ -110,12 +130,16 @@ pub struct TwoWayAnovaWithoutReplication {
     between_topic_f_stat: f64,     // F (between-topic factor)
     between_system_p_value: f64,   // p-value (between-system factor)
     between_topic_p_value: f64,    // p-value (between-topic factor)
-    system_means: Vec<f64>,
     system_t_dist: StudentsT,
 }
 
 impl TwoWayAnovaWithoutReplication {
-    /// Creates a new Two-Way ANOVA without replication.
+    /// Computes a new Two-Way ANOVA without replication.
+    ///
+    /// # Errors
+    ///
+    /// * [`ElinorError::InvalidArgument`] if the length of each sample is not equal to the number of systems.
+    /// * [`ElinorError::InvalidArgument`] if the input does not have at least two samples.
     pub fn from_tupled_samples<I, S>(samples: I, n_systems: usize) -> Result<Self, ElinorError>
     where
         I: IntoIterator<Item = S>,
@@ -223,6 +247,8 @@ impl TwoWayAnovaWithoutReplication {
         Ok(Self {
             n_topics: samples.len(),
             n_systems,
+            system_means,
+            topic_means,
             between_system_variation,
             between_system_variance,
             between_topic_variation,
@@ -233,19 +259,52 @@ impl TwoWayAnovaWithoutReplication {
             between_topic_f_stat,
             between_system_p_value,
             between_topic_p_value,
-            system_means,
             system_t_dist,
         })
     }
 
     /// Number of systems.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let result = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert_eq!(result.n_systems(), 3);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn n_systems(&self) -> usize {
         self.n_systems
     }
 
     /// Number of topics.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let result = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// assert_eq!(result.n_topics(), 2);
+    /// # Ok(())
+    /// # }
+    /// ```
     pub const fn n_topics(&self) -> usize {
         self.n_topics
+    }
+
+    /// Means of each system.
+    pub fn system_means(&self) -> Vec<f64> {
+        self.system_means.clone()
+    }
+
+    /// Means of each topic.
+    pub fn topic_means(&self) -> Vec<f64> {
+        self.topic_means.clone()
     }
 
     /// Between-system variation.
@@ -303,17 +362,12 @@ impl TwoWayAnovaWithoutReplication {
         self.between_topic_p_value
     }
 
-    /// Means of each system.
-    pub fn system_means(&self) -> Vec<f64> {
-        self.system_means.clone()
-    }
-
     /// Margin of error at a `1 - significance_level` confidence level.
     ///
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
-    pub fn margin_of_error(&self, significance_level: f64) -> Result<f64, ElinorError> {
+    pub fn system_margin_of_error(&self, significance_level: f64) -> Result<f64, ElinorError> {
         if significance_level <= 0.0 || significance_level > 1.0 {
             return Err(ElinorError::InvalidArgument(
                 "The significance level must be in the range (0, 1].".to_string(),
@@ -324,25 +378,8 @@ impl TwoWayAnovaWithoutReplication {
             .inverse_cdf(1.0 - (significance_level / 2.0)))
     }
 
-    /// Confidence intervals at a `1 - significance_level` confidence level.
-    ///
-    /// # Errors
-    ///
-    /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
-    pub fn confidence_intervals(
-        &self,
-        significance_level: f64,
-    ) -> Result<Vec<(f64, f64)>, ElinorError> {
-        let moe = self.margin_of_error(significance_level)?;
-        Ok(self
-            .system_means
-            .iter()
-            .map(|&mean| (mean - moe, mean + moe))
-            .collect())
-    }
-
     /// Effect sizes for all combinations of systems.
-    pub fn effect_sizes(&self) -> Vec<Vec<f64>> {
+    pub fn between_system_effect_sizes(&self) -> Vec<Vec<f64>> {
         let mut effect_sizes = vec![vec![0.0; self.n_systems]; self.n_systems];
         for i in 0..self.n_systems {
             for j in (i + 1)..self.n_systems {
