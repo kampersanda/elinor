@@ -625,3 +625,40 @@ impl TwoWayAnovaWithoutReplication {
         effect_sizes
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_two_way_anova_without_replication_from_tupled_samples_empty() {
+        let samples: Vec<[f64; 2]> = vec![];
+        let stat = TwoWayAnovaWithoutReplication::from_tupled_samples(samples, 2);
+        assert_eq!(
+            stat.unwrap_err(),
+            ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_two_way_anova_without_replication_from_tupled_samples_single() {
+        let samples = vec![[1.0, 2.0]];
+        let stat = TwoWayAnovaWithoutReplication::from_tupled_samples(samples, 2);
+        assert_eq!(
+            stat.unwrap_err(),
+            ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
+        );
+    }
+
+    #[test]
+    fn test_two_way_anova_without_replication_from_tupled_samples_invalid_length() {
+        let samples = vec![vec![1.0, 2.0], vec![3.0]];
+        let stat = TwoWayAnovaWithoutReplication::from_tupled_samples(samples, 2);
+        assert_eq!(
+            stat.unwrap_err(),
+            ElinorError::InvalidArgument(
+                "The length of each sample must be equal to the number of systems.".to_string()
+            )
+        );
+    }
+}
