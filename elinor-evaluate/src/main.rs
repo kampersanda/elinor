@@ -19,7 +19,11 @@ struct Args {
     #[arg(short, long)]
     pred_json: PathBuf,
 
-    #[arg(short, long, default_values_t = &["precision@10".to_string(), "ap".to_string(), "rr".to_string(), "ndcg@10".to_string()])]
+    #[arg(
+        short,
+        long,
+        default_values_t = &["precision@10".to_string(), "ap".to_string(), "rr".to_string(), "ndcg@10".to_string()],
+    )]
     metrics: Vec<String>,
 }
 
@@ -31,6 +35,10 @@ fn main() -> Result<()> {
         .iter()
         .map(|s| s.parse::<Metric>())
         .collect::<Result<Vec<_>, _>>()?;
+
+    if metrics.is_empty() {
+        return Err(anyhow::anyhow!("No metrics specified"));
+    }
 
     let reader = BufReader::new(File::open(&args.gold_json)?);
     let gold_map = serde_json::from_reader(reader)?;
