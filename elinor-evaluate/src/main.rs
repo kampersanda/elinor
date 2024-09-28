@@ -85,7 +85,7 @@ fn main_measure(
     }
     create_table(rows).printstd();
 
-    let json = results_to_json(results);
+    let json = results_to_json(&results);
     let writer = BufWriter::new(File::create(&output_json)?);
     serde_json::to_writer_pretty(writer, &json)?;
 
@@ -106,7 +106,7 @@ fn parse_metrics(metrics: Vec<String>) -> Result<Vec<Metric>> {
     Ok(parsed)
 }
 
-fn results_to_json(results: Vec<(Metric, elinor::Evaluated<String>)>) -> serde_json::Value {
+fn results_to_json(results: &[(Metric, elinor::Evaluated<String>)]) -> serde_json::Value {
     let mut metric_to_scores = serde_json::Map::new();
     for (metric, result) in results {
         let mut qid_to_score = serde_json::Map::new();
