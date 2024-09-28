@@ -51,7 +51,6 @@ fn main() -> Result<()> {
     let mut table = Table::new();
     table.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
     table.set_titles(row!["Metric", "Score"]);
-
     for metric in metrics {
         let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
         let score = evaluated.mean_score();
