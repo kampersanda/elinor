@@ -189,6 +189,12 @@ pub struct Evaluated<K> {
 }
 
 impl<K> Evaluated<K> {
+    /// Creates a new instance.
+    pub fn from_scores(scores: HashMap<K, f64>) -> Self {
+        let mean_score = scores.values().sum::<f64>() / scores.len() as f64;
+        Self { scores, mean_score }
+    }
+
     /// Returns the reference to the mappping from query ids to scores.
     pub const fn scores(&self) -> &HashMap<K, f64> {
         &self.scores
@@ -210,8 +216,7 @@ where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
     let scores = metrics::compute_metric(gold_rels, pred_rels, metric)?;
-    let mean_score = scores.values().sum::<f64>() / scores.len() as f64;
-    Ok(Evaluated { scores, mean_score })
+    Ok(Evaluated::from_scores(scores))
 }
 
 /// Extracts paired scores from two [`Evaluated`] results.
