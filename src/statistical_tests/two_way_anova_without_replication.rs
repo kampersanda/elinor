@@ -7,6 +7,13 @@ use statrs::statistics::Statistics;
 use crate::errors::ElinorError;
 
 /// Two-Way ANOVA without replication.
+///
+/// # Notations to be used
+///
+/// * $`m`$: Number of systems.
+/// * $`n`$: Number of topics.
+/// * $`x_{ij}`$: Score of the $`i`$-th system on the $`j`$-th topic.
+/// * $`\bar{x}`$: Mean of all scores $`x_{ij}`$.
 #[derive(Debug, Clone)]
 pub struct TwoWayAnovaWithoutReplication {
     n_systems: usize,
@@ -32,7 +39,7 @@ impl TwoWayAnovaWithoutReplication {
     ///
     /// # Arguments
     ///
-    /// * `samples` - Iterator of tupled samples, where each sample is $`m`$ system scores.
+    /// * `samples` - Iterator of tupled samples, where each sample is an array of $`m`$ system scores.
     /// * `n_systems` - Number of systems, $`m`$.
     ///
     /// # Errors
@@ -204,12 +211,6 @@ impl TwoWayAnovaWithoutReplication {
     /// \bar{x}_{i*} = \frac{1}{n} \sum_{i=1}^{m} x_{ij}
     /// ```
     ///
-    /// where:
-    ///
-    /// - $`m`$ is the number of systems.
-    /// - $`n`$ is the number of topics.
-    /// - $`x_{ij}`$ is the score of system $`i`$ on topic $`j`$.
-    ///
     /// # Examples
     ///
     /// ```
@@ -237,12 +238,6 @@ impl TwoWayAnovaWithoutReplication {
     /// ```math
     /// \bar{x}_{*j} = \frac{1}{m} \sum_{j=1}^{n} x_{ij}
     /// ```
-    ///
-    /// where:
-    ///
-    /// - $`m`$ is the number of systems.
-    /// - $`n`$ is the number of topics.
-    /// - $`x_{ij}`$ is the score of system $`i`$ on topic $`j`$.
     ///
     /// # Examples
     ///
