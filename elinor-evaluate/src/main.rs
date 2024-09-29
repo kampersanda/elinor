@@ -1,3 +1,5 @@
+mod tables;
+
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
@@ -8,6 +10,8 @@ use big_s::S;
 use clap::{Parser, Subcommand};
 use elinor::{Evaluated, GoldRelStore, Metric, PredRelStore};
 use prettytable::{Cell, Table};
+
+use crate::tables::MetricTable;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -71,6 +75,7 @@ fn main_measure(
     let gold_rels = GoldRelStore::<String>::from_map(load_json(&gold_json)?);
     let pred_rels = PredRelStore::<String>::from_map(load_json(&pred_json)?);
 
+    // Metric, Evaluated
     let mut results = Vec::new();
     for &metric in &metrics {
         let result = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
@@ -93,48 +98,25 @@ fn main_measure(
 }
 
 fn main_compare(result_jsons: Vec<PathBuf>) -> Result<()> {
-    // Metric -> File Name -> Evaluated
-    let mut metric_to_results = BTreeMap::new();
-    let mut system_names = BTreeSet::new();
+    let mut metric_table = MetricTable::new(result_jsons.iter().map(|p| get_file_name(p)));
     for result_json in &result_jsons {
-        let system_name = get_file_name(result_json);
         let result: HashMap<String, HashMap<String, f64>> = load_json(&result_json)?;
-        for (metric, qid_to_score) in result {
+        for (metric, scores) in result {
             let metric = metric.parse::<Metric>()?;
-            let evaluated = Evaluated::from_scores(qid_to_score);
-            metric_to_results
-                .entry(metric)
-                .or_insert_with(BTreeMap::new)
-                .insert(system_name.clone(), evaluated);
-            system_names.insert(system_name.clone());
+            let evaluated = Evaluated::from_scores(scores);
+            metric_table.insert(metric, get_file_name(result_json), evaluated);
         }
     }
+    metric_table.printstd();
 
-    let mut rows: Vec<Vec<String>> = Vec::new();
-    {
-        let mut header = vec![S("Metric")];
-        header.extend(system_names.iter().cloned());
-        rows.push(header);
-    }
-    for (metric, system_to_result) in &metric_to_results {
-        let mut row = vec![format!("{metric}")];
-        for system_name in &system_names {
-            let evaluated = system_to_result.get(system_name).unwrap();
-            let mean_score = evaluated.mean_score();
-            row.push(format!("{mean_score:.4}"));
-        }
-        rows.push(row);
-    }
-    create_table(rows).printstd();
-
-    let system_names_vec = system_names.iter().cloned().collect::<Vec<String>>();
-    for (metric, system_to_result) in &metric_to_results {
-        let system_a = system_names_vec[0].clone();
-        let system_b = system_names_vec[1].clone();
-        let result_a = system_to_result.get(&system_a).unwrap();
-        let result_b = system_to_result.get(&system_b).unwrap();
-        compare_two_systems(metric, result_a, result_b)?;
-    }
+    // let system_names_vec = system_names.iter().cloned().collect::<Vec<String>>();
+    // for (metric, system_to_result) in &metric_to_results {
+    //     let system_a = system_names_vec[0].clone();
+    //     let system_b = system_names_vec[1].clone();
+    //     let result_a = system_to_result.get(&system_a).unwrap();
+    //     let result_b = system_to_result.get(&system_b).unwrap();
+    //     compare_two_systems(metric, result_a, result_b)?;
+    // }
 
     Ok(())
 }
