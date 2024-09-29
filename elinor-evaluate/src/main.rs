@@ -116,7 +116,7 @@ fn main_compare(result_jsons: Vec<PathBuf>) -> Result<()> {
         header.extend(system_names.iter().cloned());
         rows.push(header);
     }
-    for (metric, system_to_result) in metric_to_results {
+    for (metric, system_to_result) in &metric_to_results {
         let mut row = vec![format!("{metric}")];
         for system_name in &system_names {
             let evaluated = system_to_result.get(system_name).unwrap();
@@ -126,14 +126,39 @@ fn main_compare(result_jsons: Vec<PathBuf>) -> Result<()> {
         rows.push(row);
     }
     create_table(rows).printstd();
+
+    let system_names_vec = system_names.iter().cloned().collect::<Vec<String>>();
+    for (metric, system_to_result) in &metric_to_results {
+        let system_a = system_names_vec[0].clone();
+        let system_b = system_names_vec[1].clone();
+        let result_a = system_to_result.get(&system_a).unwrap();
+        let result_b = system_to_result.get(&system_b).unwrap();
+        compare_two_systems(metric, result_a, result_b)?;
+    }
+
     Ok(())
 }
 
-// fn compare_two_systems(result_a: Evaluated<String>, result_b: Evaluated<String>) -> Result<()> {
-//     let paired_scores = elinor::paired_scores_from_evaluated(&result_a, &result_b)?;
-//     let stat = elinor::statistical_tests::StudentTTest::from_paired_samples(paired_scores)?;
-//     Ok(())
-// }
+fn compare_two_systems(
+    metric: &Metric,
+    result_a: &Evaluated<String>,
+    result_b: &Evaluated<String>,
+) -> Result<()> {
+    let paired_scores = elinor::paired_scores_from_evaluated(&result_a, &result_b)?;
+    let stat = elinor::statistical_tests::StudentTTest::from_paired_samples(paired_scores)?;
+
+    let mut rows: Vec<Vec<String>> = Vec::new();
+    rows.push(vec![format!("{metric}"), S("Statistic")]);
+    rows.push(vec![S("Mean"), format!("{:.4}", stat.mean())]);
+    rows.push(vec![S("Variance"), format!("{:.4}", stat.var())]);
+    rows.push(vec![S("Effect Size"), format!("{:.4}", stat.effect_size())]);
+    rows.push(vec![S("T Stat"), format!("{:.4}", stat.t_stat())]);
+    rows.push(vec![S("P Value"), format!("{:.4}", stat.p_value())]);
+
+    create_table(rows).printstd();
+
+    Ok(())
+}
 
 fn load_json<P, T>(file: P) -> Result<T>
 where
