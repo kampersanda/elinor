@@ -82,17 +82,15 @@ fn main_measure(
         results.push((metric, result));
     }
 
-    let mut rows = Vec::new();
-    rows.push(vec![S("Metric"), S("Score")]);
-    for (metric, result) in &results {
-        let mean_score = result.mean_score();
-        rows.push(vec![format!("{metric}"), format!("{mean_score:.4}")]);
-    }
-    create_table(rows).printstd();
-
     let json = results_to_json(&results);
     let writer = BufWriter::new(File::create(&result_json)?);
     serde_json::to_writer_pretty(writer, &json)?;
+
+    let mut metric_table = MetricTable::new();
+    for (metric, result) in &results {
+        metric_table.insert(metric.clone(), "Score", result.clone());
+    }
+    metric_table.printstd();
 
     Ok(())
 }

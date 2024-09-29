@@ -183,6 +183,7 @@ pub type PredRelStore<K> = relevance::RelevanceStore<K, PredScore>;
 pub type PredRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
 
 /// Struct to store evaluated results.
+#[derive(Debug, Clone)]
 pub struct Evaluated<K> {
     scores: HashMap<K, f64>,
     mean_score: f64,
