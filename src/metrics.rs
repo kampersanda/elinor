@@ -71,7 +71,7 @@ pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
 /// assert_eq!(format!("{}", Metric::Hits { k: 0 }), "hits");
 /// assert_eq!(format!("{}", Metric::Hits { k: 3 }), "hits@3");
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Metric {
     /// Number of relevant documents retrieved:
     ///
