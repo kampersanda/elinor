@@ -126,8 +126,8 @@ impl TupledComparisonTable {
 
     pub fn confidence_intervals(&self, metric: Metric) {
         let results = self.tupled_results.get(&metric).unwrap();
-        let n_systems = results.len();
         let tupled_scores = elinor::tupled_scores_from_evaluated(results).unwrap();
+        let n_systems = results.len();
         let stat =
             TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores, n_systems).unwrap();
 
@@ -143,6 +143,35 @@ impl TupledComparisonTable {
                 format!("{:.4}", mean),
                 format!("[{:.4}, {:.4}]", mean - moe95, mean + moe95),
             ]);
+        }
+        create_table(rows).printstd();
+    }
+
+    pub fn effect_sizes(&self, metric: Metric) {
+        let results = self.tupled_results.get(&metric).unwrap();
+        let tupled_scores = elinor::tupled_scores_from_evaluated(results).unwrap();
+        let n_systems = results.len();
+        let stat =
+            TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores, n_systems).unwrap();
+        let effect_sizes = stat.between_system_effect_sizes();
+        let mut rows: Vec<Vec<String>> = Vec::new();
+        {
+            let mut header = vec![S("Effect Size")];
+            for i in 1..results.len() {
+                header.push(format!("System {}", i + 1));
+            }
+            rows.push(header);
+        }
+        for i in 0..(n_systems - 1) {
+            let mut row = vec![format!("System {}", i + 1)];
+            for _ in 0..i {
+                row.push(S(""));
+            }
+            for j in (i + 1)..n_systems {
+                let effect_size = effect_sizes[i][j];
+                row.push(format!("{effect_size:.4}"));
+            }
+            rows.push(row);
         }
         create_table(rows).printstd();
     }
@@ -177,6 +206,8 @@ impl TupledComparisonTable {
                 rows.push(row);
             }
             create_table(rows).printstd();
+
+            self.effect_sizes(metric.clone());
         }
     }
 }
