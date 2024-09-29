@@ -1,17 +1,15 @@
 mod tables;
 
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use big_s::S;
 use clap::{Parser, Subcommand};
 use elinor::{Evaluated, GoldRelStore, Metric, PredRelStore};
-use prettytable::{Cell, Table};
 
-use crate::tables::MetricTable;
+use crate::tables::{MetricTable, TwoSystemComparisonTable};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -107,35 +105,15 @@ fn main_compare(result_jsons: Vec<PathBuf>) -> Result<()> {
     }
     metric_table.printstd();
 
-    // let system_names_vec = system_names.iter().cloned().collect::<Vec<String>>();
-    // for (metric, system_to_result) in &metric_to_results {
-    //     let system_a = system_names_vec[0].clone();
-    //     let system_b = system_names_vec[1].clone();
-    //     let result_a = system_to_result.get(&system_a).unwrap();
-    //     let result_b = system_to_result.get(&system_b).unwrap();
-    //     compare_two_systems(metric, result_a, result_b)?;
-    // }
-
-    Ok(())
-}
-
-fn compare_two_systems(
-    metric: &Metric,
-    result_a: &Evaluated<String>,
-    result_b: &Evaluated<String>,
-) -> Result<()> {
-    let paired_scores = elinor::paired_scores_from_evaluated(&result_a, &result_b)?;
-    let stat = elinor::statistical_tests::StudentTTest::from_paired_samples(paired_scores)?;
-
-    let mut rows: Vec<Vec<String>> = Vec::new();
-    rows.push(vec![format!("{metric}"), S("Statistic")]);
-    rows.push(vec![S("Mean"), format!("{:.4}", stat.mean())]);
-    rows.push(vec![S("Variance"), format!("{:.4}", stat.var())]);
-    rows.push(vec![S("Effect Size"), format!("{:.4}", stat.effect_size())]);
-    rows.push(vec![S("T Stat"), format!("{:.4}", stat.t_stat())]);
-    rows.push(vec![S("P Value"), format!("{:.4}", stat.p_value())]);
-
-    create_table(rows).printstd();
+    let mut comparison_table = TwoSystemComparisonTable::new();
+    let system_a = get_file_name(&result_jsons[0]);
+    let system_b = get_file_name(&result_jsons[1]);
+    for metric in metric_table.metrics() {
+        let result_a = metric_table.get(&metric, &system_a).unwrap().clone();
+        let result_b = metric_table.get(&metric, &system_b).unwrap().clone();
+        comparison_table.insert(metric, result_a, result_b);
+    }
+    comparison_table.printstd();
 
     Ok(())
 }
@@ -174,16 +152,6 @@ fn results_to_json(results: &[(Metric, elinor::Evaluated<String>)]) -> serde_jso
         metric_to_scores.insert(format!("{metric}"), serde_json::json!(qid_to_score));
     }
     serde_json::Value::Object(metric_to_scores)
-}
-
-fn create_table(rows: Vec<Vec<String>>) -> Table {
-    let mut table = Table::new();
-    table.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
-    table.set_titles(rows[0].iter().map(|s| Cell::new(s)).collect());
-    for row in rows.iter().skip(1) {
-        table.add_row(row.iter().map(|s| Cell::new(s)).collect());
-    }
-    table
 }
 
 fn get_file_name(path: &Path) -> String {
