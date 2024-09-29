@@ -9,7 +9,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use elinor::{Evaluated, GoldRelStore, Metric, PredRelStore};
 
-use crate::tables::{MetricTable, PairedComparisonTable};
+use crate::tables::{MetricTable, PairedComparisonTable, TupledComparisonTable};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -105,15 +105,24 @@ fn main_compare(result_jsons: Vec<PathBuf>) -> Result<()> {
     }
     metric_table.printstd();
 
-    let mut comparison_table = PairedComparisonTable::new();
-    let system_a = get_file_name(&result_jsons[0]);
-    let system_b = get_file_name(&result_jsons[1]);
-    for metric in metric_table.metrics() {
-        let result_a = metric_table.get(&metric, &system_a).unwrap().clone();
-        let result_b = metric_table.get(&metric, &system_b).unwrap().clone();
-        comparison_table.insert(metric, result_a, result_b);
+    if result_jsons.len() == 2 {
+        let mut pc_table = PairedComparisonTable::new();
+        let system_a = get_file_name(&result_jsons[0]);
+        let system_b = get_file_name(&result_jsons[1]);
+        for metric in metric_table.metrics() {
+            let result_a = metric_table.get(&metric, &system_a).unwrap().clone();
+            let result_b = metric_table.get(&metric, &system_b).unwrap().clone();
+            pc_table.insert(metric, result_a, result_b);
+        }
+        pc_table.printstd();
+    } else if result_jsons.len() > 2 {
+        let mut tc_table = TupledComparisonTable::new();
+        for metric in metric_table.metrics() {
+            let results = metric_table.get_all(&metric);
+            tc_table.insert(metric, results);
+        }
+        tc_table.printstd();
     }
-    comparison_table.printstd();
 
     Ok(())
 }

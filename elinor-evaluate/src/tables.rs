@@ -61,6 +61,10 @@ impl MetricTable {
     pub fn get(&self, metric: &Metric, name: &str) -> Option<&Evaluated> {
         self.table.get(metric)?.get(name)
     }
+
+    pub fn get_all(&self, metric: &Metric) -> Vec<Evaluated> {
+        self.table.get(metric).unwrap().values().cloned().collect()
+    }
 }
 
 pub struct PairedComparisonTable {
@@ -121,10 +125,32 @@ impl TupledComparisonTable {
 
     pub fn printstd(&self) {
         for (metric, results) in &self.tupled_results {
+            println!("{metric}");
+
             let tupled_scores = elinor::tupled_scores_from_evaluated(results).unwrap();
             let stat =
                 RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores, results.len()).unwrap();
             let n_systems = results.len();
+            let mut rows: Vec<Vec<String>> = Vec::new();
+            {
+                let mut header = vec![S("p-value")];
+                for i in 1..results.len() {
+                    header.push(format!("System {}", i + 1));
+                }
+                rows.push(header);
+            }
+            for i in 0..(n_systems - 1) {
+                let mut row = vec![format!("System {}", i + 1)];
+                for _ in 0..i {
+                    row.push(S(""));
+                }
+                for j in (i + 1)..n_systems {
+                    let p_value = stat.p_value(i, j).unwrap();
+                    row.push(format!("{p_value:.4}"));
+                }
+                rows.push(row);
+            }
+            create_table(rows).printstd();
         }
     }
 }
