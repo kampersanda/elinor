@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use big_s::S;
+use elinor::statistical_tests::RandomizedTukeyHsdTest;
 use elinor::statistical_tests::StudentTTest;
 use elinor::Metric;
 use prettytable::{Cell, Table};
@@ -62,11 +63,11 @@ impl MetricTable {
     }
 }
 
-pub struct TwoSystemComparisonTable {
+pub struct PairedComparisonTable {
     paired_results: BTreeMap<Metric, (Evaluated, Evaluated)>,
 }
 
-impl TwoSystemComparisonTable {
+impl PairedComparisonTable {
     pub fn new() -> Self {
         Self {
             paired_results: BTreeMap::new(),
@@ -100,6 +101,31 @@ impl TwoSystemComparisonTable {
             ]);
         }
         create_table(rows).printstd();
+    }
+}
+
+pub struct TupledComparisonTable {
+    tupled_results: BTreeMap<Metric, Vec<Evaluated>>,
+}
+
+impl TupledComparisonTable {
+    pub fn new() -> Self {
+        Self {
+            tupled_results: BTreeMap::new(),
+        }
+    }
+
+    pub fn insert(&mut self, metric: Metric, results: Vec<Evaluated>) {
+        self.tupled_results.insert(metric, results);
+    }
+
+    pub fn printstd(&self) {
+        for (metric, results) in &self.tupled_results {
+            let tupled_scores = elinor::tupled_scores_from_evaluated(results).unwrap();
+            let stat =
+                RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores, results.len()).unwrap();
+            let n_systems = results.len();
+        }
     }
 }
 

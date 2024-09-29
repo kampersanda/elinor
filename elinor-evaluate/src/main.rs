@@ -9,7 +9,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use elinor::{Evaluated, GoldRelStore, Metric, PredRelStore};
 
-use crate::tables::{MetricTable, TwoSystemComparisonTable};
+use crate::tables::{MetricTable, PairedComparisonTable};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -105,7 +105,7 @@ fn main_compare(result_jsons: Vec<PathBuf>) -> Result<()> {
     }
     metric_table.printstd();
 
-    let mut comparison_table = TwoSystemComparisonTable::new();
+    let mut comparison_table = PairedComparisonTable::new();
     let system_a = get_file_name(&result_jsons[0]);
     let system_b = get_file_name(&result_jsons[1]);
     for metric in metric_table.metrics() {
