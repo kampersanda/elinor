@@ -98,7 +98,7 @@ fn main_measure(
 }
 
 fn main_compare(result_jsons: Vec<PathBuf>) -> Result<()> {
-    let mut metric_table = MetricTable::new(result_jsons.iter().map(|p| get_file_name(p)));
+    let mut metric_table = MetricTable::new();
     for result_json in &result_jsons {
         let result: HashMap<String, HashMap<String, f64>> = load_json(&result_json)?;
         for (metric, scores) in result {

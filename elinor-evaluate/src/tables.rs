@@ -6,47 +6,43 @@ use prettytable::{Cell, Table};
 type Evaluated = elinor::Evaluated<String>;
 
 pub struct MetricTable {
-    system_names: Vec<String>,
+    names: Vec<String>,
     table: BTreeMap<Metric, BTreeMap<String, Evaluated>>,
 }
 
 impl MetricTable {
-    pub fn new<I, S>(system_names: I) -> Self
-    where
-        I: IntoIterator<Item = S>,
-        S: AsRef<str>,
-    {
-        let system_names = system_names
-            .into_iter()
-            .map(|s| s.as_ref().to_string())
-            .collect();
+    pub fn new() -> Self {
         Self {
-            system_names,
+            names: Vec::new(),
             table: BTreeMap::new(),
         }
     }
 
-    pub fn insert<S>(&mut self, metric: Metric, system_name: S, evaluated: Evaluated)
+    pub fn insert<S>(&mut self, metric: Metric, name: S, evaluated: Evaluated)
     where
         S: AsRef<str>,
     {
+        let name = name.as_ref();
+        if !self.names.contains(&name.to_string()) {
+            self.names.push(name.to_string());
+        }
         self.table
             .entry(metric)
             .or_insert_with(BTreeMap::new)
-            .insert(system_name.as_ref().to_string(), evaluated);
+            .insert(name.to_string(), evaluated);
     }
 
     pub fn printstd(&self) {
         let mut rows: Vec<Vec<String>> = Vec::new();
         {
             let mut header = vec!["Metric".to_string()];
-            header.extend(self.system_names.iter().cloned());
+            header.extend(self.names.iter().cloned());
             rows.push(header);
         }
-        for (metric, system_to_result) in &self.table {
+        for (metric, name_to_result) in &self.table {
             let mut row = vec![format!("{metric}")];
-            for system_name in &self.system_names {
-                let evaluated = system_to_result.get(system_name).unwrap();
+            for name in &self.names {
+                let evaluated = name_to_result.get(name).unwrap();
                 let mean_score = evaluated.mean_score();
                 row.push(format!("{mean_score:.4}"));
             }
