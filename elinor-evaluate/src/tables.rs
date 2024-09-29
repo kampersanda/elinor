@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use big_s::S;
 use elinor::statistical_tests::RandomizedTukeyHsdTest;
 use elinor::statistical_tests::StudentTTest;
+use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
 use elinor::Metric;
 use prettytable::{Cell, Table};
 
@@ -123,9 +124,34 @@ impl TupledComparisonTable {
         self.tupled_results.insert(metric, results);
     }
 
+    pub fn confidence_intervals(&self, metric: Metric) {
+        let results = self.tupled_results.get(&metric).unwrap();
+        let n_systems = results.len();
+        let tupled_scores = elinor::tupled_scores_from_evaluated(results).unwrap();
+        let stat =
+            TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores, n_systems).unwrap();
+
+        let system_means = stat.system_means();
+        let moe95 = stat.margin_of_error(0.05).unwrap();
+
+        let mut rows: Vec<Vec<String>> = Vec::new();
+        rows.push(vec![S("System"), S("Mean"), S("95% CI")]);
+        for i in 0..n_systems {
+            let mean = system_means[i];
+            rows.push(vec![
+                format!("System {}", i + 1),
+                format!("{:.4}", mean),
+                format!("[{:.4}, {:.4}]", mean - moe95, mean + moe95),
+            ]);
+        }
+        create_table(rows).printstd();
+    }
+
     pub fn printstd(&self) {
         for (metric, results) in &self.tupled_results {
             println!("{metric}");
+
+            self.confidence_intervals(metric.clone());
 
             let tupled_scores = elinor::tupled_scores_from_evaluated(results).unwrap();
             let stat =
