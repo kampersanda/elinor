@@ -26,7 +26,7 @@ enum SubCommand {
         pred_json: PathBuf,
 
         #[arg(short, long)]
-        output_json: PathBuf,
+        result_json: PathBuf,
 
         #[arg(
             short,
@@ -44,9 +44,9 @@ fn main() -> Result<()> {
         SubCommand::Measure {
             gold_json,
             pred_json,
-            output_json,
+            result_json,
             metrics,
-        } => main_measure(gold_json, pred_json, output_json, metrics)?,
+        } => main_measure(gold_json, pred_json, result_json, metrics)?,
     }
 
     Ok(())
@@ -55,7 +55,7 @@ fn main() -> Result<()> {
 fn main_measure(
     gold_json: PathBuf,
     pred_json: PathBuf,
-    output_json: PathBuf,
+    result_json: PathBuf,
     metrics: Vec<String>,
 ) -> Result<()> {
     if metrics.is_empty() {
@@ -86,7 +86,7 @@ fn main_measure(
     create_table(rows).printstd();
 
     let json = results_to_json(&results);
-    let writer = BufWriter::new(File::create(&output_json)?);
+    let writer = BufWriter::new(File::create(&result_json)?);
     serde_json::to_writer_pretty(writer, &json)?;
 
     Ok(())
