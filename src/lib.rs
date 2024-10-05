@@ -154,7 +154,7 @@ pub mod relevance;
 pub mod statistical_tests;
 pub mod trec;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use ordered_float::OrderedFloat;
 
@@ -186,14 +186,15 @@ pub type PredRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>
 #[derive(Debug, Clone)]
 pub struct Evaluated<K> {
     scores: HashMap<K, f64>,
-    mean_score: f64,
 }
 
-impl<K> Evaluated<K> {
+impl<K> Evaluated<K>
+where
+    K: Eq + std::hash::Hash,
+{
     /// Creates a new instance.
     pub fn from_scores(scores: HashMap<K, f64>) -> Self {
-        let mean_score = scores.values().sum::<f64>() / scores.len() as f64;
-        Self { scores, mean_score }
+        Self { scores }
     }
 
     /// Returns the reference to the mappping from query ids to scores.
@@ -202,8 +203,15 @@ impl<K> Evaluated<K> {
     }
 
     /// Returns the macro-averaged score.
-    pub const fn mean_score(&self) -> f64 {
-        self.mean_score
+    pub fn mean_score(&self) -> f64 {
+        self.scores.values().sum::<f64>() / self.scores.len() as f64
+    }
+
+    /// Checks if the other evaluated result has the same set of query ids.
+    pub fn has_same_queries(&self, other: &Self) -> bool {
+        let a: HashSet<_> = self.scores.keys().collect();
+        let b: HashSet<_> = other.scores.keys().collect();
+        a == b
     }
 }
 
@@ -346,14 +354,12 @@ mod tests {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
-            mean_score: 3.5,
         };
         let evaluated_b = Evaluated {
             scores: hashmap! {
                 "q_1" => 1.,
                 "q_2" => 0.,
             },
-            mean_score: 0.5,
         };
         let paired_scores = paired_scores_from_evaluated(&evaluated_a, &evaluated_b).unwrap();
         assert_eq!(paired_scores, vec![(2., 1.), (5., 0.)]);
@@ -366,13 +372,11 @@ mod tests {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
-            mean_score: 3.5,
         };
         let evaluated_b = Evaluated {
             scores: hashmap! {
                 "q_1" => 1.,
             },
-            mean_score: 1.0,
         };
         let result = paired_scores_from_evaluated(&evaluated_a, &evaluated_b);
         assert_eq!(
@@ -390,14 +394,12 @@ mod tests {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
-            mean_score: 3.5,
         };
         let evaluated_b = Evaluated {
             scores: hashmap! {
                 "q_1" => 1.,
                 "q_3" => 0.,
             },
-            mean_score: 0.5,
         };
         let result = paired_scores_from_evaluated(&evaluated_a, &evaluated_b);
         assert_eq!(
@@ -415,21 +417,18 @@ mod tests {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
-            mean_score: 3.5,
         };
         let evaluated_b = Evaluated {
             scores: hashmap! {
                 "q_1" => 1.,
                 "q_2" => 0.,
             },
-            mean_score: 0.5,
         };
         let evaluated_c = Evaluated {
             scores: hashmap! {
                 "q_1" => 2.,
                 "q_2" => 1.,
             },
-            mean_score: 1.5,
         };
         let tupled_scores =
             tupled_scores_from_evaluated(&[evaluated_a, evaluated_b, evaluated_c]).unwrap();
