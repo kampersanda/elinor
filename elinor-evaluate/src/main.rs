@@ -28,7 +28,7 @@ enum SubCommand {
         pred_json: PathBuf,
 
         #[arg(short, long)]
-        result_csv: PathBuf,
+        result_csv: Option<PathBuf>,
 
         #[arg(
             short,
@@ -36,6 +36,9 @@ enum SubCommand {
             default_values_t = &["precision@10".to_string(), "ap".to_string(), "rr".to_string(), "ndcg@10".to_string()],
         )]
         metrics: Vec<String>,
+
+        #[arg(long)]
+        pretty: bool,
     },
 
     Compare {
@@ -53,7 +56,8 @@ fn main() -> Result<()> {
             pred_json,
             result_csv,
             metrics,
-        } => main_measure(gold_json, pred_json, result_csv, metrics)?,
+            pretty,
+        } => main_measure(gold_json, pred_json, result_csv, metrics, pretty)?,
         SubCommand::Compare { result_csvs } => main_compare(result_csvs)?,
     }
 
@@ -63,8 +67,9 @@ fn main() -> Result<()> {
 fn main_measure(
     gold_json: PathBuf,
     pred_json: PathBuf,
-    result_csv: PathBuf,
+    result_csv: Option<PathBuf>,
     metrics: Vec<String>,
+    pretty: bool,
 ) -> Result<()> {
     if metrics.is_empty() {
         return Err(anyhow::anyhow!("No metrics specified"));
@@ -79,17 +84,26 @@ fn main_measure(
         results.push((metric, result));
     }
 
-    let mut score_table = ScoreTable::new();
-    for (metric, result) in &results {
-        score_table.insert(metric.clone(), result)?;
-    }
-    score_table.into_csv(&mut csv::Writer::from_path(&result_csv)?)?;
-
     let mut metric_table = MetricTable::new();
     for (metric, result) in &results {
-        metric_table.insert(metric.clone(), "Score", result.clone());
+        metric_table.insert(metric.clone(), "Mean", result.clone());
     }
-    metric_table.printstd();
+    if pretty {
+        metric_table.prettytable().printstd();
+    } else {
+        let csv_writer = csv::WriterBuilder::new()
+            .delimiter(b'\t')
+            .from_writer(std::io::stdout());
+        metric_table.prettytable().to_csv_writer(csv_writer)?;
+    }
+
+    if let Some(result_csv) = result_csv {
+        let mut score_table = ScoreTable::new();
+        for (metric, result) in &results {
+            score_table.insert(metric.clone(), result)?;
+        }
+        score_table.into_csv(&mut csv::Writer::from_path(&result_csv)?)?;
+    }
 
     Ok(())
 }
@@ -103,7 +117,7 @@ fn main_compare(result_csvs: Vec<PathBuf>) -> Result<()> {
             metric_table.insert(metric, get_file_name(result_csv), evaluated);
         }
     }
-    metric_table.printstd();
+    metric_table.prettytable().printstd();
 
     if result_csvs.len() == 2 {
         let mut pc_table = PairedComparisonTable::new();

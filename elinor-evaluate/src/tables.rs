@@ -125,7 +125,7 @@ impl MetricTable {
             .insert(name.to_string(), evaluated);
     }
 
-    pub fn printstd(&self) {
+    pub fn prettytable(&self) -> Table {
         let mut rows: Vec<Vec<String>> = Vec::new();
         {
             let mut header = vec![S("Metric")];
@@ -137,12 +137,11 @@ impl MetricTable {
             for name in &self.names {
                 let evaluated = name_to_result.get(name).unwrap();
                 let mean = evaluated.mean_score();
-                let std_dev = evaluated.std_dev();
-                row.push(format!("{mean:.4} ± {std_dev:.4}"));
+                row.push(format!("{mean:.4}"));
             }
             rows.push(row);
         }
-        create_table(rows).printstd();
+        create_table(rows)
     }
 
     pub fn metrics(&self) -> Vec<Metric> {
