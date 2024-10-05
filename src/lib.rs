@@ -207,6 +207,16 @@ where
         self.scores.values().sum::<f64>() / self.scores.len() as f64
     }
 
+    /// Returns the variance of the scores.
+    pub fn variance(&self) -> f64 {
+        let mean = self.mean_score();
+        self.scores
+            .values()
+            .map(|&s| (s - mean).powi(2))
+            .sum::<f64>()
+            / self.scores.len() as f64
+    }
+
     /// Checks if the other evaluated result has the same set of query ids.
     pub fn has_same_queries(&self, other: &Self) -> bool {
         let a: HashSet<_> = self.scores.keys().collect();
