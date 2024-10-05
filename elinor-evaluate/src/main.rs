@@ -6,10 +6,11 @@ use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
+use big_s::S;
 use clap::{Parser, Subcommand};
 use elinor::{Evaluated, GoldRelStore, Metric, PredRelStore};
 
-use crate::tables::{MetricTable, PairedComparisonTable, TupledComparisonTable};
+use crate::tables::{MetricTable, PairedComparisonTable, ScoreTable, TupledComparisonTable};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -28,7 +29,7 @@ enum SubCommand {
         pred_json: PathBuf,
 
         #[arg(short, long)]
-        result_json: PathBuf,
+        result_csv: PathBuf,
 
         #[arg(
             short,
@@ -51,9 +52,9 @@ fn main() -> Result<()> {
         SubCommand::Measure {
             gold_json,
             pred_json,
-            result_json,
+            result_csv,
             metrics,
-        } => main_measure(gold_json, pred_json, result_json, metrics)?,
+        } => main_measure(gold_json, pred_json, result_csv, metrics)?,
         SubCommand::Compare { result_jsons } => main_compare(result_jsons)?,
     }
 
@@ -63,7 +64,7 @@ fn main() -> Result<()> {
 fn main_measure(
     gold_json: PathBuf,
     pred_json: PathBuf,
-    result_json: PathBuf,
+    result_csv: PathBuf,
     metrics: Vec<String>,
 ) -> Result<()> {
     if metrics.is_empty() {
@@ -73,16 +74,17 @@ fn main_measure(
     let gold_rels = GoldRelStore::<String>::from_map(load_json(&gold_json)?);
     let pred_rels = PredRelStore::<String>::from_map(load_json(&pred_json)?);
 
-    // Metric, Evaluated
-    let mut results = Vec::new();
+    let mut results = vec![];
     for &metric in &metrics {
         let result = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
         results.push((metric, result));
     }
 
-    let json = results_to_json(&results);
-    let writer = BufWriter::new(File::create(&result_json)?);
-    serde_json::to_writer_pretty(writer, &json)?;
+    let mut score_table = ScoreTable::new();
+    for (metric, result) in &results {
+        score_table.insert(metric.clone(), result)?;
+    }
+    score_table.to_csv(&mut csv::Writer::from_path(&result_csv)?)?;
 
     let mut metric_table = MetricTable::new();
     for (metric, result) in &results {

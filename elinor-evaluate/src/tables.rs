@@ -1,5 +1,7 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
+use std::io::{Read, Write};
 
+use anyhow::Result;
 use big_s::S;
 use elinor::statistical_tests::RandomizedTukeyHsdTest;
 use elinor::statistical_tests::StudentTTest;
@@ -8,6 +10,73 @@ use elinor::Metric;
 use prettytable::{Cell, Table};
 
 type Evaluated = elinor::Evaluated<String>;
+
+pub struct ScoreTable {
+    table: BTreeMap<String, BTreeMap<Metric, f64>>,
+}
+
+impl ScoreTable {
+    pub fn new() -> Self {
+        Self {
+            table: BTreeMap::new(),
+        }
+    }
+
+    pub fn insert(&mut self, metric: Metric, evaluated: &Evaluated) -> Result<()> {
+        // Check if the query ids are the same
+        if !self.table.is_empty() {
+            let query_ids: HashSet<_> = self.table.keys().collect();
+            let new_query_ids: HashSet<_> = evaluated.scores().keys().collect();
+            if query_ids != new_query_ids {
+                return Err(anyhow::anyhow!("Query IDs are not the same"));
+            }
+        }
+        for (query, score) in evaluated.scores() {
+            self.table
+                .entry(query.clone())
+                .or_insert_with(BTreeMap::new)
+                .insert(metric, *score);
+        }
+        Ok(())
+    }
+
+    pub fn metrics(&self) -> Vec<Metric> {
+        let row = self.table.values().next().unwrap();
+        row.keys().cloned().collect()
+    }
+
+    pub fn to_csv<W: Write>(&self, wtr: &mut csv::Writer<W>) -> Result<()> {
+        let metrics = self.metrics();
+        wtr.write_record(
+            std::iter::once(S("Query")).chain(metrics.iter().map(|m| format!("{m}"))),
+        )?;
+        for (query, scores) in &self.table {
+            let mut record = vec![query.clone()];
+            for metric in &metrics {
+                let score = scores.get(metric).unwrap();
+                record.push(format!("{score:.4}"));
+            }
+            wtr.write_record(&record)?;
+        }
+        Ok(())
+    }
+
+    pub fn from_csv<R: Read>(rdr: &mut csv::Reader<R>) -> Result<Self> {
+        let mut table = BTreeMap::new();
+        let headers = rdr.headers()?.clone();
+        let metrics: Vec<Metric> = headers.iter().skip(1).map(|h| h.parse().unwrap()).collect();
+        for result in rdr.records() {
+            let result = result?;
+            let query = result.get(0).unwrap().to_string();
+            let mut scores = BTreeMap::new();
+            for (metric, score) in metrics.iter().zip(result.iter().skip(1)) {
+                scores.insert(metric.clone(), score.parse().unwrap());
+            }
+            table.insert(query, scores);
+        }
+        Ok(Self { table })
+    }
+}
 
 pub struct MetricTable {
     names: Vec<String>,
