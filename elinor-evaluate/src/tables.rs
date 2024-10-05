@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 
 use anyhow::Result;
 use big_s::S;
+use elinor::statistical_tests::BootstrapTest;
 use elinor::statistical_tests::RandomizedTukeyHsdTest;
 use elinor::statistical_tests::StudentTTest;
 use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
@@ -135,8 +136,9 @@ impl MetricTable {
             let mut row = vec![format!("{metric}")];
             for name in &self.names {
                 let evaluated = name_to_result.get(name).unwrap();
-                let mean_score = evaluated.mean_score();
-                row.push(format!("{mean_score:.4}"));
+                let mean = evaluated.mean_score();
+                let std_dev = evaluated.std_dev();
+                row.push(format!("{mean:.4} ± {std_dev:.4}"));
             }
             rows.push(row);
         }
@@ -172,6 +174,18 @@ impl PairedComparisonTable {
     }
 
     pub fn printstd(&self) {
+        println!("Paired Student's t-test");
+        self.summarize_student_t_test(&mut std::io::stdout());
+        println!("Bootstrap test");
+        self.summarize_bootstrap_test(&mut std::io::stdout());
+        println!("Fisher's randomization test");
+        self.summarize_randomized_test(&mut std::io::stdout());
+    }
+
+    pub fn summarize_student_t_test<W>(&self, wtr: &mut W)
+    where
+        W: Write + ?Sized,
+    {
         let mut rows: Vec<Vec<String>> = Vec::new();
         rows.push(vec![
             S("Metric"),
@@ -180,10 +194,12 @@ impl PairedComparisonTable {
             S("Effect Size"),
             S("T Stat"),
             S("P Value"),
+            S("95% CI"),
         ]);
         for (metric, (result_a, result_b)) in &self.paired_results {
             let paired_scores = elinor::paired_scores_from_evaluated(&result_a, &result_b).unwrap();
             let stat = StudentTTest::from_paired_samples(paired_scores).unwrap();
+            let (ci95_btm, ci95_top) = stat.confidence_interval(0.05).unwrap();
             rows.push(vec![
                 format!("{metric}"),
                 format!("{:.4}", stat.mean()),
@@ -191,9 +207,43 @@ impl PairedComparisonTable {
                 format!("{:.4}", stat.effect_size()),
                 format!("{:.4}", stat.t_stat()),
                 format!("{:.4}", stat.p_value()),
+                format!("[{:.4}, {:.4}]", ci95_btm, ci95_top),
             ]);
         }
-        create_table(rows).printstd();
+        create_table(rows).print(wtr).unwrap();
+    }
+
+    pub fn summarize_bootstrap_test<W>(&self, wtr: &mut W)
+    where
+        W: Write + ?Sized,
+    {
+        let mut rows: Vec<Vec<String>> = Vec::new();
+        rows.push(vec![S("Metric"), S("P Value")]);
+        for (metric, (result_a, result_b)) in &self.paired_results {
+            let paired_scores = elinor::paired_scores_from_evaluated(&result_a, &result_b).unwrap();
+            let stat = BootstrapTest::from_paired_samples(paired_scores).unwrap();
+            rows.push(vec![format!("{metric}"), format!("{:.4}", stat.p_value())]);
+        }
+        create_table(rows).print(wtr).unwrap();
+    }
+
+    pub fn summarize_randomized_test<W>(&self, wtr: &mut W)
+    where
+        W: Write + ?Sized,
+    {
+        let mut rows: Vec<Vec<String>> = Vec::new();
+        rows.push(vec![S("Metric"), S("P Value")]);
+        for (metric, (result_a, result_b)) in &self.paired_results {
+            let tupled_scores =
+                elinor::tupled_scores_from_evaluated(&[result_a.clone(), result_b.clone()])
+                    .unwrap();
+            let stat = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores, 2).unwrap();
+            rows.push(vec![
+                format!("{metric}"),
+                format!("{:.4}", stat.p_value(0, 1).unwrap()),
+            ]);
+        }
+        create_table(rows).print(wtr).unwrap();
     }
 }
 

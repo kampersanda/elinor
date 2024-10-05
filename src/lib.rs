@@ -217,6 +217,11 @@ where
             / self.scores.len() as f64
     }
 
+    /// Returns the standard deviation of the scores.
+    pub fn std_dev(&self) -> f64 {
+        self.variance().sqrt()
+    }
+
     /// Checks if the other evaluated result has the same set of query ids.
     pub fn has_same_queries(&self, other: &Self) -> bool {
         let a: HashSet<_> = self.scores.keys().collect();
@@ -281,6 +286,10 @@ where
 /// # Errors
 ///
 /// * [`ElinorError::InvalidArgument`] if the evaluated results have different sets of queries.
+///
+/// # TODO
+///
+/// Modify the argument to accept a slice of `&Evaluated<K>`.
 pub fn tupled_scores_from_evaluated<K>(
     evaluateds: &[Evaluated<K>],
 ) -> Result<Vec<Vec<f64>>, ElinorError>
