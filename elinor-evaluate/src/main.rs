@@ -132,8 +132,7 @@ where
     P: AsRef<Path>,
     T: serde::de::DeserializeOwned,
 {
-    let file = File::open(file)?;
-    let reader = BufReader::new(file);
+    let reader = BufReader::new(File::open(file)?);
     Ok(serde_json::from_reader(reader)?)
 }
 
