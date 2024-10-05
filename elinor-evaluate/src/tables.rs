@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Read, Write};
 
 use anyhow::Result;
@@ -45,7 +45,7 @@ impl ScoreTable {
         row.keys().cloned().collect()
     }
 
-    pub fn to_csv<W: Write>(&self, wtr: &mut csv::Writer<W>) -> Result<()> {
+    pub fn into_csv<W: Write>(&self, wtr: &mut csv::Writer<W>) -> Result<()> {
         let metrics = self.metrics();
         wtr.write_record(
             std::iter::once(S("Query")).chain(metrics.iter().map(|m| format!("{m}"))),
@@ -75,6 +75,20 @@ impl ScoreTable {
             table.insert(query, scores);
         }
         Ok(Self { table })
+    }
+
+    pub fn to_results(&self) -> BTreeMap<Metric, Evaluated> {
+        let mut results = BTreeMap::new();
+        for metric in self.metrics() {
+            let mut query_to_score = HashMap::new();
+            for (query, metric_to_score) in &self.table {
+                let score = metric_to_score.get(&metric).unwrap();
+                query_to_score.insert(query.clone(), *score);
+            }
+            let evaluated = Evaluated::from_scores(query_to_score);
+            results.insert(metric, evaluated);
+        }
+        results
     }
 }
 

@@ -1,14 +1,13 @@
 mod tables;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fs::File;
-use std::io::{BufReader, BufWriter};
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use big_s::S;
 use clap::{Parser, Subcommand};
-use elinor::{Evaluated, GoldRelStore, Metric, PredRelStore};
+use elinor::{GoldRelStore, Metric, PredRelStore};
 
 use crate::tables::{MetricTable, PairedComparisonTable, ScoreTable, TupledComparisonTable};
 
@@ -41,7 +40,7 @@ enum SubCommand {
 
     Compare {
         #[arg(short, long)]
-        result_jsons: Vec<PathBuf>,
+        result_csvs: Vec<PathBuf>,
     },
 }
 
@@ -55,7 +54,7 @@ fn main() -> Result<()> {
             result_csv,
             metrics,
         } => main_measure(gold_json, pred_json, result_csv, metrics)?,
-        SubCommand::Compare { result_jsons } => main_compare(result_jsons)?,
+        SubCommand::Compare { result_csvs } => main_compare(result_csvs)?,
     }
 
     Ok(())
@@ -84,7 +83,7 @@ fn main_measure(
     for (metric, result) in &results {
         score_table.insert(metric.clone(), result)?;
     }
-    score_table.to_csv(&mut csv::Writer::from_path(&result_csv)?)?;
+    score_table.into_csv(&mut csv::Writer::from_path(&result_csv)?)?;
 
     let mut metric_table = MetricTable::new();
     for (metric, result) in &results {
@@ -95,29 +94,28 @@ fn main_measure(
     Ok(())
 }
 
-fn main_compare(result_jsons: Vec<PathBuf>) -> Result<()> {
+fn main_compare(result_csvs: Vec<PathBuf>) -> Result<()> {
     let mut metric_table = MetricTable::new();
-    for result_json in &result_jsons {
-        let result: HashMap<String, HashMap<String, f64>> = load_json(&result_json)?;
-        for (metric, scores) in result {
-            let metric = metric.parse::<Metric>()?;
-            let evaluated = Evaluated::from_scores(scores);
-            metric_table.insert(metric, get_file_name(result_json), evaluated);
+    for result_csv in &result_csvs {
+        let score_table = ScoreTable::from_csv(&mut csv::Reader::from_path(&result_csv)?)?;
+        let result = score_table.to_results();
+        for (metric, evaluated) in result {
+            metric_table.insert(metric, get_file_name(result_csv), evaluated);
         }
     }
     metric_table.printstd();
 
-    if result_jsons.len() == 2 {
+    if result_csvs.len() == 2 {
         let mut pc_table = PairedComparisonTable::new();
-        let system_a = get_file_name(&result_jsons[0]);
-        let system_b = get_file_name(&result_jsons[1]);
+        let system_a = get_file_name(&result_csvs[0]);
+        let system_b = get_file_name(&result_csvs[1]);
         for metric in metric_table.metrics() {
             let result_a = metric_table.get(&metric, &system_a).unwrap().clone();
             let result_b = metric_table.get(&metric, &system_b).unwrap().clone();
             pc_table.insert(metric, result_a, result_b);
         }
         pc_table.printstd();
-    } else if result_jsons.len() > 2 {
+    } else if result_csvs.len() > 2 {
         let mut tc_table = TupledComparisonTable::new();
         for metric in metric_table.metrics() {
             let results = metric_table.get_all(&metric);
@@ -151,18 +149,6 @@ fn parse_metrics(metrics: Vec<String>) -> Result<Vec<Metric>> {
         parsed.push(metric);
     }
     Ok(parsed)
-}
-
-fn results_to_json(results: &[(Metric, elinor::Evaluated<String>)]) -> serde_json::Value {
-    let mut metric_to_scores = serde_json::Map::new();
-    for (metric, result) in results {
-        let mut qid_to_score = serde_json::Map::new();
-        for (k, v) in result.scores() {
-            qid_to_score.insert(k.clone(), serde_json::json!(*v));
-        }
-        metric_to_scores.insert(format!("{metric}"), serde_json::json!(qid_to_score));
-    }
-    serde_json::Value::Object(metric_to_scores)
 }
 
 fn get_file_name(path: &Path) -> String {
