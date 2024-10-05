@@ -11,6 +11,7 @@ use prettytable::{Cell, Table};
 
 type Evaluated = elinor::Evaluated<String>;
 
+/// Table of scores for each query and metric.
 pub struct ScoreTable {
     table: BTreeMap<String, BTreeMap<Metric, f64>>,
 }
@@ -45,6 +46,20 @@ impl ScoreTable {
         row.keys().cloned().collect()
     }
 
+    pub fn to_results(&self) -> BTreeMap<Metric, Evaluated> {
+        let mut results = BTreeMap::new();
+        for metric in self.metrics() {
+            let mut query_to_score = HashMap::new();
+            for (query, metric_to_score) in &self.table {
+                let score = metric_to_score.get(&metric).unwrap();
+                query_to_score.insert(query.clone(), *score);
+            }
+            let evaluated = Evaluated::from_scores(query_to_score);
+            results.insert(metric, evaluated);
+        }
+        results
+    }
+
     pub fn into_csv<W: Write>(&self, wtr: &mut csv::Writer<W>) -> Result<()> {
         let metrics = self.metrics();
         wtr.write_record(
@@ -64,31 +79,21 @@ impl ScoreTable {
     pub fn from_csv<R: Read>(rdr: &mut csv::Reader<R>) -> Result<Self> {
         let mut table = BTreeMap::new();
         let headers = rdr.headers()?.clone();
-        let metrics: Vec<Metric> = headers.iter().skip(1).map(|h| h.parse().unwrap()).collect();
+        let metrics: Vec<Metric> = headers
+            .iter()
+            .skip(1)
+            .map(|h| h.parse::<Metric>())
+            .collect::<Result<_, _>>()?;
         for result in rdr.records() {
             let result = result?;
             let query = result.get(0).unwrap().to_string();
             let mut scores = BTreeMap::new();
             for (metric, score) in metrics.iter().zip(result.iter().skip(1)) {
-                scores.insert(metric.clone(), score.parse().unwrap());
+                scores.insert(metric.clone(), score.parse()?);
             }
             table.insert(query, scores);
         }
         Ok(Self { table })
-    }
-
-    pub fn to_results(&self) -> BTreeMap<Metric, Evaluated> {
-        let mut results = BTreeMap::new();
-        for metric in self.metrics() {
-            let mut query_to_score = HashMap::new();
-            for (query, metric_to_score) in &self.table {
-                let score = metric_to_score.get(&metric).unwrap();
-                query_to_score.insert(query.clone(), *score);
-            }
-            let evaluated = Evaluated::from_scores(query_to_score);
-            results.insert(metric, evaluated);
-        }
-        results
     }
 }
 
