@@ -27,13 +27,10 @@ def run_trec_eval(
 
 
 def run_elinor_evaluate(
-    elinor_dir: str, qrels_file: str, results_file: str
+    elinor_dir: str, qrels_file: str, results_file: str, metrics: list[str]
 ) -> dict[str, str]:
-    ks = [0, 1, 5, 10, 15, 20, 30, 100, 200, 500, 1000]
-    ks_args = " ".join([f"-k {k}" for k in ks])
-    command = (
-        f"./{elinor_dir}/elinor-evaluate -g {qrels_file} -p {results_file} {ks_args}"
-    )
+    metrics_args = " ".join([f"-m {m}" for m in metrics])
+    command = f"./{elinor_dir}/elinor-evaluate measure -g {qrels_file} -p {results_file} {metrics_args}"
     print(f"Running: {command}")
     result = subprocess.run(command, capture_output=True, shell=True)
     if result.returncode != 0:
@@ -69,30 +66,32 @@ if __name__ == "__main__":
         (f"{trec_eval_dir}/test/qrels.rel_level", f"{trec_eval_dir}/test/results.test"),
     ]
 
+    metric_pairs = []
+    metric_pairs.extend([(f"success_{k}", f"success@{k}") for k in [1, 5, 10]])
+    metric_pairs.extend(
+        [
+            ("set_P", "precision"),
+            ("set_recall", "recall"),
+            ("set_F", "f1"),
+            ("Rprec", "r_precision"),
+            ("map", "ap"),
+            ("recip_rank", "rr"),
+            ("ndcg", "ndcg"),
+            ("bpref", "bpref"),
+        ]
+    )
+
+    ks = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
+    metric_pairs.extend([(f"P_{k}", f"precision@{k}") for k in ks])
+    metric_pairs.extend([(f"recall_{k}", f"recall@{k}") for k in ks])
+    metric_pairs.extend([(f"map_cut_{k}", f"ap@{k}") for k in ks])
+    metric_pairs.extend([(f"ndcg_cut_{k}", f"ndcg@{k}") for k in ks])
+
     for data_id, (qrels_file, results_file) in enumerate(test_data, 1):
         trec_results = run_trec_eval(trec_eval_dir, qrels_file, results_file)
-        elinor_results = run_elinor_evaluate(elinor_dir, qrels_file, results_file)
-
-        metric_pairs = []
-        metric_pairs.extend([(f"success_{k}", f"success@{k}") for k in [1, 5, 10]])
-        metric_pairs.extend(
-            [
-                ("set_P", "precision"),
-                ("set_recall", "recall"),
-                ("set_F", "f1"),
-                ("Rprec", "r_precision"),
-                ("map", "ap"),
-                ("recip_rank", "rr"),
-                ("ndcg", "ndcg"),
-                ("bpref", "bpref"),
-            ]
+        elinor_results = run_elinor_evaluate(
+            elinor_dir, qrels_file, results_file, [m[1] for m in metric_pairs]
         )
-
-        ks = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
-        metric_pairs.extend([(f"P_{k}", f"precision@{k}") for k in ks])
-        metric_pairs.extend([(f"recall_{k}", f"recall@{k}") for k in ks])
-        metric_pairs.extend([(f"map_cut_{k}", f"ap@{k}") for k in ks])
-        metric_pairs.extend([(f"ndcg_cut_{k}", f"ndcg@{k}") for k in ks])
 
         print("case_id\ttrec_metric\telinor_metric\ttrec_score\telinor_score\tmatch")
         for metric_id, (trec_metric, elinor_metric) in enumerate(metric_pairs, 1):
