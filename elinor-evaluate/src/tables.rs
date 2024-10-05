@@ -173,12 +173,12 @@ impl PairedComparisonTable {
         self.paired_results.insert(metric, (result_a, result_b));
     }
 
-    pub fn printstd(&self) {
+    pub fn summarize(&self) {
         println!("Paired Student's t-test");
         self.summarize_student_t_test(&mut std::io::stdout());
         println!("Bootstrap test");
         self.summarize_bootstrap_test(&mut std::io::stdout());
-        println!("Fisher's randomization test");
+        println!("Fisher's randomized test");
         self.summarize_randomized_test(&mut std::io::stdout());
     }
 

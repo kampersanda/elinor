@@ -114,7 +114,7 @@ fn main_compare(result_csvs: Vec<PathBuf>) -> Result<()> {
             let result_b = metric_table.get(&metric, &system_b).unwrap().clone();
             pc_table.insert(metric, result_a, result_b);
         }
-        pc_table.printstd();
+        pc_table.summarize();
     } else if result_csvs.len() > 2 {
         let mut tc_table = TupledComparisonTable::new();
         for metric in metric_table.metrics() {
