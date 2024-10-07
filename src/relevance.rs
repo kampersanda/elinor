@@ -4,10 +4,10 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
 
-use crate::errors::ElinorError;
+use crate::errors::{ElinorError, Result};
 
 /// Record of a query-document pair.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Record<K, T> {
     /// Query id.
     pub query_id: K,
@@ -49,33 +49,33 @@ pub struct RelevanceStore<K, T> {
 
 impl<K, T> RelevanceStore<K, T>
 where
-    K: Eq + Ord + Hash + Clone,
+    K: Eq + Ord + Hash + Clone + Display,
     T: Ord + Clone,
 {
-    /// Creates a relevance store from a map of query ids to relevance maps, such as
-    ///
-    /// ```json
-    /// {
-    ///     "q_1": {
-    ///         "d_1": 1,
-    ///         "d_2": 2
-    ///     },
-    ///     "q_2": {
-    ///         "d_1": 1
-    ///     }
-    /// }
-    /// ```
-    pub fn from_map(map: HashMap<K, HashMap<K, T>>) -> Self
+    /// Creates an instance from records.
+    pub fn from_records<I>(records: I) -> Result<Self>
     where
-        K: Display,
+        I: IntoIterator<Item = Record<K, T>>,
     {
-        let b = RelevanceStoreBuilder { map };
-        b.build()
+        let mut b = RelevanceStoreBuilder::new();
+        for record in records {
+            b.add_record(record.query_id, record.doc_id, record.score)?;
+        }
+        Ok(b.build())
     }
 
-    /// Exports the relevance store as a map of query ids to relevance maps.
-    pub fn into_map(self) -> HashMap<K, HashMap<K, T>> {
-        self.map.into_iter().map(|(k, v)| (k, v.map)).collect()
+    /// Exports the relevance store into records.
+    pub fn into_records(self) -> Vec<Record<K, T>> {
+        self.map
+            .into_iter()
+            .flat_map(|(query_id, data)| {
+                data.sorted.into_iter().map(move |rel| Record {
+                    query_id: query_id.clone(),
+                    doc_id: rel.doc_id,
+                    score: rel.score,
+                })
+            })
+            .collect()
     }
 
     /// Returns the score for a given query-document pair.
@@ -154,7 +154,7 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
     /// # Errors
     ///
     /// * [`ElinorError::DuplicateEntry`] if the query-document pair already exists.
-    pub fn add_record(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), ElinorError>
+    pub fn add_record(&mut self, query_id: K, doc_id: K, score: T) -> Result<()>
     where
         K: Eq + Hash + Clone + Display,
     {
@@ -192,49 +192,105 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use std::collections::HashSet;
 
     use super::*;
 
     #[test]
-    fn test_relevance_store_from_into_map() {
-        let map1: HashMap<char, HashMap<char, u32>> =
-            [('a', [('x', 1), ('y', 2)].into()), ('b', [('x', 1)].into())].into();
-        let store = RelevanceStore::from_map(map1.clone());
-        let map2 = store.into_map();
-        assert_eq!(map1, map2);
+    fn test_relevance_store_from_into_records() {
+        let mut records = vec![
+            Record {
+                query_id: 'a',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'b',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'b',
+                doc_id: 'y',
+                score: 2,
+            },
+            Record {
+                query_id: 'c',
+                doc_id: 'x',
+                score: 1,
+            },
+        ];
+        let store = RelevanceStore::from_records(records.iter().cloned()).unwrap();
+        let mut other = store.into_records();
+        records.sort();
+        other.sort();
+        assert_eq!(records, other);
     }
 
     #[test]
     fn test_relevance_store_n_queries() {
-        let store = RelevanceStore::from_map(
-            [
-                ('a', [('x', 1)].into()),
-                ('b', [('x', 1), ('y', 2)].into()),
-                ('c', [('x', 1)].into()),
-            ]
-            .into(),
-        );
+        let store = RelevanceStore::from_records([
+            Record {
+                query_id: 'a',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'b',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'b',
+                doc_id: 'y',
+                score: 2,
+            },
+            Record {
+                query_id: 'c',
+                doc_id: 'x',
+                score: 1,
+            },
+        ])
+        .unwrap();
         assert_eq!(store.n_queries(), 3);
     }
 
     #[test]
     fn test_relevance_store_n_docs() {
-        let store = RelevanceStore::from_map(
-            [
-                ('a', [('x', 1)].into()),
-                ('b', [('x', 1), ('y', 2)].into()),
-                ('c', [('x', 1)].into()),
-            ]
-            .into(),
-        );
+        let store = RelevanceStore::from_records([
+            Record {
+                query_id: 'a',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'b',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'b',
+                doc_id: 'y',
+                score: 2,
+            },
+            Record {
+                query_id: 'c',
+                doc_id: 'x',
+                score: 1,
+            },
+        ])
+        .unwrap();
         assert_eq!(store.n_docs(), 4);
     }
 
     #[test]
     fn test_relevance_store_get_score() {
-        let store = RelevanceStore::from_map([('a', [('x', 1)].into())].into());
+        let store = RelevanceStore::from_records([Record {
+            query_id: 'a',
+            doc_id: 'x',
+            score: 1,
+        }])
+        .unwrap();
         assert_eq!(store.get_score(&'a', &'x'), Some(&1));
         assert_eq!(store.get_score(&'a', &'y'), None);
         assert_eq!(store.get_score(&'b', &'x'), None);
@@ -242,14 +298,38 @@ mod tests {
 
     #[test]
     fn test_relevance_store_get_map() {
-        let store = RelevanceStore::from_map([('a', [('x', 1), ('y', 2)].into())].into());
+        let store = RelevanceStore::from_records([
+            Record {
+                query_id: 'a',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'a',
+                doc_id: 'y',
+                score: 2,
+            },
+        ])
+        .unwrap();
         assert_eq!(store.get_map(&'a'), Some(&[('x', 1), ('y', 2)].into()));
         assert_eq!(store.get_map(&'b'), None);
     }
 
     #[test]
     fn test_relevance_store_get_sorted() {
-        let store = RelevanceStore::from_map([('a', [('x', 1), ('y', 2)].into())].into());
+        let store = RelevanceStore::from_records([
+            Record {
+                query_id: 'a',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'a',
+                doc_id: 'y',
+                score: 2,
+            },
+        ])
+        .unwrap();
         let expected = vec![
             Relevance {
                 doc_id: 'y',
@@ -266,14 +346,24 @@ mod tests {
 
     #[test]
     fn test_relevance_store_query_ids() {
-        let store = RelevanceStore::from_map(
-            [
-                ('a', [('x', 1)].into()),
-                ('b', [('x', 1)].into()),
-                ('c', [('x', 1)].into()),
-            ]
-            .into(),
-        );
+        let store = RelevanceStore::from_records([
+            Record {
+                query_id: 'a',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'b',
+                doc_id: 'x',
+                score: 1,
+            },
+            Record {
+                query_id: 'c',
+                doc_id: 'x',
+                score: 1,
+            },
+        ])
+        .unwrap();
         let expected = HashSet::from_iter([&'a', &'b', &'c']);
         let actual = store.query_ids().collect::<HashSet<_>>();
         assert_eq!(actual, expected);

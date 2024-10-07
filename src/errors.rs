@@ -24,3 +24,6 @@ pub enum ElinorError {
     #[error("{0}")]
     InvalidFormat(String),
 }
+
+/// Specialized result type for Elinor.
+pub type Result<T> = std::result::Result<T, ElinorError>;

@@ -390,6 +390,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Record;
     use approx::assert_relative_eq;
     use maplit::hashmap;
     use rstest::*;
@@ -488,21 +489,47 @@ mod tests {
     #[case::ndcg_k_4_burges(Metric::NDCGBurges { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_5_burges(Metric::NDCGBurges { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<char, f64>) {
-        let gold_rels = GoldRelStore::from_map(hashmap! {
-            'A' => hashmap! {
-                'X' => 1,
-                'Y' => 0,
-                'Z' => 2,
+        let gold_rels = GoldRelStore::from_records([
+            Record {
+                query_id: 'A',
+                doc_id: 'X',
+                score: 1,
             },
-        });
-        let pred_rels = PredRelStore::from_map(hashmap! {
-            'A' => hashmap! {
-                'X' => 0.5.into(),
-                'Y' => 0.4.into(),
-                'Z' => 0.3.into(),
-                'W' => 0.2.into(),
+            Record {
+                query_id: 'A',
+                doc_id: 'Y',
+                score: 0,
             },
-        });
+            Record {
+                query_id: 'A',
+                doc_id: 'Z',
+                score: 2,
+            },
+        ])
+        .unwrap();
+        let pred_rels = PredRelStore::from_records([
+            Record {
+                query_id: 'A',
+                doc_id: 'X',
+                score: 0.5.into(),
+            },
+            Record {
+                query_id: 'A',
+                doc_id: 'Y',
+                score: 0.4.into(),
+            },
+            Record {
+                query_id: 'A',
+                doc_id: 'Z',
+                score: 0.3.into(),
+            },
+            Record {
+                query_id: 'A',
+                doc_id: 'W',
+                score: 0.2.into(),
+            },
+        ])
+        .unwrap();
         let results = compute_metric(&gold_rels, &pred_rels, metric).unwrap();
         compare_hashmaps(&results, &expected);
     }

@@ -160,6 +160,7 @@ use ordered_float::OrderedFloat;
 
 pub use errors::ElinorError;
 pub use metrics::Metric;
+pub use relevance::Record;
 pub use relevance::Relevance;
 
 /// Data type to store a gold relevance score.
@@ -169,6 +170,12 @@ pub type GoldScore = u32;
 /// Data type to store a predicted relevance score.
 /// A higher score means more relevant.
 pub type PredScore = OrderedFloat<f64>;
+
+/// Record type to store a gold relevance score.
+pub type GoldRecord<K> = Record<K, GoldScore>;
+
+/// Record type to store a predicted relevance score.
+pub type PredRecord<K> = Record<K, PredScore>;
 
 /// Data structure to store gold relevance scores.
 pub type GoldRelStore<K> = relevance::RelevanceStore<K, GoldScore>;
