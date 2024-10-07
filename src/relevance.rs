@@ -4,9 +4,13 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::errors::{ElinorError, Result};
 
 /// Record of a query-document pair.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Record<K, T> {
     /// Query id.
