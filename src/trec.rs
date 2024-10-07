@@ -53,7 +53,7 @@ where
             .parse::<i32>()
             .map_err(|_| ElinorError::InvalidFormat(format!("Invalid score: {}", rows[3])))?;
         let score = GoldScore::try_from(score.max(0)).unwrap();
-        b.add_score(query_id, doc_id, score)?;
+        b.add_record(query_id, doc_id, score)?;
     }
     Ok(b.build())
 }
@@ -104,7 +104,7 @@ where
         let score = rows[4]
             .parse::<PredScore>()
             .map_err(|_| ElinorError::InvalidFormat(format!("Invalid score: {}", rows[4])))?;
-        b.add_score(query_id, doc_id, score)?;
+        b.add_record(query_id, doc_id, score)?;
     }
     Ok(b.build())
 }

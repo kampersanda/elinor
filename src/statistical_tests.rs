@@ -20,25 +20,25 @@
 //!
 //! // Prepare gold relevance scores.
 //! let mut b = GoldRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 1)?;
-//! b.add_score("q_1", "d_2", 1)?;
-//! b.add_score("q_2", "d_1", 1)?;
-//! b.add_score("q_2", "d_2", 1)?;
+//! b.add_record("q_1", "d_1", 1)?;
+//! b.add_record("q_1", "d_2", 1)?;
+//! b.add_record("q_2", "d_1", 1)?;
+//! b.add_record("q_2", "d_2", 1)?;
 //! let gold_rels = b.build();
 //!
 //! // Prepare predicted relevance scores for system A.
 //! let mut b = PredRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 0.2.into())?;
-//! b.add_score("q_1", "d_2", 0.1.into())?;
-//! b.add_score("q_2", "d_1", 0.2.into())?;
-//! b.add_score("q_2", "d_2", 0.1.into())?;
+//! b.add_record("q_1", "d_1", 0.2.into())?;
+//! b.add_record("q_1", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_1", 0.2.into())?;
+//! b.add_record("q_2", "d_2", 0.1.into())?;
 //! let pred_rels_a = b.build();
 //!
 //! // Prepare predicted relevance scores for system B.
 //! let mut b = PredRelStoreBuilder::new();
-//! b.add_score("q_1", "d_3", 0.2.into())?;
-//! b.add_score("q_1", "d_2", 0.1.into())?;
-//! b.add_score("q_2", "d_3", 0.2.into())?;
+//! b.add_record("q_1", "d_3", 0.2.into())?;
+//! b.add_record("q_1", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_3", 0.2.into())?;
 //! let pred_rels_b = b.build();
 //!
 //! // Evaluate Precision for both systems.
@@ -83,32 +83,32 @@
 //!
 //! // Prepare gold relevance scores.
 //! let mut b = GoldRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 1)?;
-//! b.add_score("q_1", "d_2", 1)?;
-//! b.add_score("q_2", "d_1", 1)?;
-//! b.add_score("q_2", "d_2", 1)?;
+//! b.add_record("q_1", "d_1", 1)?;
+//! b.add_record("q_1", "d_2", 1)?;
+//! b.add_record("q_2", "d_1", 1)?;
+//! b.add_record("q_2", "d_2", 1)?;
 //! let gold_rels = b.build();
 //!
 //! // Prepare predicted relevance scores for system A.
 //! let mut b = PredRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 0.2.into())?;
-//! b.add_score("q_1", "d_2", 0.1.into())?;
-//! b.add_score("q_2", "d_1", 0.2.into())?;
-//! b.add_score("q_2", "d_2", 0.1.into())?;
+//! b.add_record("q_1", "d_1", 0.2.into())?;
+//! b.add_record("q_1", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_1", 0.2.into())?;
+//! b.add_record("q_2", "d_2", 0.1.into())?;
 //! let pred_rels_a = b.build();
 //!
 //! // Prepare predicted relevance scores for system B.
 //! let mut b = PredRelStoreBuilder::new();
-//! b.add_score("q_1", "d_3", 0.2.into())?;
-//! b.add_score("q_1", "d_2", 0.1.into())?;
-//! b.add_score("q_2", "d_3", 0.2.into())?;
+//! b.add_record("q_1", "d_3", 0.2.into())?;
+//! b.add_record("q_1", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_3", 0.2.into())?;
 //! let pred_rels_b = b.build();
 //!
 //! // Prepare predicted relevance scores for system C.
 //! let mut b = PredRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 0.2.into())?;
-//! b.add_score("q_2", "d_2", 0.1.into())?;
-//! b.add_score("q_2", "d_4", 0.2.into())?;
+//! b.add_record("q_1", "d_1", 0.2.into())?;
+//! b.add_record("q_2", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_4", 0.2.into())?;
 //! let pred_rels_c = b.build();
 //!
 //! // Evaluate Precision for all systems.

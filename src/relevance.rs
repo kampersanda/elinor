@@ -6,6 +6,19 @@ use std::hash::Hash;
 
 use crate::errors::ElinorError;
 
+/// Record of a query-document pair.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Record<K, T> {
+    /// Query id.
+    pub query_id: K,
+
+    /// Document id.
+    pub doc_id: K,
+
+    /// Relevance score.
+    pub score: T,
+}
+
 /// Data to store a relevance score for a document.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Relevance<K, T> {
@@ -141,7 +154,7 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
     /// # Errors
     ///
     /// * [`ElinorError::DuplicateEntry`] if the query-document pair already exists.
-    pub fn add_score(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), ElinorError>
+    pub fn add_record(&mut self, query_id: K, doc_id: K, score: T) -> Result<(), ElinorError>
     where
         K: Eq + Hash + Clone + Display,
     {
@@ -269,9 +282,9 @@ mod tests {
     #[test]
     fn test_relevance_store_builder() {
         let mut b = RelevanceStoreBuilder::new();
-        b.add_score('a', 'x', 1).unwrap();
-        b.add_score('a', 'y', 2).unwrap();
-        b.add_score('b', 'x', 3).unwrap();
+        b.add_record('a', 'x', 1).unwrap();
+        b.add_record('a', 'y', 2).unwrap();
+        b.add_record('b', 'x', 3).unwrap();
         let store = b.build();
         assert_eq!(store.get_map(&'a'), Some(&[('x', 1), ('y', 2)].into()));
         assert_eq!(store.get_map(&'b'), Some(&[('x', 3)].into()));
@@ -281,9 +294,9 @@ mod tests {
     #[test]
     fn test_relevance_store_builder_duplicate_entry() {
         let mut b = RelevanceStoreBuilder::new();
-        b.add_score('a', 'x', 1).unwrap();
+        b.add_record('a', 'x', 1).unwrap();
         assert_eq!(
-            b.add_score('a', 'x', 2),
+            b.add_record('a', 'x', 2),
             Err(ElinorError::DuplicateEntry("Query: a, Doc: x".to_string()))
         );
     }

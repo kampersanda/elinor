@@ -36,21 +36,21 @@
 //! // Prepare gold relevance scores.
 //! // In binary-relevance metrics, 0 means non-relevant and the others mean relevant.
 //! let mut b = GoldRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 1)?;
-//! b.add_score("q_1", "d_2", 0)?;
-//! b.add_score("q_1", "d_3", 2)?;
-//! b.add_score("q_2", "d_2", 2)?;
-//! b.add_score("q_2", "d_4", 1)?;
+//! b.add_record("q_1", "d_1", 1)?;
+//! b.add_record("q_1", "d_2", 0)?;
+//! b.add_record("q_1", "d_3", 2)?;
+//! b.add_record("q_2", "d_2", 2)?;
+//! b.add_record("q_2", "d_4", 1)?;
 //! let gold_rels = b.build();
 //!
 //! // Prepare predicted relevance scores.
 //! let mut b = PredRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 0.5.into())?;
-//! b.add_score("q_1", "d_2", 0.4.into())?;
-//! b.add_score("q_1", "d_3", 0.3.into())?;
-//! b.add_score("q_2", "d_4", 0.1.into())?;
-//! b.add_score("q_2", "d_1", 0.2.into())?;
-//! b.add_score("q_2", "d_3", 0.3.into())?;
+//! b.add_record("q_1", "d_1", 0.5.into())?;
+//! b.add_record("q_1", "d_2", 0.4.into())?;
+//! b.add_record("q_1", "d_3", 0.3.into())?;
+//! b.add_record("q_2", "d_4", 0.1.into())?;
+//! b.add_record("q_2", "d_1", 0.2.into())?;
+//! b.add_record("q_2", "d_3", 0.3.into())?;
 //! let pred_rels = b.build();
 //!
 //! // Evaluate Precision@3.
@@ -308,20 +308,20 @@ mod tests {
     #[test]
     fn test_evaluate() {
         let mut b = GoldRelStoreBuilder::new();
-        b.add_score("q_1", "d_1", 1).unwrap();
-        b.add_score("q_1", "d_2", 0).unwrap();
-        b.add_score("q_1", "d_3", 2).unwrap();
-        b.add_score("q_2", "d_2", 2).unwrap();
-        b.add_score("q_2", "d_4", 1).unwrap();
+        b.add_record("q_1", "d_1", 1).unwrap();
+        b.add_record("q_1", "d_2", 0).unwrap();
+        b.add_record("q_1", "d_3", 2).unwrap();
+        b.add_record("q_2", "d_2", 2).unwrap();
+        b.add_record("q_2", "d_4", 1).unwrap();
         let gold_rels = b.build();
 
         let mut b = PredRelStoreBuilder::new();
-        b.add_score("q_1", "d_1", 0.5.into()).unwrap();
-        b.add_score("q_1", "d_2", 0.4.into()).unwrap();
-        b.add_score("q_1", "d_3", 0.3.into()).unwrap();
-        b.add_score("q_2", "d_4", 0.1.into()).unwrap();
-        b.add_score("q_2", "d_1", 0.2.into()).unwrap();
-        b.add_score("q_2", "d_3", 0.3.into()).unwrap();
+        b.add_record("q_1", "d_1", 0.5.into()).unwrap();
+        b.add_record("q_1", "d_2", 0.4.into()).unwrap();
+        b.add_record("q_1", "d_3", 0.3.into()).unwrap();
+        b.add_record("q_2", "d_4", 0.1.into()).unwrap();
+        b.add_record("q_2", "d_1", 0.2.into()).unwrap();
+        b.add_record("q_2", "d_3", 0.3.into()).unwrap();
         let pred_rels = b.build();
 
         let evaluated = evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 }).unwrap();
