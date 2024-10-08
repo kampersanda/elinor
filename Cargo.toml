@@ -39,3 +39,5 @@ members = ["elinor-evaluate"]
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--html-in-header", "katex.html"]
+features = ["serde"]
+default-features = false
