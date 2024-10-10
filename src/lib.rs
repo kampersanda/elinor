@@ -97,43 +97,30 @@
 //! #
 //! # #[cfg(feature = "serde")]
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use std::collections::HashMap;
-//! use elinor::{GoldRelStore, GoldScore, PredRelStore, PredScore};
+//! use elinor::{GoldRelStore, GoldRecord, PredRelStore, PredRecord};
 //!
-//! let gold_rels_data = r#"
-//! {
-//!     "q_1": {
-//!         "d_1": 1,
-//!         "d_2": 0,
-//!         "d_3": 2
-//!     },
-//!     "q_2": {
-//!         "d_2": 2,
-//!         "d_4": 1
-//!     }
-//! }"#;
+//! let gold_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 1}
+//! {"query_id": "q_1", "doc_id": "d_2", "score": 0}
+//! {"query_id": "q_1", "doc_id": "d_3", "score": 2}
+//! {"query_id": "q_2", "doc_id": "d_2", "score": 2}
+//! {"query_id": "q_2", "doc_id": "d_4", "score": 1}"#;
 //!
-//! let pred_rels_data = r#"
-//! {
-//!     "q_1": {
-//!         "d_1": 0.5,
-//!         "d_2": 0.4,
-//!         "d_3": 0.3
-//!     },
-//!     "q_2": {
-//!         "d_3": 0.3,
-//!         "d_1": 0.2,
-//!         "d_4": 0.1
-//!     }
-//! }"#;
+//! let pred_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 0.5}
+//! {"query_id": "q_1", "doc_id": "d_2", "score": 0.4}
+//! {"query_id": "q_1", "doc_id": "d_3", "score": 0.3}
+//! {"query_id": "q_2", "doc_id": "d_4", "score": 0.1}
+//! {"query_id": "q_2", "doc_id": "d_1", "score": 0.2}
+//! {"query_id": "q_2", "doc_id": "d_3", "score": 0.3}"#;
 //!
-//! let gold_rels_map: HashMap<String, HashMap<String, GoldScore>> =
-//!     serde_json::from_str(gold_rels_data)?;
-//! let pred_rels_map: HashMap<String, HashMap<String, PredScore>> =
-//!     serde_json::from_str(pred_rels_data)?;
+//! let gold_records: Vec<GoldRecord<String>> = gold_data.lines()
+//!     .map(|line| serde_json::from_str(line))
+//!     .collect::<Result<_, _>>()?;
+//! let pred_records: Vec<PredRecord<String>> = pred_data.lines()
+//!     .map(|line| serde_json::from_str(line))
+//!     .collect::<Result<_, _>>()?;
 //!
-//! let gold_rels = GoldRelStore::from_map(gold_rels_map);
-//! let pred_rels = PredRelStore::from_map(pred_rels_map);
+//! let gold_rels = GoldRelStore::from_records(gold_records)?;
+//! let pred_rels = PredRelStore::from_records(pred_records)?;
 //!
 //! assert_eq!(gold_rels.n_queries(), 2);
 //! assert_eq!(gold_rels.n_docs(), 5);

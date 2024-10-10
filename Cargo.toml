@@ -33,6 +33,7 @@ anyhow = "1.0.87"
 approx = "0.5.1"
 maplit = "1.0.2"
 rstest = "0.22.0"
+serde_json = "1.0.128"
 
 [workspace]
 members = ["elinor-evaluate"]
