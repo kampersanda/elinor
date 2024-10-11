@@ -49,15 +49,16 @@ jobs:
         continue-on-error: ${{ matrix.rust != 'stable' }}
         run: cargo test --release --features serde
       - name: Run cargo doc
-        run: RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps
+        run: RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --features serde
       - name: Run cargo example
         # MSRV should be ignored for dev-dependencies.
         continue-on-error: ${{ matrix.rust != 'stable' }}
         run: |
-          cargo run --release --example from_json --features serde
+          cargo run --release --example from_jsonl --features serde
           cargo run --release --example from_trec
           cargo run --release --example paired_bootstrap_test
           cargo run --release --example randomized_tukey_hsd_test
+          cargo run --release --example two_way_anova_without_replication
 
   correctness-test:
     name: Correctness test against trec_eval
