@@ -36,21 +36,21 @@
 //! // Prepare gold relevance scores.
 //! // In binary-relevance metrics, 0 means non-relevant and the others mean relevant.
 //! let mut b = GoldRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 1)?;
-//! b.add_score("q_1", "d_2", 0)?;
-//! b.add_score("q_1", "d_3", 2)?;
-//! b.add_score("q_2", "d_2", 2)?;
-//! b.add_score("q_2", "d_4", 1)?;
+//! b.add_record("q_1", "d_1", 1)?;
+//! b.add_record("q_1", "d_2", 0)?;
+//! b.add_record("q_1", "d_3", 2)?;
+//! b.add_record("q_2", "d_2", 2)?;
+//! b.add_record("q_2", "d_4", 1)?;
 //! let gold_rels = b.build();
 //!
 //! // Prepare predicted relevance scores.
 //! let mut b = PredRelStoreBuilder::new();
-//! b.add_score("q_1", "d_1", 0.5.into())?;
-//! b.add_score("q_1", "d_2", 0.4.into())?;
-//! b.add_score("q_1", "d_3", 0.3.into())?;
-//! b.add_score("q_2", "d_4", 0.1.into())?;
-//! b.add_score("q_2", "d_1", 0.2.into())?;
-//! b.add_score("q_2", "d_3", 0.3.into())?;
+//! b.add_record("q_1", "d_1", 0.5.into())?;
+//! b.add_record("q_1", "d_2", 0.4.into())?;
+//! b.add_record("q_1", "d_3", 0.3.into())?;
+//! b.add_record("q_2", "d_4", 0.1.into())?;
+//! b.add_record("q_2", "d_1", 0.2.into())?;
+//! b.add_record("q_2", "d_3", 0.3.into())?;
 //! let pred_rels = b.build();
 //!
 //! // Evaluate Precision@3.
@@ -72,16 +72,15 @@
 //! # }
 //! ```
 //!
-//! # Relevance stores from [`HashMap`]
+//! # Instantiating relevance stores with [Serde](https://serde.rs/)
 //!
-//! [`GoldRelStore`] and [`PredRelStore`] can also be instantiated from [`HashMap`]s.
-//! The following mapping structure is expected:
+//! [`GoldRelStore`] and [`PredRelStore`] can be instantiated from
+//! [`GoldRecord`] and [`PredRecord`] instances, respectively,
+//! where each record consists of three fields: `query_id`, `document_id`, and `score`.
 //!
-//! ```text
-//! query_id => { doc_id => score }
-//! ```
+//! Both [`GoldRecord`] and [`PredRecord`] support serialization and deserialization via Serde,
+//! allowing you to easily instantiate relevance stores from JSON or other formats.
 //!
-//! It allows you to prepare data in JSON or other formats via [Serde](https://serde.rs/).
 //! If you use Serde, enable the `serde` feature in the `Cargo.toml`:
 //!
 //! ```toml
@@ -89,7 +88,7 @@
 //! elinor = { version = "*", features = ["serde"] }
 //! ```
 //!
-//! An example to instantiate relevance stores from JSON is shown below:
+//! An example to instantiate relevance stores from JSONL strings is shown below:
 //!
 //! ```
 //! # #[cfg(not(feature = "serde"))]
@@ -97,43 +96,30 @@
 //! #
 //! # #[cfg(feature = "serde")]
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use std::collections::HashMap;
-//! use elinor::{GoldRelStore, GoldScore, PredRelStore, PredScore};
+//! use elinor::{GoldRelStore, GoldRecord, PredRelStore, PredRecord};
 //!
-//! let gold_rels_data = r#"
-//! {
-//!     "q_1": {
-//!         "d_1": 1,
-//!         "d_2": 0,
-//!         "d_3": 2
-//!     },
-//!     "q_2": {
-//!         "d_2": 2,
-//!         "d_4": 1
-//!     }
-//! }"#;
+//! let gold_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 1}
+//! {"query_id": "q_1", "doc_id": "d_2", "score": 0}
+//! {"query_id": "q_1", "doc_id": "d_3", "score": 2}
+//! {"query_id": "q_2", "doc_id": "d_2", "score": 2}
+//! {"query_id": "q_2", "doc_id": "d_4", "score": 1}"#;
 //!
-//! let pred_rels_data = r#"
-//! {
-//!     "q_1": {
-//!         "d_1": 0.5,
-//!         "d_2": 0.4,
-//!         "d_3": 0.3
-//!     },
-//!     "q_2": {
-//!         "d_3": 0.3,
-//!         "d_1": 0.2,
-//!         "d_4": 0.1
-//!     }
-//! }"#;
+//! let pred_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 0.5}
+//! {"query_id": "q_1", "doc_id": "d_2", "score": 0.4}
+//! {"query_id": "q_1", "doc_id": "d_3", "score": 0.3}
+//! {"query_id": "q_2", "doc_id": "d_4", "score": 0.1}
+//! {"query_id": "q_2", "doc_id": "d_1", "score": 0.2}
+//! {"query_id": "q_2", "doc_id": "d_3", "score": 0.3}"#;
 //!
-//! let gold_rels_map: HashMap<String, HashMap<String, GoldScore>> =
-//!     serde_json::from_str(gold_rels_data)?;
-//! let pred_rels_map: HashMap<String, HashMap<String, PredScore>> =
-//!     serde_json::from_str(pred_rels_data)?;
+//! let gold_records = gold_data
+//!     .lines()
+//!     .map(|line| serde_json::from_str::<GoldRecord<String>>(line).unwrap());
+//! let pred_records = pred_data
+//!     .lines()
+//!     .map(|line| serde_json::from_str::<PredRecord<String>>(line).unwrap());
 //!
-//! let gold_rels = GoldRelStore::from_map(gold_rels_map);
-//! let pred_rels = PredRelStore::from_map(pred_rels_map);
+//! let gold_rels = GoldRelStore::from_records(gold_records)?;
+//! let pred_rels = PredRelStore::from_records(pred_records)?;
 //!
 //! assert_eq!(gold_rels.n_queries(), 2);
 //! assert_eq!(gold_rels.n_docs(), 5);
@@ -145,7 +131,7 @@
 //!
 //! # Crate features
 //!
-//! * `serde` - Enables Serde for [`PredScore`].
+//! * `serde` - Enables Serde for [`GoldRecord`] and [`PredRecord`].
 #![deny(missing_docs)]
 
 pub mod errors;
@@ -160,6 +146,7 @@ use ordered_float::OrderedFloat;
 
 pub use errors::ElinorError;
 pub use metrics::Metric;
+pub use relevance::Record;
 pub use relevance::Relevance;
 
 /// Data type to store a gold relevance score.
@@ -169,6 +156,12 @@ pub type GoldScore = u32;
 /// Data type to store a predicted relevance score.
 /// A higher score means more relevant.
 pub type PredScore = OrderedFloat<f64>;
+
+/// Record type to store a gold relevance score.
+pub type GoldRecord<K> = Record<K, GoldScore>;
+
+/// Record type to store a predicted relevance score.
+pub type PredRecord<K> = Record<K, PredScore>;
 
 /// Data structure to store gold relevance scores.
 pub type GoldRelStore<K> = relevance::RelevanceStore<K, GoldScore>;
@@ -308,20 +301,20 @@ mod tests {
     #[test]
     fn test_evaluate() {
         let mut b = GoldRelStoreBuilder::new();
-        b.add_score("q_1", "d_1", 1).unwrap();
-        b.add_score("q_1", "d_2", 0).unwrap();
-        b.add_score("q_1", "d_3", 2).unwrap();
-        b.add_score("q_2", "d_2", 2).unwrap();
-        b.add_score("q_2", "d_4", 1).unwrap();
+        b.add_record("q_1", "d_1", 1).unwrap();
+        b.add_record("q_1", "d_2", 0).unwrap();
+        b.add_record("q_1", "d_3", 2).unwrap();
+        b.add_record("q_2", "d_2", 2).unwrap();
+        b.add_record("q_2", "d_4", 1).unwrap();
         let gold_rels = b.build();
 
         let mut b = PredRelStoreBuilder::new();
-        b.add_score("q_1", "d_1", 0.5.into()).unwrap();
-        b.add_score("q_1", "d_2", 0.4.into()).unwrap();
-        b.add_score("q_1", "d_3", 0.3.into()).unwrap();
-        b.add_score("q_2", "d_4", 0.1.into()).unwrap();
-        b.add_score("q_2", "d_1", 0.2.into()).unwrap();
-        b.add_score("q_2", "d_3", 0.3.into()).unwrap();
+        b.add_record("q_1", "d_1", 0.5.into()).unwrap();
+        b.add_record("q_1", "d_2", 0.4.into()).unwrap();
+        b.add_record("q_1", "d_3", 0.3.into()).unwrap();
+        b.add_record("q_2", "d_4", 0.1.into()).unwrap();
+        b.add_record("q_2", "d_1", 0.2.into()).unwrap();
+        b.add_record("q_2", "d_3", 0.3.into()).unwrap();
         let pred_rels = b.build();
 
         let evaluated = evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 }).unwrap();
