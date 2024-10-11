@@ -273,22 +273,22 @@ where
     Ok(paired_scores)
 }
 
-/// Extracts tupled scores from multiple [`Evaluated`] results.
+/// Extracts tupled scores from multiple [`Evaluation`] results.
 ///
 /// # Errors
 ///
 /// * [`ElinorError::InvalidArgument`] if the evaluated results have different sets of queries.
-pub fn tupled_scores_from_evaluated<K>(evaluateds: &[Evaluation<K>]) -> Result<Vec<Vec<f64>>>
+pub fn tupled_scores_from_evaluated<K>(evaluations: &[&Evaluation<K>]) -> Result<Vec<Vec<f64>>>
 where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
-    if evaluateds.len() < 2 {
+    if evaluations.len() < 2 {
         return Err(ElinorError::InvalidArgument(
             "The number of evaluated results must be at least 2.".to_string(),
         ));
     }
 
-    let score_maps = evaluateds.iter().map(|e| e.scores()).collect::<Vec<_>>();
+    let score_maps = evaluations.iter().map(|e| e.scores()).collect::<Vec<_>>();
     for i in 1..score_maps.len() {
         if score_maps[i].len() != score_maps[0].len() {
             return Err(ElinorError::InvalidArgument(
@@ -473,7 +473,7 @@ mod tests {
             variance: 0.0,
         };
         let tupled_scores =
-            tupled_scores_from_evaluated(&[evaluated_a, evaluated_b, evaluated_c]).unwrap();
+            tupled_scores_from_evaluated(&[&evaluated_a, &evaluated_b, &evaluated_c]).unwrap();
         assert_eq!(tupled_scores, vec![vec![2., 1., 2.], vec![5., 0., 1.]]);
     }
 }
