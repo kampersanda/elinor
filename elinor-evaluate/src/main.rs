@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let metrics = all_metrics(&args.ks);
     for metric in metrics {
         let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
-        let score = evaluated.mean_score();
+        let score = evaluated.mean();
         println!("{metric}\t{score:.4}");
     }
 

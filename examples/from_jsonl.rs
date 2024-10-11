@@ -47,7 +47,7 @@ fn main() -> Result<()> {
 
     for metric in metrics {
         let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
-        println!("{:?}: {:.4}", metric, evaluated.mean_score());
+        println!("{:?}: {:.4}", metric, evaluated.mean());
     }
 
     Ok(())

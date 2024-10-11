@@ -40,7 +40,7 @@ q_2 0 d_4 3 0.1 SAMPLE
 
     for metric in metrics {
         let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
-        println!("{:?}: {:.4}", metric, evaluated.mean_score());
+        println!("{:?}: {:.4}", metric, evaluated.mean());
     }
 
     Ok(())
