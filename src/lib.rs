@@ -235,12 +235,12 @@ where
     })
 }
 
-/// Extracts paired scores from two [`Evaluated`] results.
+/// Extracts paired scores from two [`Evaluation`] results.
 ///
 /// # Errors
 ///
-/// * [`ElinorError::InvalidArgument`] if the two evaluated results have different sets of queries.
-pub fn paired_scores_from_evaluated<K>(
+/// * [`ElinorError::InvalidArgument`] if the two evaluation results have different sets of queries.
+pub fn paired_scores_from_evaluations<K>(
     a: &Evaluation<K>,
     b: &Evaluation<K>,
 ) -> Result<Vec<(f64, f64)>>
@@ -251,7 +251,7 @@ where
     let b = b.scores();
     if a.len() != b.len() {
         return Err(ElinorError::InvalidArgument(
-            "The two evaluated results must have the same number of queries.".to_string(),
+            "The two evaluation results must have the same number of queries.".to_string(),
         ));
     }
 
@@ -264,7 +264,7 @@ where
         let score_a = a.get(&query_id).unwrap();
         let score_b = b.get(&query_id).ok_or_else(|| {
             ElinorError::InvalidArgument(format!(
-                "The query id {} is not found in the second evaluated result.",
+                "The query id {} is not found in the second evaluation result.",
                 query_id
             ))
         })?;
@@ -277,14 +277,14 @@ where
 ///
 /// # Errors
 ///
-/// * [`ElinorError::InvalidArgument`] if the evaluated results have different sets of queries.
-pub fn tupled_scores_from_evaluated<K>(evaluations: &[&Evaluation<K>]) -> Result<Vec<Vec<f64>>>
+/// * [`ElinorError::InvalidArgument`] if the evaluation results have different sets of queries.
+pub fn tupled_scores_from_evaluations<K>(evaluations: &[&Evaluation<K>]) -> Result<Vec<Vec<f64>>>
 where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
     if evaluations.len() < 2 {
         return Err(ElinorError::InvalidArgument(
-            "The number of evaluated results must be at least 2.".to_string(),
+            "The number of evaluation results must be at least 2.".to_string(),
         ));
     }
 
@@ -292,7 +292,7 @@ where
     for i in 1..score_maps.len() {
         if score_maps[i].len() != score_maps[0].len() {
             return Err(ElinorError::InvalidArgument(
-                "The evaluated results must have the same number of queries.".to_string(),
+                "The evaluation results must have the same number of queries.".to_string(),
             ));
         }
     }
@@ -308,7 +308,7 @@ where
                 scores.push(*score);
             } else {
                 return Err(ElinorError::InvalidArgument(format!(
-                    "The query id {} is not found in the evaluated results.",
+                    "The query id {} is not found in the evaluation results.",
                     query_id
                 )));
             }
@@ -354,7 +354,7 @@ mod tests {
     }
 
     #[test]
-    fn test_paired_scores_from_evaluated() {
+    fn test_paired_scores_from_evaluations() {
         let evaluated_a = Evaluation {
             scores: hashmap! {
                 "q_1" => 2.,
@@ -375,12 +375,12 @@ mod tests {
             mean: 0.0,
             variance: 0.0,
         };
-        let paired_scores = paired_scores_from_evaluated(&evaluated_a, &evaluated_b).unwrap();
+        let paired_scores = paired_scores_from_evaluations(&evaluated_a, &evaluated_b).unwrap();
         assert_eq!(paired_scores, vec![(2., 1.), (5., 0.)]);
     }
 
     #[test]
-    fn test_paired_scores_from_evaluated_different_n_queries() {
+    fn test_paired_scores_from_evaluations_different_n_queries() {
         let evaluated_a = Evaluation {
             scores: hashmap! {
                 "q_1" => 2.,
@@ -400,17 +400,17 @@ mod tests {
             mean: 0.0,
             variance: 0.0,
         };
-        let result = paired_scores_from_evaluated(&evaluated_a, &evaluated_b);
+        let result = paired_scores_from_evaluations(&evaluated_a, &evaluated_b);
         assert_eq!(
             result.unwrap_err(),
             ElinorError::InvalidArgument(
-                "The two evaluated results must have the same number of queries.".to_string()
+                "The two evaluation results must have the same number of queries.".to_string()
             )
         );
     }
 
     #[test]
-    fn test_paired_scores_from_evaluated_missing_query_id() {
+    fn test_paired_scores_from_evaluations_missing_query_id() {
         let evaluated_a = Evaluation {
             scores: hashmap! {
                 "q_1" => 2.,
@@ -431,11 +431,11 @@ mod tests {
             mean: 0.0,
             variance: 0.0,
         };
-        let result = paired_scores_from_evaluated(&evaluated_a, &evaluated_b);
+        let result = paired_scores_from_evaluations(&evaluated_a, &evaluated_b);
         assert_eq!(
             result.unwrap_err(),
             ElinorError::InvalidArgument(
-                "The query id q_2 is not found in the second evaluated result.".to_string()
+                "The query id q_2 is not found in the second evaluation result.".to_string()
             )
         );
     }
@@ -473,7 +473,7 @@ mod tests {
             variance: 0.0,
         };
         let tupled_scores =
-            tupled_scores_from_evaluated(&[&evaluated_a, &evaluated_b, &evaluated_c]).unwrap();
+            tupled_scores_from_evaluations(&[&evaluated_a, &evaluated_b, &evaluated_c]).unwrap();
         assert_eq!(tupled_scores, vec![vec![2., 1., 2.], vec![5., 0., 1.]]);
     }
 }
