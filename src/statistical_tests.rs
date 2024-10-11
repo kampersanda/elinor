@@ -47,7 +47,7 @@
 //! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
 //!
 //! // Perform Student's t-test.
-//! let paired_scores = elinor::paired_scores_from_evaluated(&evaluated_a, &evaluated_b)?;
+//! let paired_scores = elinor::paired_scores_from_evaluations(&evaluated_a, &evaluated_b)?;
 //! let stat = StudentTTest::from_paired_samples(paired_scores)?;
 //!
 //! // Various statistics can be obtained from the t-test result.
@@ -118,7 +118,7 @@
 //! let evaluated_c = elinor::evaluate(&gold_rels, &pred_rels_c, metric)?;
 //!
 //! // Perform Randomized Tukey HSD test and Two-way ANOVA without replication.
-//! let tupled_scores = elinor::tupled_scores_from_evaluated(&[evaluated_a, evaluated_b, evaluated_c])?;
+//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&evaluated_a, &evaluated_b, &evaluated_c])?;
 //! let hsd_stat = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores.iter(), 3)?;
 //! let anova_stat = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), 3)?;
 //!

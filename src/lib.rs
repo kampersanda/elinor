@@ -55,19 +55,19 @@
 //!
 //! // Evaluate Precision@3.
 //! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
-//! assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
+//! assert_abs_diff_eq!(evaluated.mean(), 0.5000, epsilon = 1e-4);
 //!
 //! // Evaluate MAP, where all documents are considered via k=0.
 //! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
-//! assert_abs_diff_eq!(evaluated.mean_score(), 0.5000, epsilon = 1e-4);
+//! assert_abs_diff_eq!(evaluated.mean(), 0.5000, epsilon = 1e-4);
 //!
 //! // Evaluate MRR, where the metric is specified via a string representation.
 //! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
-//! assert_abs_diff_eq!(evaluated.mean_score(), 0.6667, epsilon = 1e-4);
+//! assert_abs_diff_eq!(evaluated.mean(), 0.6667, epsilon = 1e-4);
 //!
 //! // Evaluate nDCG@3, where the metric is specified via a string representation.
 //! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
-//! assert_abs_diff_eq!(evaluated.mean_score(), 0.4751, epsilon = 1e-4);
+//! assert_abs_diff_eq!(evaluated.mean(), 0.4751, epsilon = 1e-4);
 //! # Ok(())
 //! # }
 //! ```
@@ -145,6 +145,7 @@ use std::collections::HashMap;
 use ordered_float::OrderedFloat;
 
 pub use errors::ElinorError;
+pub use errors::Result;
 pub use metrics::Metric;
 pub use relevance::Record;
 pub use relevance::Relevance;
@@ -176,20 +177,37 @@ pub type PredRelStore<K> = relevance::RelevanceStore<K, PredScore>;
 pub type PredRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>;
 
 /// Struct to store evaluated results.
-pub struct Evaluated<K> {
+pub struct Evaluation<K> {
+    metric: Metric,
     scores: HashMap<K, f64>,
-    mean_score: f64,
+    mean: f64,
+    variance: f64,
 }
 
-impl<K> Evaluated<K> {
+impl<K> Evaluation<K> {
+    /// Returns the metric used for evaluation.
+    pub const fn metric(&self) -> Metric {
+        self.metric
+    }
+
     /// Returns the reference to the mappping from query ids to scores.
     pub const fn scores(&self) -> &HashMap<K, f64> {
         &self.scores
     }
 
     /// Returns the macro-averaged score.
-    pub const fn mean_score(&self) -> f64 {
-        self.mean_score
+    pub const fn mean(&self) -> f64 {
+        self.mean
+    }
+
+    /// Returns the variance of the scores.
+    pub const fn variance(&self) -> f64 {
+        self.variance
+    }
+
+    /// Returns the standard deviation of the scores.
+    pub fn std_dev(&self) -> f64 {
+        self.variance.sqrt()
     }
 }
 
@@ -198,24 +216,34 @@ pub fn evaluate<K>(
     gold_rels: &GoldRelStore<K>,
     pred_rels: &PredRelStore<K>,
     metric: Metric,
-) -> Result<Evaluated<K>, ElinorError>
+) -> Result<Evaluation<K>>
 where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
     let scores = metrics::compute_metric(gold_rels, pred_rels, metric)?;
-    let mean_score = scores.values().sum::<f64>() / scores.len() as f64;
-    Ok(Evaluated { scores, mean_score })
+    let mean = scores.values().sum::<f64>() / scores.len() as f64;
+    let variance = scores
+        .values()
+        .map(|&score| (score - mean).powi(2))
+        .sum::<f64>()
+        / scores.len() as f64;
+    Ok(Evaluation {
+        metric,
+        scores,
+        mean,
+        variance,
+    })
 }
 
-/// Extracts paired scores from two [`Evaluated`] results.
+/// Extracts paired scores from two [`Evaluation`] results.
 ///
 /// # Errors
 ///
-/// * [`ElinorError::InvalidArgument`] if the two evaluated results have different sets of queries.
-pub fn paired_scores_from_evaluated<K>(
-    a: &Evaluated<K>,
-    b: &Evaluated<K>,
-) -> Result<Vec<(f64, f64)>, ElinorError>
+/// * [`ElinorError::InvalidArgument`] if the two evaluation results have different sets of queries.
+pub fn paired_scores_from_evaluations<K>(
+    a: &Evaluation<K>,
+    b: &Evaluation<K>,
+) -> Result<Vec<(f64, f64)>>
 where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
@@ -223,7 +251,7 @@ where
     let b = b.scores();
     if a.len() != b.len() {
         return Err(ElinorError::InvalidArgument(
-            "The two evaluated results must have the same number of queries.".to_string(),
+            "The two evaluation results must have the same number of queries.".to_string(),
         ));
     }
 
@@ -236,7 +264,7 @@ where
         let score_a = a.get(&query_id).unwrap();
         let score_b = b.get(&query_id).ok_or_else(|| {
             ElinorError::InvalidArgument(format!(
-                "The query id {} is not found in the second evaluated result.",
+                "The query id {} is not found in the second evaluation result.",
                 query_id
             ))
         })?;
@@ -245,28 +273,26 @@ where
     Ok(paired_scores)
 }
 
-/// Extracts tupled scores from multiple [`Evaluated`] results.
+/// Extracts tupled scores from multiple [`Evaluation`] results.
 ///
 /// # Errors
 ///
-/// * [`ElinorError::InvalidArgument`] if the evaluated results have different sets of queries.
-pub fn tupled_scores_from_evaluated<K>(
-    evaluateds: &[Evaluated<K>],
-) -> Result<Vec<Vec<f64>>, ElinorError>
+/// * [`ElinorError::InvalidArgument`] if the evaluation results have different sets of queries.
+pub fn tupled_scores_from_evaluations<K>(evaluations: &[&Evaluation<K>]) -> Result<Vec<Vec<f64>>>
 where
     K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
 {
-    if evaluateds.len() < 2 {
+    if evaluations.len() < 2 {
         return Err(ElinorError::InvalidArgument(
-            "The number of evaluated results must be at least 2.".to_string(),
+            "The number of evaluation results must be at least 2.".to_string(),
         ));
     }
 
-    let score_maps = evaluateds.iter().map(|e| e.scores()).collect::<Vec<_>>();
+    let score_maps = evaluations.iter().map(|e| e.scores()).collect::<Vec<_>>();
     for i in 1..score_maps.len() {
         if score_maps[i].len() != score_maps[0].len() {
             return Err(ElinorError::InvalidArgument(
-                "The evaluated results must have the same number of queries.".to_string(),
+                "The evaluation results must have the same number of queries.".to_string(),
             ));
         }
     }
@@ -282,7 +308,7 @@ where
                 scores.push(*score);
             } else {
                 return Err(ElinorError::InvalidArgument(format!(
-                    "The query id {} is not found in the evaluated results.",
+                    "The query id {} is not found in the evaluation results.",
                     query_id
                 )));
             }
@@ -318,7 +344,13 @@ mod tests {
         let pred_rels = b.build();
 
         let evaluated = evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 }).unwrap();
-        assert_relative_eq!(evaluated.mean_score(), (2. / 3. + 1. / 3.) / 2.);
+        assert_eq!(evaluated.metric(), Metric::Precision { k: 3 });
+
+        let mean: f64 = (2. / 3. + 1. / 3.) / 2.;
+        let variance = ((2. / 3. - mean).powi(2) + (1. / 3. - mean).powi(2)) / 2.;
+        assert_relative_eq!(evaluated.mean(), mean);
+        assert_relative_eq!(evaluated.variance(), variance);
+        assert_relative_eq!(evaluated.std_dev(), variance.sqrt());
 
         let scores = evaluated.scores();
         assert_eq!(scores.len(), 2);
@@ -327,99 +359,126 @@ mod tests {
     }
 
     #[test]
-    fn test_paired_scores_from_evaluated() {
-        let evaluated_a = Evaluated {
+    fn test_paired_scores_from_evaluations() {
+        let evaluated_a = Evaluation {
             scores: hashmap! {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
-            mean_score: 3.5,
+            // The following values are not used in this test.
+            metric: Metric::Precision { k: 0 },
+            mean: 0.0,
+            variance: 0.0,
         };
-        let evaluated_b = Evaluated {
+        let evaluated_b = Evaluation {
             scores: hashmap! {
                 "q_1" => 1.,
                 "q_2" => 0.,
             },
-            mean_score: 0.5,
+            // The following values are not used in this test.
+            metric: Metric::Precision { k: 0 },
+            mean: 0.0,
+            variance: 0.0,
         };
-        let paired_scores = paired_scores_from_evaluated(&evaluated_a, &evaluated_b).unwrap();
+        let paired_scores = paired_scores_from_evaluations(&evaluated_a, &evaluated_b).unwrap();
         assert_eq!(paired_scores, vec![(2., 1.), (5., 0.)]);
     }
 
     #[test]
-    fn test_paired_scores_from_evaluated_different_n_queries() {
-        let evaluated_a = Evaluated {
+    fn test_paired_scores_from_evaluations_different_n_queries() {
+        let evaluated_a = Evaluation {
             scores: hashmap! {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
-            mean_score: 3.5,
+            // The following values are not used in this test.
+            metric: Metric::Precision { k: 0 },
+            mean: 0.0,
+            variance: 0.0,
         };
-        let evaluated_b = Evaluated {
+        let evaluated_b = Evaluation {
             scores: hashmap! {
                 "q_1" => 1.,
             },
-            mean_score: 1.0,
+            // The following values are not used in this test.
+            metric: Metric::Precision { k: 0 },
+            mean: 0.0,
+            variance: 0.0,
         };
-        let result = paired_scores_from_evaluated(&evaluated_a, &evaluated_b);
+        let result = paired_scores_from_evaluations(&evaluated_a, &evaluated_b);
         assert_eq!(
             result.unwrap_err(),
             ElinorError::InvalidArgument(
-                "The two evaluated results must have the same number of queries.".to_string()
+                "The two evaluation results must have the same number of queries.".to_string()
             )
         );
     }
 
     #[test]
-    fn test_paired_scores_from_evaluated_missing_query_id() {
-        let evaluated_a = Evaluated {
+    fn test_paired_scores_from_evaluations_missing_query_id() {
+        let evaluated_a = Evaluation {
             scores: hashmap! {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
-            mean_score: 3.5,
+            // The following values are not used in this test.
+            metric: Metric::Precision { k: 0 },
+            mean: 0.0,
+            variance: 0.0,
         };
-        let evaluated_b = Evaluated {
+        let evaluated_b = Evaluation {
             scores: hashmap! {
                 "q_1" => 1.,
                 "q_3" => 0.,
             },
-            mean_score: 0.5,
+            // The following values are not used in this test.
+            metric: Metric::Precision { k: 0 },
+            mean: 0.0,
+            variance: 0.0,
         };
-        let result = paired_scores_from_evaluated(&evaluated_a, &evaluated_b);
+        let result = paired_scores_from_evaluations(&evaluated_a, &evaluated_b);
         assert_eq!(
             result.unwrap_err(),
             ElinorError::InvalidArgument(
-                "The query id q_2 is not found in the second evaluated result.".to_string()
+                "The query id q_2 is not found in the second evaluation result.".to_string()
             )
         );
     }
 
     #[test]
     fn test_tupled_scores_from_evaluated() {
-        let evaluated_a = Evaluated {
+        let evaluated_a = Evaluation {
             scores: hashmap! {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
-            mean_score: 3.5,
+            // The following values are not used in this test.
+            metric: Metric::Precision { k: 0 },
+            mean: 0.0,
+            variance: 0.0,
         };
-        let evaluated_b = Evaluated {
+        let evaluated_b = Evaluation {
             scores: hashmap! {
                 "q_1" => 1.,
                 "q_2" => 0.,
             },
-            mean_score: 0.5,
+            // The following values are not used in this test.
+            metric: Metric::Precision { k: 0 },
+            mean: 0.0,
+            variance: 0.0,
         };
-        let evaluated_c = Evaluated {
+        let evaluated_c = Evaluation {
             scores: hashmap! {
                 "q_1" => 2.,
                 "q_2" => 1.,
             },
-            mean_score: 1.5,
+            // The following values are not used in this test.
+            metric: Metric::Precision { k: 0 },
+            mean: 0.0,
+            variance: 0.0,
         };
         let tupled_scores =
-            tupled_scores_from_evaluated(&[evaluated_a, evaluated_b, evaluated_c]).unwrap();
+            tupled_scores_from_evaluations(&[&evaluated_a, &evaluated_b, &evaluated_c]).unwrap();
         assert_eq!(tupled_scores, vec![vec![2., 1., 2.], vec![5., 0., 1.]]);
     }
 }
