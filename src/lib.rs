@@ -72,16 +72,15 @@
 //! # }
 //! ```
 //!
-//! # Relevance stores from [`HashMap`]
+//! # Instantiating relevance stores with [Serde](https://serde.rs/)
 //!
-//! [`GoldRelStore`] and [`PredRelStore`] can also be instantiated from [`HashMap`]s.
-//! The following mapping structure is expected:
+//! [`GoldRelStore`] and [`PredRelStore`] can be instantiated from
+//! [`GoldRecord`] and [`PredRecord`] instances, respectively,
+//! where each record consists of three fields: `query_id`, `document_id`, and `score`.
 //!
-//! ```text
-//! query_id => { doc_id => score }
-//! ```
+//! Both [`GoldRecord`] and [`PredRecord`] support serialization and deserialization via Serde,
+//! allowing you to easily instantiate relevance stores from JSON or other formats.
 //!
-//! It allows you to prepare data in JSON or other formats via [Serde](https://serde.rs/).
 //! If you use Serde, enable the `serde` feature in the `Cargo.toml`:
 //!
 //! ```toml
@@ -89,7 +88,7 @@
 //! elinor = { version = "*", features = ["serde"] }
 //! ```
 //!
-//! An example to instantiate relevance stores from JSON is shown below:
+//! An example to instantiate relevance stores from JSONL strings is shown below:
 //!
 //! ```
 //! # #[cfg(not(feature = "serde"))]
@@ -112,12 +111,12 @@
 //! {"query_id": "q_2", "doc_id": "d_1", "score": 0.2}
 //! {"query_id": "q_2", "doc_id": "d_3", "score": 0.3}"#;
 //!
-//! let gold_records: Vec<GoldRecord<String>> = gold_data.lines()
-//!     .map(|line| serde_json::from_str(line))
-//!     .collect::<Result<_, _>>()?;
-//! let pred_records: Vec<PredRecord<String>> = pred_data.lines()
-//!     .map(|line| serde_json::from_str(line))
-//!     .collect::<Result<_, _>>()?;
+//! let gold_records = gold_data
+//!     .lines()
+//!     .map(|line| serde_json::from_str::<GoldRecord<String>>(line).unwrap());
+//! let pred_records = pred_data
+//!     .lines()
+//!     .map(|line| serde_json::from_str::<PredRecord<String>>(line).unwrap());
 //!
 //! let gold_rels = GoldRelStore::from_records(gold_records)?;
 //! let pred_rels = PredRelStore::from_records(pred_records)?;
@@ -132,7 +131,7 @@
 //!
 //! # Crate features
 //!
-//! * `serde` - Enables Serde for [`PredScore`].
+//! * `serde` - Enables Serde for [`GoldRecord`] and [`PredRecord`].
 #![deny(missing_docs)]
 
 pub mod errors;
