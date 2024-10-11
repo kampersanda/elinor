@@ -345,7 +345,12 @@ mod tests {
 
         let evaluated = evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 }).unwrap();
         assert_eq!(evaluated.metric(), Metric::Precision { k: 3 });
-        assert_relative_eq!(evaluated.mean(), (2. / 3. + 1. / 3.) / 2.);
+
+        let mean: f64 = (2. / 3. + 1. / 3.) / 2.;
+        let variance = ((2. / 3. - mean).powi(2) + (1. / 3. - mean).powi(2)) / 2.;
+        assert_relative_eq!(evaluated.mean(), mean);
+        assert_relative_eq!(evaluated.variance(), variance);
+        assert_relative_eq!(evaluated.std_dev(), variance.sqrt());
 
         let scores = evaluated.scores();
         assert_eq!(scores.len(), 2);
