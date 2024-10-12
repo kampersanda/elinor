@@ -19,9 +19,8 @@ fn main() -> Result<()> {
     println!("Comparing two systems (equivalent to Fisher's randomization test).");
     let tupled_samples = a.iter().zip(b.iter()).map(|(&a, &b)| [a, b]);
     let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 2)?;
-    for (i, j, p_value) in result.p_values() {
-        println!("p-value for {} and {}: {:.4}", i, j, p_value);
-    }
+    let p_values = result.p_values();
+    println!("p-value for 0 and 1: {:.4}", p_values[0][1]);
 
     println!("Comparing three systems.");
     let tupled_samples = a
@@ -30,9 +29,10 @@ fn main() -> Result<()> {
         .zip(c.iter())
         .map(|((&a, &b), &c)| [a, b, c]);
     let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 3)?;
-    for (i, j, p_value) in result.p_values() {
-        println!("p-value for {} and {}: {:.4}", i, j, p_value);
-    }
+    let p_values = result.p_values();
+    println!("p-value for 0 and 1: {:.4}", p_values[0][1]);
+    println!("p-value for 0 and 2: {:.4}", p_values[0][2]);
+    println!("p-value for 1 and 2: {:.4}", p_values[1][2]);
 
     Ok(())
 }

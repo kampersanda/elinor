@@ -1,7 +1,4 @@
 //! Randomized Tukey HSD test.
-use std::collections::HashMap;
-
-use itertools::Itertools;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -39,7 +36,8 @@ use crate::errors::ElinorError;
 /// // Comparing two systems, equivalent to Fisher's randomization test.
 /// let tupled_samples = a.iter().zip(b.iter()).map(|(&a, &b)| [a, b]);
 /// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 2)?;
-/// assert!((0.0..=1.0).contains(&result.p_value(0, 1)?));
+/// let p_values = result.p_values();
+/// assert!((0.0..=1.0).contains(&p_values[0][1]));  // a vs. b
 ///
 /// // Comparing three systems.
 /// let tupled_samples = a
@@ -48,9 +46,10 @@ use crate::errors::ElinorError;
 ///     .zip(c.iter())
 ///     .map(|((&a, &b), &c)| [a, b, c]);
 /// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 3)?;
-/// assert!((0.0..=1.0).contains(&result.p_value(0, 1)?));  // a vs. b
-/// assert!((0.0..=1.0).contains(&result.p_value(0, 2)?));  // a vs. c
-/// assert!((0.0..=1.0).contains(&result.p_value(1, 2)?));  // b vs. c
+/// let p_values = result.p_values();
+/// assert!((0.0..=1.0).contains(&p_values[0][1]));  // a vs. b
+/// assert!((0.0..=1.0).contains(&p_values[0][2]));  // a vs. c
+/// assert!((0.0..=1.0).contains(&p_values[1][2]));  // b vs. c
 /// # Ok(())
 /// # }
 /// ```
@@ -68,7 +67,7 @@ pub struct RandomizedTukeyHsdTest {
     n_systems: usize,
     n_iters: usize,
     random_state: u64,
-    p_values: HashMap<(usize, usize), f64>,
+    p_values: Vec<Vec<f64>>,
 }
 
 impl RandomizedTukeyHsdTest {
@@ -100,37 +99,12 @@ impl RandomizedTukeyHsdTest {
         self.random_state
     }
 
-    /// p-value for the pair of systems.
+    /// p-values for all combinations of systems,
+    /// returning a matrix of size $`n_systems \times n_systems`$.
     ///
-    /// # Errors
-    ///
-    /// * [`ElinorError::InvalidArgument`] if the indices are out of bounds or the indices are the same.
-    pub fn p_value(&self, i: usize, j: usize) -> Result<f64, ElinorError> {
-        if i >= self.n_systems || j >= self.n_systems {
-            return Err(ElinorError::InvalidArgument(
-                "The indices must be less than the number of systems.".to_string(),
-            ));
-        }
-        if i == j {
-            return Err(ElinorError::InvalidArgument(
-                "The indices must be different.".to_string(),
-            ));
-        }
-        let (i, j) = if i < j { (i, j) } else { (j, i) };
-        Ok(*self.p_values.get(&(i, j)).unwrap())
-    }
-
-    /// p-values for all pairs of systems, returning `(i, j, p-value)` such that `i < j`.
-    ///
-    /// The results are sorted by `(i, j)`.
-    pub fn p_values(&self) -> Vec<(usize, usize, f64)> {
-        let mut p_values = self
-            .p_values
-            .iter()
-            .map(|(&(i, j), &p)| (i, j, p))
-            .collect_vec();
-        p_values.sort_unstable_by(|(ai, aj, _), (bi, bj, _)| ai.cmp(bi).then(aj.cmp(bj)));
-        p_values
+    /// The diagonal elements are always zero.
+    pub const fn p_values(&self) -> &Vec<Vec<f64>> {
+        &self.p_values
     }
 }
 
@@ -210,23 +184,20 @@ impl RandomizedTukeyHsdTester {
         let mut rng = StdRng::seed_from_u64(random_state);
 
         // Compute the means of each system.
-        let means = (0..self.n_systems)
+        let means: Vec<_> = (0..self.n_systems)
             .map(|i| samples.iter().map(|sample| sample[i]).sum::<f64>() / n_samples)
-            .collect_vec();
+            .collect();
 
-        // All possible combinations of two systems.
-        let combis = (0..self.n_systems)
-            .combinations(2)
-            .map(|c| (c[0], c[1]))
-            .collect_vec();
+        // Compute the differences between the means of each pair of systems.
+        // i >= j, so the upper triangle is filled with zeros.
+        let mut diffs = vec![vec![0_f64; self.n_systems]; self.n_systems];
+        for i in 0..self.n_systems {
+            for j in (i + 1)..self.n_systems {
+                diffs[i][j] = means[i] - means[j];
+            }
+        }
 
-        // Compute the differences between the means for each pair of systems.
-        let diffs = combis
-            .iter()
-            .map(|&(a, b)| means[a] - means[b])
-            .collect_vec();
-
-        let mut counts = vec![0usize; diffs.len()];
+        let mut counts = vec![vec![0_usize; self.n_systems]; self.n_systems];
         for _ in 0..self.n_iters {
             let mut shuffled_samples = Vec::with_capacity(samples.len());
             for sample in &samples {
@@ -235,23 +206,27 @@ impl RandomizedTukeyHsdTester {
                 shuffled_samples.push(shuffled_sample);
             }
 
-            let shuffled_means = (0..self.n_systems)
+            let shuffled_means: Vec<_> = (0..self.n_systems)
                 .map(|i| shuffled_samples.iter().map(|sample| sample[i]).sum::<f64>() / n_samples)
-                .collect_vec();
+                .collect();
 
             let shuffled_diff = shuffled_means.as_slice().max() - shuffled_means.as_slice().min();
-            for (&diff, count) in diffs.iter().zip(counts.iter_mut()) {
-                if shuffled_diff >= diff.abs() {
-                    *count += 1;
+            for i in 0..self.n_systems {
+                for j in (i + 1)..self.n_systems {
+                    if shuffled_diff >= diffs[i][j].abs() {
+                        counts[i][j] += 1;
+                    }
                 }
             }
         }
 
-        let p_values: HashMap<_, _> = combis
-            .iter()
-            .zip(counts.iter())
-            .map(|(&(a, b), &count)| ((a, b), count as f64 / self.n_iters as f64))
-            .collect();
+        let mut p_values = vec![vec![0_f64; self.n_systems]; self.n_systems];
+        for i in 0..self.n_systems {
+            for j in (i + 1)..self.n_systems {
+                p_values[i][j] = counts[i][j] as f64 / self.n_iters as f64;
+                p_values[j][i] = p_values[i][j];
+            }
+        }
 
         Ok(RandomizedTukeyHsdTest {
             n_systems: self.n_systems,
