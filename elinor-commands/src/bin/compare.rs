@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt::format, path::PathBuf};
 
 use anyhow::Result;
 use big_s::S;
@@ -25,22 +25,51 @@ fn main() -> Result<()> {
         dfs.push(df);
     }
 
-    // for df in dfs {
-    //     println!("{:#?}", df);
-    // }
+    let metrics = extract_metrics(&dfs[0]);
+    let mut columns = vec![Series::new(
+        "Metric".into(),
+        metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+    )];
+    for (i, df) in dfs.iter().enumerate() {
+        let means = df
+            .clone()
+            .lazy()
+            .select([col("*").exclude(["query_id"]).mean()])
+            .collect()?;
+        let values = metrics
+            .iter()
+            .map(|metric| {
+                means
+                    .column(metric)
+                    .unwrap()
+                    .f64()
+                    .unwrap()
+                    .first()
+                    .unwrap()
+            })
+            .collect::<Vec<_>>();
+        columns.push(Series::new(format!("System_{}", i + 1).into(), values));
+    }
+    println!("Means");
+    println!("{:?}", DataFrame::new(columns)?);
 
-    compare_two_systems(dfs[0].clone(), dfs[1].clone())?;
+    if dfs.len() == 2 {
+        compare_two_systems(&dfs[0], &dfs[1])?;
+    }
 
     Ok(())
 }
 
-fn compare_two_systems(df_1: DataFrame, df_2: DataFrame) -> Result<()> {
-    let metrics = df_1
-        .get_columns()
+fn extract_metrics(df: &DataFrame) -> Vec<String> {
+    df.get_columns()
         .iter()
         .skip(1) // The first column is the query_id
-        .map(|column| column.name())
-        .collect::<Vec<_>>();
+        .map(|column| column.name().to_string())
+        .collect()
+}
+
+fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
+    let metrics = extract_metrics(df_1);
 
     let mut df_metrics = vec![];
     for metric in &metrics {

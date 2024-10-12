@@ -37,6 +37,13 @@ by running the following command:
 RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --features serde --open
 ```
 
+## Command-line interface
+
+```shell
+export POLARS_FMT_TABLE_HIDE_COLUMN_DATA_TYPES=1
+export POLARS_FMT_TABLE_HIDE_DATAFRAME_SHAPE_INFORMATION=1
+```
+
 ## Licensing
 
 Licensed under either of
