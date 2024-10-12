@@ -140,7 +140,7 @@ pub mod relevance;
 pub mod statistical_tests;
 pub mod trec;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use ordered_float::OrderedFloat;
 
@@ -179,7 +179,7 @@ pub type PredRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, PredScore>
 /// Struct to store evaluated results.
 pub struct Evaluation<K> {
     metric: Metric,
-    scores: HashMap<K, f64>,
+    scores: BTreeMap<K, f64>,
     mean: f64,
     variance: f64,
 }
@@ -191,7 +191,7 @@ impl<K> Evaluation<K> {
     }
 
     /// Returns the reference to the mappping from query ids to scores.
-    pub const fn scores(&self) -> &HashMap<K, f64> {
+    pub const fn scores(&self) -> &BTreeMap<K, f64> {
         &self.scores
     }
 
@@ -218,7 +218,7 @@ pub fn evaluate<K>(
     metric: Metric,
 ) -> Result<Evaluation<K>>
 where
-    K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
+    K: Clone + Eq + Ord + std::fmt::Display,
 {
     let scores = metrics::compute_metric(gold_rels, pred_rels, metric)?;
     let mean = scores.values().sum::<f64>() / scores.len() as f64;
@@ -322,7 +322,7 @@ where
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use maplit::hashmap;
+    use maplit::btreemap;
 
     #[test]
     fn test_evaluate() {
@@ -361,7 +361,7 @@ mod tests {
     #[test]
     fn test_paired_scores_from_evaluations() {
         let evaluated_a = Evaluation {
-            scores: hashmap! {
+            scores: btreemap! {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
@@ -371,7 +371,7 @@ mod tests {
             variance: 0.0,
         };
         let evaluated_b = Evaluation {
-            scores: hashmap! {
+            scores: btreemap! {
                 "q_1" => 1.,
                 "q_2" => 0.,
             },
@@ -387,7 +387,7 @@ mod tests {
     #[test]
     fn test_paired_scores_from_evaluations_different_n_queries() {
         let evaluated_a = Evaluation {
-            scores: hashmap! {
+            scores: btreemap! {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
@@ -397,7 +397,7 @@ mod tests {
             variance: 0.0,
         };
         let evaluated_b = Evaluation {
-            scores: hashmap! {
+            scores: btreemap! {
                 "q_1" => 1.,
             },
             // The following values are not used in this test.
@@ -417,7 +417,7 @@ mod tests {
     #[test]
     fn test_paired_scores_from_evaluations_missing_query_id() {
         let evaluated_a = Evaluation {
-            scores: hashmap! {
+            scores: btreemap! {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
@@ -427,7 +427,7 @@ mod tests {
             variance: 0.0,
         };
         let evaluated_b = Evaluation {
-            scores: hashmap! {
+            scores: btreemap! {
                 "q_1" => 1.,
                 "q_3" => 0.,
             },
@@ -448,7 +448,7 @@ mod tests {
     #[test]
     fn test_tupled_scores_from_evaluated() {
         let evaluated_a = Evaluation {
-            scores: hashmap! {
+            scores: btreemap! {
                 "q_1" => 2.,
                 "q_2" => 5.,
             },
@@ -458,7 +458,7 @@ mod tests {
             variance: 0.0,
         };
         let evaluated_b = Evaluation {
-            scores: hashmap! {
+            scores: btreemap! {
                 "q_1" => 1.,
                 "q_2" => 0.,
             },
@@ -468,7 +468,7 @@ mod tests {
             variance: 0.0,
         };
         let evaluated_c = Evaluation {
-            scores: hashmap! {
+            scores: btreemap! {
                 "q_1" => 2.,
                 "q_2" => 1.,
             },

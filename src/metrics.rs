@@ -10,7 +10,7 @@ pub(crate) mod recall;
 pub(crate) mod reciprocal_rank;
 pub(crate) mod success;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::str::FromStr;
 
@@ -322,16 +322,16 @@ pub fn compute_metric<K>(
     gold_rels: &GoldRelStore<K>,
     pred_rels: &PredRelStore<K>,
     metric: Metric,
-) -> Result<HashMap<K, f64>, ElinorError>
+) -> Result<BTreeMap<K, f64>, ElinorError>
 where
-    K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
+    K: Clone + Eq + Ord + std::fmt::Display,
 {
     for query_id in pred_rels.query_ids() {
         if gold_rels.get_map(query_id).is_none() {
             return Err(ElinorError::MissingEntry(format!("Query ID: {query_id}")));
         }
     }
-    let mut results = HashMap::new();
+    let mut results = BTreeMap::new();
     for query_id in pred_rels.query_ids() {
         let sorted_preds = pred_rels.get_sorted(query_id).unwrap();
         let golds = gold_rels.get_map(query_id).unwrap();
@@ -392,14 +392,14 @@ mod tests {
     use super::*;
     use crate::Record;
     use approx::assert_relative_eq;
-    use maplit::hashmap;
+    use maplit::btreemap;
     use rstest::*;
 
     const LOG_2_2: f64 = 1.0;
     const LOG_2_3: f64 = 1.584962500721156;
     const LOG_2_4: f64 = 2.0;
 
-    fn compare_hashmaps(a: &HashMap<char, f64>, b: &HashMap<char, f64>) {
+    fn compare_hashmaps(a: &BTreeMap<char, f64>, b: &BTreeMap<char, f64>) {
         assert_eq!(a.len(), b.len());
         for (k, v) in a.iter() {
             assert_relative_eq!(v, b.get(k).unwrap());
@@ -408,87 +408,87 @@ mod tests {
 
     #[rstest]
     // Hits
-    #[case::hits_k_0(Metric::Hits { k: 0 }, hashmap! { 'A' => 2.0 })]
-    #[case::hits_k_1(Metric::Hits { k: 1 }, hashmap! { 'A' => 1.0 })]
-    #[case::hits_k_2(Metric::Hits { k: 2 }, hashmap! { 'A' => 1.0 })]
-    #[case::hits_k_3(Metric::Hits { k: 3 }, hashmap! { 'A' => 2.0 })]
-    #[case::hits_k_4(Metric::Hits { k: 4 }, hashmap! { 'A' => 2.0 })]
-    #[case::hits_k_5(Metric::Hits { k: 5 }, hashmap! { 'A' => 2.0 })]
+    #[case::hits_k_0(Metric::Hits { k: 0 }, btreemap! { 'A' => 2.0 })]
+    #[case::hits_k_1(Metric::Hits { k: 1 }, btreemap! { 'A' => 1.0 })]
+    #[case::hits_k_2(Metric::Hits { k: 2 }, btreemap! { 'A' => 1.0 })]
+    #[case::hits_k_3(Metric::Hits { k: 3 }, btreemap! { 'A' => 2.0 })]
+    #[case::hits_k_4(Metric::Hits { k: 4 }, btreemap! { 'A' => 2.0 })]
+    #[case::hits_k_5(Metric::Hits { k: 5 }, btreemap! { 'A' => 2.0 })]
     // Hit rate
-    #[case::success_k_0(Metric::Success { k: 0 }, hashmap! { 'A' => 1.0 })]
-    #[case::success_k_1(Metric::Success { k: 1 }, hashmap! { 'A' => 1.0 })]
-    #[case::success_k_2(Metric::Success { k: 2 }, hashmap! { 'A' => 1.0 })]
-    #[case::success_k_3(Metric::Success { k: 3 }, hashmap! { 'A' => 1.0 })]
-    #[case::success_k_4(Metric::Success { k: 4 }, hashmap! { 'A' => 1.0 })]
-    #[case::success_k_5(Metric::Success { k: 5 }, hashmap! { 'A' => 1.0 })]
+    #[case::success_k_0(Metric::Success { k: 0 }, btreemap! { 'A' => 1.0 })]
+    #[case::success_k_1(Metric::Success { k: 1 }, btreemap! { 'A' => 1.0 })]
+    #[case::success_k_2(Metric::Success { k: 2 }, btreemap! { 'A' => 1.0 })]
+    #[case::success_k_3(Metric::Success { k: 3 }, btreemap! { 'A' => 1.0 })]
+    #[case::success_k_4(Metric::Success { k: 4 }, btreemap! { 'A' => 1.0 })]
+    #[case::success_k_5(Metric::Success { k: 5 }, btreemap! { 'A' => 1.0 })]
     // Precision
-    #[case::precision_k_0(Metric::Precision { k: 0 }, hashmap! { 'A' => 2.0 / 4.0 })]
-    #[case::precision_k_1(Metric::Precision { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::precision_k_2(Metric::Precision { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
-    #[case::precision_k_3(Metric::Precision { k: 3 }, hashmap! { 'A' => 2.0 / 3.0 })]
-    #[case::precision_k_4(Metric::Precision { k: 4 }, hashmap! { 'A' => 2.0 / 4.0 })]
-    #[case::precision_k_5(Metric::Precision { k: 5 }, hashmap! { 'A' => 2.0 / 5.0 })]
+    #[case::precision_k_0(Metric::Precision { k: 0 }, btreemap! { 'A' => 2.0 / 4.0 })]
+    #[case::precision_k_1(Metric::Precision { k: 1 }, btreemap! { 'A' => 1.0 / 1.0 })]
+    #[case::precision_k_2(Metric::Precision { k: 2 }, btreemap! { 'A' => 1.0 / 2.0 })]
+    #[case::precision_k_3(Metric::Precision { k: 3 }, btreemap! { 'A' => 2.0 / 3.0 })]
+    #[case::precision_k_4(Metric::Precision { k: 4 }, btreemap! { 'A' => 2.0 / 4.0 })]
+    #[case::precision_k_5(Metric::Precision { k: 5 }, btreemap! { 'A' => 2.0 / 5.0 })]
     // Recall
-    #[case::recall_k_0(Metric::Recall { k: 0 }, hashmap! { 'A' => 2.0 / 2.0 })]
-    #[case::recall_k_1(Metric::Recall { k: 1 }, hashmap! { 'A' => 1.0 / 2.0 })]
-    #[case::recall_k_2(Metric::Recall { k: 2 }, hashmap! { 'A' => 1.0 / 2.0 })]
-    #[case::recall_k_3(Metric::Recall { k: 3 }, hashmap! { 'A' => 2.0 / 2.0 })]
-    #[case::recall_k_4(Metric::Recall { k: 4 }, hashmap! { 'A' => 2.0 / 2.0 })]
-    #[case::recall_k_5(Metric::Recall { k: 5 }, hashmap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_0(Metric::Recall { k: 0 }, btreemap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_1(Metric::Recall { k: 1 }, btreemap! { 'A' => 1.0 / 2.0 })]
+    #[case::recall_k_2(Metric::Recall { k: 2 }, btreemap! { 'A' => 1.0 / 2.0 })]
+    #[case::recall_k_3(Metric::Recall { k: 3 }, btreemap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_4(Metric::Recall { k: 4 }, btreemap! { 'A' => 2.0 / 2.0 })]
+    #[case::recall_k_5(Metric::Recall { k: 5 }, btreemap! { 'A' => 2.0 / 2.0 })]
     // F1
-    #[case::f1_k_0(Metric::F1 { k: 0 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_1(Metric::F1 { k: 1 }, hashmap! { 'A' => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_2(Metric::F1 { k: 2 }, hashmap! { 'A' => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
-    #[case::f1_k_3(Metric::F1 { k: 3 }, hashmap! { 'A' => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_4(Metric::F1 { k: 4 }, hashmap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
-    #[case::f1_k_5(Metric::F1 { k: 5 }, hashmap! { 'A' => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_0(Metric::F1 { k: 0 }, btreemap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_1(Metric::F1 { k: 1 }, btreemap! { 'A' => 2.0 * (1.0 / 1.0) * (1.0 / 2.0) / ((1.0 / 1.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_2(Metric::F1 { k: 2 }, btreemap! { 'A' => 2.0 * (1.0 / 2.0) * (1.0 / 2.0) / ((1.0 / 2.0) + (1.0 / 2.0)) })]
+    #[case::f1_k_3(Metric::F1 { k: 3 }, btreemap! { 'A' => 2.0 * (2.0 / 3.0) * (2.0 / 2.0) / ((2.0 / 3.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_4(Metric::F1 { k: 4 }, btreemap! { 'A' => 2.0 * (2.0 / 4.0) * (2.0 / 2.0) / ((2.0 / 4.0) + (2.0 / 2.0)) })]
+    #[case::f1_k_5(Metric::F1 { k: 5 }, btreemap! { 'A' => 2.0 * (2.0 / 5.0) * (2.0 / 2.0) / ((2.0 / 5.0) + (2.0 / 2.0)) })]
     // R-Precision
-    #[case::r_precision(Metric::RPrecision, hashmap! { 'A' => 1.0 / 2.0 })]
+    #[case::r_precision(Metric::RPrecision, btreemap! { 'A' => 1.0 / 2.0 })]
     // Average precision
-    #[case::average_precision_k_0(Metric::AP { k: 0 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_1(Metric::AP { k: 1 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
-    #[case::average_precision_k_2(Metric::AP { k: 2 }, hashmap! { 'A' => (1.0 / 1.0) / 2.0 })]
-    #[case::average_precision_k_3(Metric::AP { k: 3 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_4(Metric::AP { k: 4 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
-    #[case::average_precision_k_5(Metric::AP { k: 5 }, hashmap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_0(Metric::AP { k: 0 }, btreemap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_1(Metric::AP { k: 1 }, btreemap! { 'A' => (1.0 / 1.0) / 2.0 })]
+    #[case::average_precision_k_2(Metric::AP { k: 2 }, btreemap! { 'A' => (1.0 / 1.0) / 2.0 })]
+    #[case::average_precision_k_3(Metric::AP { k: 3 }, btreemap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_4(Metric::AP { k: 4 }, btreemap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
+    #[case::average_precision_k_5(Metric::AP { k: 5 }, btreemap! { 'A' => ((1.0 / 1.0) + (2.0 / 3.0)) / 2.0 })]
     // Reciprocal rank
-    #[case::reciprocal_rank_k_0(Metric::RR { k: 0 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_1(Metric::RR { k: 1 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_2(Metric::RR { k: 2 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_3(Metric::RR { k: 3 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_4(Metric::RR { k: 4 }, hashmap! { 'A' => 1.0 / 1.0 })]
-    #[case::reciprocal_rank_k_5(Metric::RR { k: 5 }, hashmap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_0(Metric::RR { k: 0 }, btreemap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_1(Metric::RR { k: 1 }, btreemap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_2(Metric::RR { k: 2 }, btreemap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_3(Metric::RR { k: 3 }, btreemap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_4(Metric::RR { k: 4 }, btreemap! { 'A' => 1.0 / 1.0 })]
+    #[case::reciprocal_rank_k_5(Metric::RR { k: 5 }, btreemap! { 'A' => 1.0 / 1.0 })]
     // Bpref
-    #[case::bpref(Metric::Bpref, hashmap! { 'A' => (1.0 + (1.0 - 1.0 / 1.0)) / 2.0 })]
+    #[case::bpref(Metric::Bpref, btreemap! { 'A' => (1.0 + (1.0 - 1.0 / 1.0)) / 2.0 })]
     // DCG (Jarvelin)
-    #[case::dcg_k_0_jarvelin(Metric::DCG { k: 0 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_1_jarvelin(Metric::DCG { k: 1 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_2_jarvelin(Metric::DCG { k: 2 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_3_jarvelin(Metric::DCG { k: 3 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_4_jarvelin(Metric::DCG { k: 4 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
-    #[case::dcg_k_5_jarvelin(Metric::DCG { k: 5 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_0_jarvelin(Metric::DCG { k: 0 }, btreemap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_1_jarvelin(Metric::DCG { k: 1 }, btreemap! { 'A' => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_2_jarvelin(Metric::DCG { k: 2 }, btreemap! { 'A' => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_3_jarvelin(Metric::DCG { k: 3 }, btreemap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_4_jarvelin(Metric::DCG { k: 4 }, btreemap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
+    #[case::dcg_k_5_jarvelin(Metric::DCG { k: 5 }, btreemap! { 'A' => 1.0 / LOG_2_2 + 2.0 / LOG_2_4 })]
     // NDCG (Jarvelin)
-    #[case::ndcg_k_0_jarvelin(Metric::NDCG { k: 0 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_1_jarvelin(Metric::NDCG { k: 1 }, hashmap! { 'A' => (1.0 / LOG_2_2) / (2.0 / LOG_2_2) })]
-    #[case::ndcg_k_2_jarvelin(Metric::NDCG { k: 2 }, hashmap! { 'A' => (1.0 / LOG_2_2) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_3_jarvelin(Metric::NDCG { k: 3 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_4_jarvelin(Metric::NDCG { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_5_jarvelin(Metric::NDCG { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_0_jarvelin(Metric::NDCG { k: 0 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_1_jarvelin(Metric::NDCG { k: 1 }, btreemap! { 'A' => (1.0 / LOG_2_2) / (2.0 / LOG_2_2) })]
+    #[case::ndcg_k_2_jarvelin(Metric::NDCG { k: 2 }, btreemap! { 'A' => (1.0 / LOG_2_2) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_3_jarvelin(Metric::NDCG { k: 3 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_4_jarvelin(Metric::NDCG { k: 4 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_5_jarvelin(Metric::NDCG { k: 5 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 2.0 / LOG_2_4) / (2.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     // DCG (Burges)
-    #[case::dcg_k_0_burges(Metric::DCGBurges { k: 0 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_1_burges(Metric::DCGBurges { k: 1 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_2_burges(Metric::DCGBurges { k: 2 }, hashmap! { 'A' => 1.0 / LOG_2_2 })]
-    #[case::dcg_k_3_burges(Metric::DCGBurges { k: 3 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_4_burges(Metric::DCGBurges { k: 4 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
-    #[case::dcg_k_5_burges(Metric::DCGBurges { k: 5 }, hashmap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_0_burges(Metric::DCGBurges { k: 0 }, btreemap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_1_burges(Metric::DCGBurges { k: 1 }, btreemap! { 'A' => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_2_burges(Metric::DCGBurges { k: 2 }, btreemap! { 'A' => 1.0 / LOG_2_2 })]
+    #[case::dcg_k_3_burges(Metric::DCGBurges { k: 3 }, btreemap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_4_burges(Metric::DCGBurges { k: 4 }, btreemap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
+    #[case::dcg_k_5_burges(Metric::DCGBurges { k: 5 }, btreemap! { 'A' => 1.0 / LOG_2_2 + 3.0 / LOG_2_4 })]
     // NDCG (Burges)
-    #[case::ndcg_k_0_burges(Metric::NDCGBurges { k: 0 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_1_burges(Metric::NDCGBurges { k: 1 }, hashmap! { 'A' => (1.0 / LOG_2_2) / (3.0 / LOG_2_2) })]
-    #[case::ndcg_k_2_burges(Metric::NDCGBurges { k: 2 }, hashmap! { 'A' => (1.0 / LOG_2_2) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_3_burges(Metric::NDCGBurges { k: 3 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_4_burges(Metric::NDCGBurges { k: 4 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    #[case::ndcg_k_5_burges(Metric::NDCGBurges { k: 5 }, hashmap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
-    fn test_compute_metric(#[case] metric: Metric, #[case] expected: HashMap<char, f64>) {
+    #[case::ndcg_k_0_burges(Metric::NDCGBurges { k: 0 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_1_burges(Metric::NDCGBurges { k: 1 }, btreemap! { 'A' => (1.0 / LOG_2_2) / (3.0 / LOG_2_2) })]
+    #[case::ndcg_k_2_burges(Metric::NDCGBurges { k: 2 }, btreemap! { 'A' => (1.0 / LOG_2_2) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_3_burges(Metric::NDCGBurges { k: 3 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_4_burges(Metric::NDCGBurges { k: 4 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    #[case::ndcg_k_5_burges(Metric::NDCGBurges { k: 5 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
+    fn test_compute_metric(#[case] metric: Metric, #[case] expected: BTreeMap<char, f64>) {
         let gold_rels = GoldRelStore::from_records([
             Record {
                 query_id: 'A',

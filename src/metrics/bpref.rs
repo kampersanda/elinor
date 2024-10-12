@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::GoldScore;
 use crate::PredScore;
@@ -6,12 +6,12 @@ use crate::Relevance;
 
 /// Computes the Bpref.
 pub fn compute_bpref<K>(
-    golds: &HashMap<K, GoldScore>,
+    golds: &BTreeMap<K, GoldScore>,
     sorted_preds: &[Relevance<K, PredScore>],
     rel_lvl: GoldScore,
 ) -> f64
 where
-    K: Eq + std::hash::Hash,
+    K: Eq + Ord,
 {
     let n_rels = golds.values().filter(|&&rel| rel >= rel_lvl).count() as f64;
     let n_non_rels = golds.len() as f64 - n_rels;

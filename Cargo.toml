@@ -20,7 +20,6 @@ default = []
 serde = ["dep:serde", "ordered-float/serde"]
 
 [dependencies]
-itertools = "0.13.0"
 ordered-float = "4.2.2"
 rand = "0.8.5"
 regex = "1.10.6"

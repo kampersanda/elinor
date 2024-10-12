@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::GoldScore;
 use crate::PredScore;
@@ -19,13 +19,13 @@ fn weighted_score(rel: GoldScore, weighting: DcgWeighting) -> f64 {
 
 /// Computes the DCG at k.
 pub fn compute_dcg<K>(
-    golds: &HashMap<K, GoldScore>,
+    golds: &BTreeMap<K, GoldScore>,
     sorted_preds: &[Relevance<K, PredScore>],
     k: usize,
     weighting: DcgWeighting,
 ) -> f64
 where
-    K: Eq + std::hash::Hash,
+    K: Eq + Ord,
 {
     let k = if k == 0 { sorted_preds.len() } else { k };
     let mut dcg = 0.0;
@@ -39,14 +39,14 @@ where
 
 /// Computes the NDCG at k.
 pub fn compute_ndcg<K>(
-    golds: &HashMap<K, GoldScore>,
+    golds: &BTreeMap<K, GoldScore>,
     sorted_golds: &[Relevance<K, GoldScore>],
     sorted_preds: &[Relevance<K, PredScore>],
     k: usize,
     weighting: DcgWeighting,
 ) -> f64
 where
-    K: Eq + std::hash::Hash + Clone,
+    K: Eq + Ord + Clone,
 {
     let sorted_golds = sorted_golds
         .iter()
