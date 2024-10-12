@@ -150,37 +150,58 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
 
     println!("Bootstrap test");
     {
-        let mut rows: Vec<Vec<String>> = Vec::new();
-        rows.push(vec![S("Metric"), S("P Value")]);
-        for (metric, df) in metrics.iter().zip(df_metrics.iter()) {
+        let mut stats = vec![];
+        for df in df_metrics.iter() {
             let values_1 = df.column("system_1")?.f64()?;
             let values_2 = df.column("system_2")?.f64()?;
             let paired_scores = values_1
                 .into_iter()
                 .zip(values_2.into_iter())
                 .map(|(x, y)| (x.unwrap(), y.unwrap()));
-            let stat = BootstrapTest::from_paired_samples(paired_scores).unwrap();
-            rows.push(vec![format!("{metric}"), format!("{:.4}", stat.p_value())]);
+            stats.push(BootstrapTest::from_paired_samples(paired_scores)?);
         }
-        elinor_commands::to_prettytable(rows).printstd();
+        let columns = vec![
+            Series::new(
+                "Metric".into(),
+                metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "P Value".into(),
+                stats.iter().map(|stat| stat.p_value()).collect::<Vec<_>>(),
+            ),
+        ];
+        println!("{:?}", DataFrame::new(columns)?);
     }
 
     println!("Fisher's randomized test");
     {
-        let mut rows: Vec<Vec<String>> = Vec::new();
-        rows.push(vec![S("Metric"), S("P Value")]);
-        for (metric, df) in metrics.iter().zip(df_metrics.iter()) {
+        let mut stats = vec![];
+        for df in df_metrics.iter() {
             let values_1 = df.column("system_1")?.f64()?;
             let values_2 = df.column("system_2")?.f64()?;
             let paired_scores = values_1
                 .into_iter()
                 .zip(values_2.into_iter())
                 .map(|(x, y)| [x.unwrap(), y.unwrap()]);
-            let stat = RandomizedTukeyHsdTest::from_tupled_samples(paired_scores, 2).unwrap();
-            let p_values = stat.p_values();
-            rows.push(vec![format!("{metric}"), format!("{:.4}", p_values[0][1])]);
+            stats.push(RandomizedTukeyHsdTest::from_tupled_samples(
+                paired_scores,
+                2,
+            )?);
         }
-        elinor_commands::to_prettytable(rows).printstd();
+        let columns = vec![
+            Series::new(
+                "Metric".into(),
+                metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "P Value".into(),
+                stats
+                    .iter()
+                    .map(|stat| stat.p_values()[0][1])
+                    .collect::<Vec<_>>(),
+            ),
+        ];
+        println!("{:?}", DataFrame::new(columns)?);
     }
 
     Ok(())
