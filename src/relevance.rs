@@ -1,8 +1,7 @@
 //! Data structures for storing relevance scores.
 use std::borrow::Borrow;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Display;
-use std::hash::Hash;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -35,7 +34,7 @@ pub struct Relevance<K, T> {
 
 struct RelevanceData<K, T> {
     sorted: Vec<Relevance<K, T>>,
-    map: HashMap<K, T>,
+    map: BTreeMap<K, T>,
 }
 
 /// Data structure for storing relevance scores.
@@ -48,12 +47,12 @@ pub struct RelevanceStore<K, T> {
     // Mapping from query ids to:
     //  - Sorted list of relevance scores in descending order.
     //  - Mapping from document ids to relevance scores.
-    map: HashMap<K, RelevanceData<K, T>>,
+    map: BTreeMap<K, RelevanceData<K, T>>,
 }
 
 impl<K, T> RelevanceStore<K, T>
 where
-    K: Eq + Ord + Hash + Clone + Display,
+    K: Eq + Ord + Clone + Display,
     T: Ord + Clone,
 {
     /// Creates an instance from records.
@@ -86,16 +85,16 @@ where
     pub fn get_score<Q>(&self, query_id: &Q, doc_id: &Q) -> Option<&T>
     where
         K: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: Eq + Ord + ?Sized,
     {
         self.map.get(query_id).and_then(|data| data.map.get(doc_id))
     }
 
     /// Returns the relevance map for a given query id.
-    pub fn get_map<Q>(&self, query_id: &Q) -> Option<&HashMap<K, T>>
+    pub fn get_map<Q>(&self, query_id: &Q) -> Option<&BTreeMap<K, T>>
     where
         K: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: Eq + Ord + ?Sized,
     {
         self.map.get(query_id).map(|data| &data.map)
     }
@@ -105,7 +104,7 @@ where
     pub fn get_sorted<Q>(&self, query_id: &Q) -> Option<&[Relevance<K, T>]>
     where
         K: Borrow<Q>,
-        Q: Eq + Hash + ?Sized,
+        Q: Eq + Ord + ?Sized,
     {
         self.map.get(query_id).map(|data| data.sorted.as_slice())
     }
@@ -130,7 +129,7 @@ impl<K, T> RelevanceStore<K, T> {
 
 /// Builder for [`RelevanceStore`].
 pub struct RelevanceStoreBuilder<K, T> {
-    map: HashMap<K, HashMap<K, T>>,
+    map: BTreeMap<K, BTreeMap<K, T>>,
 }
 
 impl<K, T> Default for RelevanceStoreBuilder<K, T> {
@@ -143,7 +142,7 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
     /// Creates a new builder.
     pub fn new() -> Self {
         Self {
-            map: HashMap::new(),
+            map: BTreeMap::new(),
         }
     }
 
@@ -160,7 +159,7 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
     /// * [`ElinorError::DuplicateEntry`] if the query-document pair already exists.
     pub fn add_record(&mut self, query_id: K, doc_id: K, score: T) -> Result<()>
     where
-        K: Eq + Hash + Clone + Display,
+        K: Eq + Ord + Clone + Display,
     {
         let rels = self.map.entry(query_id.clone()).or_default();
         if rels.contains_key(&doc_id) {
@@ -175,10 +174,10 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
     /// Builds the relevance store.
     pub fn build(self) -> RelevanceStore<K, T>
     where
-        K: Eq + Ord + Hash + Clone + Display,
+        K: Eq + Ord + Clone + Display,
         T: Ord + Clone,
     {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         for (query_id, rels) in self.map {
             let mut sorted = rels
                 .iter()
