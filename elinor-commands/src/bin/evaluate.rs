@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use clap::Parser;
 use elinor::{GoldRecord, GoldRelStore, Metric, PredRecord, PredRelStore};
+use polars::prelude::*;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -38,12 +39,19 @@ fn main() -> Result<()> {
         args.metrics
     };
 
-    let results: Vec<_> = metrics
-        .into_iter()
-        .map(|metric| elinor::evaluate(&gold_rels, &pred_rels, metric))
-        .collect::<Result<_, _>>()?;
-
-    for (metric, result) in results.iter().zip(results.iter()) {}
+    let mut columns = vec![];
+    for metric in metrics {
+        let result = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
+        let scores = result.scores();
+        if columns.is_empty() {
+            let query_ids = scores.keys().map(|k| k.as_str()).collect::<Vec<_>>();
+            columns.push(Series::new("QueryID".into(), query_ids));
+        }
+        let values = scores.values().map(|v| *v).collect::<Vec<_>>();
+        columns.push(Series::new(format!("{metric:#}").into(), values));
+    }
+    let df = DataFrame::new(columns)?;
+    println!("{:?}", df);
 
     Ok(())
 }
