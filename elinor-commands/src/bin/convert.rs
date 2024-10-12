@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::BufWriter;
+use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -50,6 +50,7 @@ fn main() -> Result<()> {
             let gold_records = gold_rels.into_records();
             for record in gold_records {
                 serde_json::to_writer(&mut writer, &record)?;
+                writer.write_all(b"\n")?;
             }
         }
         RelevanceType::Pred => {
@@ -57,6 +58,7 @@ fn main() -> Result<()> {
             let pred_records = pred_rels.into_records();
             for record in pred_records {
                 serde_json::to_writer(&mut writer, &record)?;
+                writer.write_all(b"\n")?;
             }
         }
     }
