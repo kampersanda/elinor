@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
-use big_s::S;
 use clap::Parser;
 use elinor::statistical_tests::{BootstrapTest, RandomizedTukeyHsdTest, StudentTTest};
 use polars::prelude::*;

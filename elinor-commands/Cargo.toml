@@ -5,11 +5,9 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.89"
-big_s = "1.0.2"
 clap = { version = "4.5.20", features = ["derive"] }
 polars = "0.43.1"
 polars-lazy = "0.43.1"
-prettytable-rs = "0.10.0"
 serde_json = "1.0.128"
 
 [dependencies.elinor]
