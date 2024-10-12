@@ -101,9 +101,10 @@ impl RandomizedTukeyHsdTest {
         self.random_state
     }
 
-    /// p-values for all pairs of systems, returning `(i, j, p-value)` such that `i < j`.
+    /// p-values for all combinations of systems,
+    /// returning a matrix of size $`n_systems \times n_systems`$.
     ///
-    /// The results are sorted by `(i, j)`.
+    /// The diagonal elements are always zero.
     pub fn p_values(&self) -> &Vec<Vec<f64>> {
         &self.p_values
     }
