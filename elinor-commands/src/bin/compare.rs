@@ -26,12 +26,31 @@ fn main() -> Result<()> {
         dfs.push(df);
     }
 
-    let metrics = extract_metrics(&dfs[0]);
+    if dfs.len() == 2 {
+        compare_two_systems(&dfs[0], &dfs[1])?;
+    } else if dfs.len() > 2 {
+        compare_multiple_systems(&dfs)?;
+    }
+
+    Ok(())
+}
+
+fn extract_metrics(df: &DataFrame) -> Vec<String> {
+    df.get_columns()
+        .iter()
+        .skip(1) // The first column is the query_id
+        .map(|column| column.name().to_string())
+        .collect()
+}
+
+fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
+    let metrics = extract_metrics(df_1);
+
     let mut columns = vec![Series::new(
         "Metric".into(),
         metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
     )];
-    for (i, df) in dfs.iter().enumerate() {
+    for (i, df) in [df_1, df_2].into_iter().enumerate() {
         let means = df
             .clone()
             .lazy()
@@ -53,26 +72,6 @@ fn main() -> Result<()> {
     }
     println!("Means");
     println!("{:?}", DataFrame::new(columns)?);
-
-    if dfs.len() == 2 {
-        compare_two_systems(&dfs[0], &dfs[1])?;
-    } else if dfs.len() > 2 {
-        compare_multiple_systems(&dfs)?;
-    }
-
-    Ok(())
-}
-
-fn extract_metrics(df: &DataFrame) -> Vec<String> {
-    df.get_columns()
-        .iter()
-        .skip(1) // The first column is the query_id
-        .map(|column| column.name().to_string())
-        .collect()
-}
-
-fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
-    let metrics = extract_metrics(df_1);
 
     let mut df_metrics = vec![];
     for metric in &metrics {
