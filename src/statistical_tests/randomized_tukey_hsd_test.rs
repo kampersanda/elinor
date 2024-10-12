@@ -1,6 +1,4 @@
 //! Randomized Tukey HSD test.
-use std::vec;
-
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -105,7 +103,7 @@ impl RandomizedTukeyHsdTest {
     /// returning a matrix of size $`n_systems \times n_systems`$.
     ///
     /// The diagonal elements are always zero.
-    pub fn p_values(&self) -> &Vec<Vec<f64>> {
+    pub const fn p_values(&self) -> &Vec<Vec<f64>> {
         &self.p_values
     }
 }
