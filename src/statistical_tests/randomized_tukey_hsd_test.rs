@@ -38,7 +38,8 @@ use crate::errors::ElinorError;
 /// // Comparing two systems, equivalent to Fisher's randomization test.
 /// let tupled_samples = a.iter().zip(b.iter()).map(|(&a, &b)| [a, b]);
 /// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 2)?;
-/// assert!((0.0..=1.0).contains(&result.p_value(0, 1)?));
+/// let p_values = result.p_values();
+/// assert!((0.0..=1.0).contains(&p_values[0][1]));  // a vs. b
 ///
 /// // Comparing three systems.
 /// let tupled_samples = a
@@ -47,9 +48,10 @@ use crate::errors::ElinorError;
 ///     .zip(c.iter())
 ///     .map(|((&a, &b), &c)| [a, b, c]);
 /// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 3)?;
-/// assert!((0.0..=1.0).contains(&result.p_value(0, 1)?));  // a vs. b
-/// assert!((0.0..=1.0).contains(&result.p_value(0, 2)?));  // a vs. c
-/// assert!((0.0..=1.0).contains(&result.p_value(1, 2)?));  // b vs. c
+/// let p_values = result.p_values();
+/// assert!((0.0..=1.0).contains(&p_values[0][1]));  // a vs. b
+/// assert!((0.0..=1.0).contains(&p_values[0][2]));  // a vs. c
+/// assert!((0.0..=1.0).contains(&p_values[1][2]));  // b vs. c
 /// # Ok(())
 /// # }
 /// ```
