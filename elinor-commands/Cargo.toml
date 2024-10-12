@@ -16,3 +16,7 @@ default-features = false
 [[bin]]
 name = "elinor-convert"
 path = "src/bin/convert.rs"
+
+[[bin]]
+name = "elinor-evaluate"
+path = "src/bin/evaluate.rs"
