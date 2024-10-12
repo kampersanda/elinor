@@ -38,11 +38,12 @@ fn main() -> Result<()> {
         args.metrics
     };
 
-    for metric in metrics {
-        let result = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
-        let mean = result.mean();
-        println!("{metric:#}:\t{mean:.4}");
-    }
+    let results: Vec<_> = metrics
+        .into_iter()
+        .map(|metric| elinor::evaluate(&gold_rels, &pred_rels, metric))
+        .collect::<Result<_, _>>()?;
+
+    for (metric, result) in results.iter().zip(results.iter()) {}
 
     Ok(())
 }
