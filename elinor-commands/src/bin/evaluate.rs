@@ -14,6 +14,9 @@ struct Args {
     #[arg(short, long, help = "Path to the input JSONL file")]
     pred_jsonl: PathBuf,
 
+    #[arg(short, long, help = "Path to the output CSV file")]
+    output_csv: Option<PathBuf>,
+
     #[arg(short, long, help = "Metric to evaluate")]
     metrics: Vec<Metric>,
 }
@@ -42,16 +45,21 @@ fn main() -> Result<()> {
     let mut columns = vec![];
     for metric in metrics {
         let result = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
+        println!("{:#}\t{:.4}", metric, result.mean());
         let scores = result.scores();
         if columns.is_empty() {
             let query_ids = scores.keys().map(|k| k.as_str()).collect::<Vec<_>>();
-            columns.push(Series::new("QueryID".into(), query_ids));
+            columns.push(Series::new("query_id".into(), query_ids));
         }
         let values = scores.values().map(|v| *v).collect::<Vec<_>>();
         columns.push(Series::new(format!("{metric:#}").into(), values));
     }
-    let df = DataFrame::new(columns)?;
-    println!("{:?}", df);
+
+    if let Some(output_csv) = args.output_csv {
+        let mut df = DataFrame::new(columns)?;
+        let mut file = std::fs::File::create(output_csv)?;
+        CsvWriter::new(&mut file).finish(&mut df)?;
+    }
 
     Ok(())
 }
