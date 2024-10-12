@@ -2,7 +2,9 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
-use elinor::statistical_tests::{BootstrapTest, RandomizedTukeyHsdTest, StudentTTest};
+use elinor::statistical_tests::{
+    BootstrapTest, RandomizedTukeyHsdTest, StudentTTest, TwoWayAnovaWithoutReplication,
+};
 use polars::prelude::*;
 use polars_lazy::prelude::*;
 
@@ -54,6 +56,8 @@ fn main() -> Result<()> {
 
     if dfs.len() == 2 {
         compare_two_systems(&dfs[0], &dfs[1])?;
+    } else if dfs.len() > 2 {
+        compare_multiple_systems(&dfs)?;
     }
 
     Ok(())
@@ -200,6 +204,93 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
                     .collect::<Vec<_>>(),
             ),
         ];
+        println!("{:?}", DataFrame::new(columns)?);
+    }
+
+    Ok(())
+}
+
+fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
+    let metrics = extract_metrics(&dfs[0]);
+
+    let mut df_metrics = vec![];
+    for metric in &metrics {
+        let metric = metric.as_str();
+        let mut df_systems = vec![];
+        for (i, df) in dfs.iter().enumerate() {
+            let df_system = df
+                .clone()
+                .lazy()
+                .select([
+                    col("query_id"),
+                    col(metric).alias(format!("system_{}", i + 1)),
+                ])
+                .collect()?;
+            df_systems.push(df_system);
+        }
+        let joined = df_systems
+            .iter()
+            .skip(1)
+            .fold(df_systems[0].clone(), |acc, df| {
+                acc.lazy()
+                    .join(
+                        df.clone().lazy(),
+                        [col("query_id")],
+                        [col("query_id")],
+                        JoinArgs::new(JoinType::Left),
+                    )
+                    .collect()
+                    .unwrap()
+            });
+        df_metrics.push(joined);
+    }
+
+    for (metric, df_metric) in metrics.iter().zip(df_metrics.iter()) {
+        println!("{metric:#}");
+
+        let mut data = vec![];
+        for i in 0..dfs.len() {
+            let values = df_metric
+                .column(format!("system_{}", i + 1).as_str())?
+                .f64()?;
+            data.push(values);
+        }
+        let mut tupled_scores = vec![];
+        for i in 0..data[0].len() {
+            let mut scores = vec![];
+            for j in 0..data.len() {
+                scores.push(data[j].get(i).unwrap());
+            }
+            tupled_scores.push(scores);
+        }
+
+        let stat =
+            TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
+        let effect_sizes = stat.between_system_effect_sizes();
+        let mut columns = vec![Series::new(
+            "Effect Size".into(),
+            (1..=dfs.len())
+                .map(|i| format!("System_{}", i))
+                .collect::<Vec<_>>(),
+        )];
+        for i in 1..=dfs.len() {
+            let values = effect_sizes[i - 1].iter().cloned().collect::<Vec<_>>();
+            columns.push(Series::new(format!("System_{}", i).into(), values));
+        }
+        println!("{:?}", DataFrame::new(columns)?);
+
+        let stat = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
+        let p_values = stat.p_values();
+        let mut columns = vec![Series::new(
+            "P Value".into(),
+            (1..=dfs.len())
+                .map(|i| format!("System_{}", i))
+                .collect::<Vec<_>>(),
+        )];
+        for i in 1..=dfs.len() {
+            let values = p_values[i - 1].iter().cloned().collect::<Vec<_>>();
+            columns.push(Series::new(format!("System_{}", i).into(), values));
+        }
         println!("{:?}", DataFrame::new(columns)?);
     }
 
