@@ -34,7 +34,7 @@ Or, you can build and open the documentation locally
 by running the following command:
 
 ```sh
-RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --open
+RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --features serde --open
 ```
 
 ## Licensing

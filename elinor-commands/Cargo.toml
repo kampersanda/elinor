@@ -1,0 +1,18 @@
+[package]
+name = "elinor-commands"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.89"
+clap = { version = "4.5.20", features = ["derive"] }
+serde_json = "1.0.128"
+
+[dependencies.elinor]
+path = ".."
+features = ["serde"]
+default-features = false
+
+[[bin]]
+name = "elinor-convert"
+path = "src/bin/convert.rs"
