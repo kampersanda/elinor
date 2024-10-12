@@ -102,7 +102,7 @@ impl RandomizedTukeyHsdTest {
     /// p-values for all combinations of systems,
     /// returning a matrix of size $`n_systems \times n_systems`$.
     ///
-    /// The diagonal elements are always zero.
+    /// The diagonal elements are always one.
     pub const fn p_values(&self) -> &Vec<Vec<f64>> {
         &self.p_values
     }
@@ -220,7 +220,7 @@ impl RandomizedTukeyHsdTester {
             }
         }
 
-        let mut p_values = vec![vec![0_f64; self.n_systems]; self.n_systems];
+        let mut p_values = vec![vec![1_f64; self.n_systems]; self.n_systems];
         for i in 0..self.n_systems {
             for j in (i + 1)..self.n_systems {
                 p_values[i][j] = counts[i][j] as f64 / self.n_iters as f64;

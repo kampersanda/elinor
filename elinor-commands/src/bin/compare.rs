@@ -266,6 +266,26 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
 
         let stat =
             TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
+        let system_means = stat.system_means();
+        let moe95 = stat.margin_of_error(0.05)?;
+        let columns = vec![
+            Series::new(
+                "System".into(),
+                (1..=dfs.len())
+                    .map(|i| format!("System {i}"))
+                    .collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "Mean".into(),
+                system_means.iter().cloned().collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "95% MOE".into(),
+                (1..=dfs.len()).map(|_| moe95).collect::<Vec<_>>(),
+            ),
+        ];
+        println!("{:?}", DataFrame::new(columns)?);
+
         let effect_sizes = stat.between_system_effect_sizes();
         let mut columns = vec![Series::new(
             "Effect Size".into(),
