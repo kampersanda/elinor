@@ -1,4 +1,4 @@
-use std::{fmt::format, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::Result;
 use big_s::S;
@@ -99,36 +99,53 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
 
     println!("Paired Student's t-test");
     {
-        let mut rows: Vec<Vec<String>> = Vec::new();
-        rows.push(vec![
-            S("Metric"),
-            S("Mean"),
-            S("Variance"),
-            S("Effect Size"),
-            S("T Stat"),
-            S("P Value"),
-            S("95% CI"),
-        ]);
-        for (metric, df) in metrics.iter().zip(df_metrics.iter()) {
+        let mut stats = vec![];
+        for df in df_metrics.iter() {
             let values_1 = df.column("system_1")?.f64()?;
             let values_2 = df.column("system_2")?.f64()?;
             let paired_scores = values_1
                 .into_iter()
                 .zip(values_2.into_iter())
                 .map(|(x, y)| (x.unwrap(), y.unwrap()));
-            let stat = StudentTTest::from_paired_samples(paired_scores)?;
-            let (ci95_btm, ci95_top) = stat.confidence_interval(0.05).unwrap();
-            rows.push(vec![
-                format!("{}", metric.as_str()),
-                format!("{:.4}", stat.mean()),
-                format!("{:.4}", stat.var()),
-                format!("{:.4}", stat.effect_size()),
-                format!("{:.4}", stat.t_stat()),
-                format!("{:.4}", stat.p_value()),
-                format!("[{:.4}, {:.4}]", ci95_btm, ci95_top),
-            ]);
+            stats.push(StudentTTest::from_paired_samples(paired_scores)?);
         }
-        elinor_commands::to_prettytable(rows).printstd();
+        let columns = vec![
+            Series::new(
+                "Metric".into(),
+                metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "Mean".into(),
+                stats.iter().map(|stat| stat.mean()).collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "Variance".into(),
+                stats.iter().map(|stat| stat.var()).collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "Effect Size".into(),
+                stats
+                    .iter()
+                    .map(|stat| stat.effect_size())
+                    .collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "T Stat".into(),
+                stats.iter().map(|stat| stat.t_stat()).collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "P Value".into(),
+                stats.iter().map(|stat| stat.p_value()).collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "95% MOE".into(),
+                stats
+                    .iter()
+                    .map(|stat| stat.margin_of_error(0.05).unwrap())
+                    .collect::<Vec<_>>(),
+            ),
+        ];
+        println!("{:?}", DataFrame::new(columns)?);
     }
 
     println!("Bootstrap test");
