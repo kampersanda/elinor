@@ -148,7 +148,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
         df_metrics.push(joined);
     }
 
-    println!("\n# Paired Student's t-test for System_1 - System_2");
+    println!("\n# Paired Student's t-test for (System_1 - System_2)");
     {
         let mut stats = vec![];
         for df in df_metrics.iter() {
