@@ -397,7 +397,9 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
                 .collect::<Vec<_>>(),
         )];
         for i in 1..=dfs.len() {
-            let values = effect_sizes[i - 1].iter().cloned().collect::<Vec<_>>();
+            let values = (1..=dfs.len())
+                .map(|j| effect_sizes[j - 1][i - 1])
+                .collect::<Vec<_>>();
             columns.push(Series::new(format!("System_{}", i).into(), values));
         }
         let df = DataFrame::new(columns)?;
@@ -413,7 +415,9 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
                 .collect::<Vec<_>>(),
         )];
         for i in 1..=dfs.len() {
-            let values = p_values[i - 1].iter().cloned().collect::<Vec<_>>();
+            let values = (1..=dfs.len())
+                .map(|j| p_values[j - 1][i - 1])
+                .collect::<Vec<_>>();
             columns.push(Series::new(format!("System_{}", i).into(), values));
         }
         let df = DataFrame::new(columns)?;
