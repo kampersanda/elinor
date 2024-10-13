@@ -11,7 +11,7 @@ use polars_lazy::prelude::*;
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
-    #[arg(short, long, help = "Path to the input CSV files")]
+    #[arg(short, long, num_args = 1.., help = "Path to the input CSV files")]
     input_csvs: Vec<PathBuf>,
 }
 
