@@ -2,9 +2,9 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
-use elinor::statistical_tests::{
-    BootstrapTest, RandomizedTukeyHsdTest, StudentTTest, TwoWayAnovaWithoutReplication,
-};
+use elinor::statistical_tests::bootstrap_test::BootstrapTester;
+use elinor::statistical_tests::randomized_tukey_hsd_test::RandomizedTukeyHsdTester;
+use elinor::statistical_tests::{StudentTTest, TwoWayAnovaWithoutReplication};
 use polars::prelude::*;
 use polars_lazy::prelude::*;
 
@@ -200,9 +200,11 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
         df_to_prettytable(&df).printstd();
     }
 
-    println!("\n# Bootstrap test");
+    let n_resamples = 10000;
+    println!("\n# Bootstrap test (n_resamples={n_resamples})");
     {
         let mut stats = vec![];
+        let tester = BootstrapTester::new().with_n_resamples(n_resamples);
         for df in df_metrics.iter() {
             let values_1 = df.column("system_1")?.f64()?;
             let values_2 = df.column("system_2")?.f64()?;
@@ -210,7 +212,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
                 .into_iter()
                 .zip(values_2.into_iter())
                 .map(|(x, y)| (x.unwrap(), y.unwrap()));
-            stats.push(BootstrapTest::from_paired_samples(paired_scores)?);
+            stats.push(tester.test_for_paired_samples(paired_scores)?);
         }
         let columns = vec![
             Series::new(
@@ -226,9 +228,11 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
         df_to_prettytable(&df).printstd();
     }
 
-    println!("\n# Fisher's randomized test");
+    let n_iters = 10000;
+    println!("\n# Fisher's randomized test (n_iters={n_iters})");
     {
         let mut stats = vec![];
+        let tester = RandomizedTukeyHsdTester::new(2).with_n_iters(n_iters);
         for df in df_metrics.iter() {
             let values_1 = df.column("system_1")?.f64()?;
             let values_2 = df.column("system_2")?.f64()?;
@@ -236,10 +240,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
                 .into_iter()
                 .zip(values_2.into_iter())
                 .map(|(x, y)| [x.unwrap(), y.unwrap()]);
-            stats.push(RandomizedTukeyHsdTest::from_tupled_samples(
-                paired_scores,
-                2,
-            )?);
+            stats.push(tester.test(paired_scores)?);
         }
         let columns = vec![
             Series::new(
@@ -295,6 +296,9 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
             });
         df_metrics.push(joined);
     }
+
+    let n_iters = 10000;
+    let hsd_tester = RandomizedTukeyHsdTester::new(dfs.len()).with_n_iters(n_iters);
 
     for (metric, df_metric) in metrics.iter().zip(df_metrics.iter()) {
         println!("\n# {metric:#}");
@@ -405,8 +409,8 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## P-values from randomized Tukey Hsd test");
-        let stat = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
+        println!("## P-values from randomized Tukey Hsd test (n_iters={n_iters})");
+        let stat = hsd_tester.test(tupled_scores.iter())?;
         let p_values = stat.p_values();
         let mut columns = vec![Series::new(
             "P Value".into(),
