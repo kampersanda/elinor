@@ -67,8 +67,6 @@ fn main() -> Result<()> {
 fn default_metrics() -> Vec<Metric> {
     vec![
         Metric::Precision { k: 10 },
-        Metric::Recall { k: 10 },
-        Metric::F1 { k: 10 },
         Metric::AP { k: 0 },
         Metric::RR { k: 0 },
         Metric::NDCG { k: 10 },
