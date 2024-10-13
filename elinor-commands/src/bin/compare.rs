@@ -18,12 +18,52 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
+    if args.input_csvs.is_empty() {
+        return Err(anyhow::anyhow!("No input CSV files"))?;
+    }
+
     let mut dfs = vec![];
-    for input_csv in args.input_csvs {
+    for input_csv in &args.input_csvs {
         let df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some(input_csv))?
+            .try_into_reader_with_file_path(Some(input_csv.clone()))?
             .finish()?;
         dfs.push(df);
+    }
+
+    if args.input_csvs.len() == 1 {
+        println!("# Means");
+        {
+            let metrics = extract_metrics(&dfs[0]);
+            let values = get_means(&dfs[0], &metrics);
+            let columns = vec![
+                Series::new("Metric".into(), metrics),
+                Series::new("Score".into(), values),
+            ];
+            let df = DataFrame::new(columns)?;
+            df_to_prettytable(&df).printstd();
+        }
+        return Ok(());
+    }
+
+    println!("# Alias");
+    {
+        let columns = vec![
+            Series::new(
+                "Alias".into(),
+                (1..=dfs.len())
+                    .map(|i| format!("System_{}", i))
+                    .collect::<Vec<_>>(),
+            ),
+            Series::new(
+                "Path".into(),
+                args.input_csvs
+                    .iter()
+                    .map(|p| p.to_string_lossy())
+                    .collect::<Vec<_>>(),
+            ),
+        ];
+        let df = DataFrame::new(columns)?;
+        df_to_prettytable(&df).printstd();
     }
 
     if dfs.len() == 2 {
@@ -43,36 +83,44 @@ fn extract_metrics(df: &DataFrame) -> Vec<String> {
         .collect()
 }
 
+fn get_means(df: &DataFrame, metrics: &[String]) -> Vec<f64> {
+    let means = df
+        .clone()
+        .lazy()
+        .select([col("*").exclude(["query_id"]).mean()])
+        .collect()
+        .unwrap();
+    let values = metrics
+        .iter()
+        .map(|metric| {
+            means
+                .column(metric)
+                .unwrap()
+                .f64()
+                .unwrap()
+                .first()
+                .unwrap()
+        })
+        .collect::<Vec<_>>();
+    values
+}
+
 fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
     let metrics = extract_metrics(df_1);
 
-    let mut columns = vec![Series::new(
-        "Metric".into(),
-        metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
-    )];
-    for (i, df) in [df_1, df_2].into_iter().enumerate() {
-        let means = df
-            .clone()
-            .lazy()
-            .select([col("*").exclude(["query_id"]).mean()])
-            .collect()?;
-        let values = metrics
-            .iter()
-            .map(|metric| {
-                means
-                    .column(metric)
-                    .unwrap()
-                    .f64()
-                    .unwrap()
-                    .first()
-                    .unwrap()
-            })
-            .collect::<Vec<_>>();
-        columns.push(Series::new(format!("System_{}", i + 1).into(), values));
+    println!("\n# Means");
+    {
+        let mut columns = vec![Series::new(
+            "Metric".into(),
+            metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+        )];
+        for (i, df) in [df_1, df_2].into_iter().enumerate() {
+            let values = get_means(df, &metrics);
+            columns.push(Series::new(format!("System_{}", i + 1).into(), values));
+        }
+        let df = DataFrame::new(columns)?;
+        df_to_prettytable(&df).printstd();
     }
-    println!("Means");
-    let df = DataFrame::new(columns)?;
-    df_to_prettytable(&df).printstd();
 
     let mut df_metrics = vec![];
     for metric in &metrics {
@@ -100,7 +148,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
         df_metrics.push(joined);
     }
 
-    println!("Paired Student's t-test");
+    println!("\n# Paired Student's t-test for System_1 - System_2");
     {
         let mut stats = vec![];
         for df in df_metrics.iter() {
@@ -122,11 +170,11 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
                 stats.iter().map(|stat| stat.mean()).collect::<Vec<_>>(),
             ),
             Series::new(
-                "Variance".into(),
+                "Var".into(),
                 stats.iter().map(|stat| stat.var()).collect::<Vec<_>>(),
             ),
             Series::new(
-                "Effect Size".into(),
+                "ES".into(),
                 stats
                     .iter()
                     .map(|stat| stat.effect_size())
@@ -152,7 +200,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
         df_to_prettytable(&df).printstd();
     }
 
-    println!("Bootstrap test");
+    println!("\n# Bootstrap test");
     {
         let mut stats = vec![];
         for df in df_metrics.iter() {
@@ -178,7 +226,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
         df_to_prettytable(&df).printstd();
     }
 
-    println!("Fisher's randomized test");
+    println!("\n# Fisher's randomized test");
     {
         let mut stats = vec![];
         for df in df_metrics.iter() {
@@ -249,7 +297,7 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
     }
 
     for (metric, df_metric) in metrics.iter().zip(df_metrics.iter()) {
-        println!("{metric:#}");
+        println!("\n# {metric:#}");
 
         let mut data = vec![];
         for i in 0..dfs.len() {
@@ -292,7 +340,7 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
 
         let effect_sizes = stat.between_system_effect_sizes();
         let mut columns = vec![Series::new(
-            "Effect Size".into(),
+            "ES".into(),
             (1..=dfs.len())
                 .map(|i| format!("System_{}", i))
                 .collect::<Vec<_>>(),
