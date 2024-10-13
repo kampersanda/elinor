@@ -71,7 +71,8 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
         columns.push(Series::new(format!("System_{}", i + 1).into(), values));
     }
     println!("Means");
-    println!("{:?}", DataFrame::new(columns)?);
+    let df = DataFrame::new(columns)?;
+    df_to_prettytable(&df).printstd();
 
     let mut df_metrics = vec![];
     for metric in &metrics {
@@ -147,7 +148,8 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
                     .collect::<Vec<_>>(),
             ),
         ];
-        println!("{:?}", DataFrame::new(columns)?);
+        let df = DataFrame::new(columns)?;
+        df_to_prettytable(&df).printstd();
     }
 
     println!("Bootstrap test");
@@ -172,7 +174,8 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
                 stats.iter().map(|stat| stat.p_value()).collect::<Vec<_>>(),
             ),
         ];
-        println!("{:?}", DataFrame::new(columns)?);
+        let df = DataFrame::new(columns)?;
+        df_to_prettytable(&df).printstd();
     }
 
     println!("Fisher's randomized test");
@@ -203,7 +206,8 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
                     .collect::<Vec<_>>(),
             ),
         ];
-        println!("{:?}", DataFrame::new(columns)?);
+        let df = DataFrame::new(columns)?;
+        df_to_prettytable(&df).printstd();
     }
 
     Ok(())
@@ -283,7 +287,8 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
                 (1..=dfs.len()).map(|_| moe95).collect::<Vec<_>>(),
             ),
         ];
-        println!("{:?}", DataFrame::new(columns)?);
+        let df = DataFrame::new(columns)?;
+        df_to_prettytable(&df).printstd();
 
         let effect_sizes = stat.between_system_effect_sizes();
         let mut columns = vec![Series::new(
@@ -296,7 +301,8 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
             let values = effect_sizes[i - 1].iter().cloned().collect::<Vec<_>>();
             columns.push(Series::new(format!("System_{}", i).into(), values));
         }
-        println!("{:?}", DataFrame::new(columns)?);
+        let df = DataFrame::new(columns)?;
+        df_to_prettytable(&df).printstd();
 
         let stat = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
         let p_values = stat.p_values();
@@ -310,8 +316,41 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
             let values = p_values[i - 1].iter().cloned().collect::<Vec<_>>();
             columns.push(Series::new(format!("System_{}", i).into(), values));
         }
-        println!("{:?}", DataFrame::new(columns)?);
+        let df = DataFrame::new(columns)?;
+        df_to_prettytable(&df).printstd();
     }
 
     Ok(())
+}
+
+fn df_to_prettytable(df: &DataFrame) -> prettytable::Table {
+    let columns = df.get_columns();
+    let mut table = prettytable::Table::new();
+    table.set_titles(prettytable::Row::new(
+        columns
+            .iter()
+            .map(|s| s.name().as_str())
+            .map(|s| prettytable::Cell::new(s))
+            .collect(),
+    ));
+    for i in 0..df.height() {
+        let mut row = vec![];
+        for column in columns.iter() {
+            let value = column.get(i).unwrap();
+            match value {
+                AnyValue::String(value) => {
+                    row.push(prettytable::Cell::new(value));
+                }
+                AnyValue::Float64(value) => {
+                    row.push(prettytable::Cell::new(&format!("{value:.4}")));
+                }
+                _ => {
+                    row.push(prettytable::Cell::new("N/A"));
+                }
+            }
+        }
+        table.add_row(prettytable::Row::new(row));
+    }
+    table.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+    table
 }
