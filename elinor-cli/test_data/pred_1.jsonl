@@ -1,0 +1,12 @@
+{"query_id": "q_1", "doc_id": "d_1", "score": 0.85}
+{"query_id": "q_1", "doc_id": "d_4", "score": 0.32}
+{"query_id": "q_1", "doc_id": "d_5", "score": 1.0}
+{"query_id": "q_2", "doc_id": "d_2", "score": 0.67}
+{"query_id": "q_2", "doc_id": "d_3", "score": 0.15}
+{"query_id": "q_2", "doc_id": "d_5", "score": 0.88}
+{"query_id": "q_3", "doc_id": "d_1", "score": 0.93}
+{"query_id": "q_3", "doc_id": "d_4", "score": 0.45}
+{"query_id": "q_4", "doc_id": "d_2", "score": 0.78}
+{"query_id": "q_4", "doc_id": "d_5", "score": 0.0}
+{"query_id": "q_5", "doc_id": "d_3", "score": 0.59}
+{"query_id": "q_5", "doc_id": "d_4", "score": 0.21}
