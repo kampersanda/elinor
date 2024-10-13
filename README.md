@@ -39,10 +39,7 @@ RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --features serde 
 
 ## Command-line tools
 
-```shell
-export POLARS_FMT_TABLE_HIDE_COLUMN_DATA_TYPES=1
-export POLARS_FMT_TABLE_HIDE_DATAFRAME_SHAPE_INFORMATION=1
-```
+See [elinor-cli](./elinor-cli/README.md).
 
 ## Licensing
 

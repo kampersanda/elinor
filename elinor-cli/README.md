@@ -1,8 +1,17 @@
 # elinor-cli
 
-```shell
-export POLARS_FMT_TABLE_HIDE_COLUMN_DATA_TYPES=1
-export POLARS_FMT_TABLE_HIDE_DATAFRAME_SHAPE_INFORMATION=1
+```sh
+cargo run --release -p elinor-cli --bin elinor-evaluate -- \
+    --gold-jsonl test-data/toy/gold.jsonl \
+    --pred-jsonl test-data/toy/pred_1.jsonl \
+    --metrics precision@3 ap rr ndcg@3
+```
+
+```
+precision@3     0.2667
+ap      0.3500
+rr      0.5000
+ndcg@3  0.4480
 ```
 
 ## Licensing

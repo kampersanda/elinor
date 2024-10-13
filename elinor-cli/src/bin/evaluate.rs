@@ -17,7 +17,7 @@ struct Args {
     #[arg(short, long, help = "Path to the output CSV file")]
     output_csv: Option<PathBuf>,
 
-    #[arg(short, long, help = "Metric to evaluate")]
+    #[arg(short, long, num_args = 1.., help = "Metric to evaluate")]
     metrics: Vec<Metric>,
 }
 
