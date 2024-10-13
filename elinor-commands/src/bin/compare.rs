@@ -338,6 +338,57 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
+        println!("## Two-way ANOVA without replication");
+        let columns = vec![
+            Series::new(
+                "Factor".into(),
+                vec!["Between-systems", "Between-queries", "Residual"],
+            ),
+            Series::new(
+                "Variation ".into(),
+                vec![
+                    stat.between_system_variation(),
+                    stat.between_topic_variation(),
+                    stat.residual_variation(),
+                ],
+            ),
+            Series::new(
+                "DF".into(),
+                vec![
+                    stat.n_systems() as u64 - 1,
+                    stat.n_topics() as u64 - 1,
+                    (stat.n_systems() as u64 - 1) * (stat.n_topics() as u64 - 1),
+                ],
+            ),
+            Series::new(
+                "Variance".into(),
+                vec![
+                    stat.between_system_variance(),
+                    stat.between_topic_variance(),
+                    stat.residual_variance(),
+                ],
+            ),
+            Series::new(
+                "F Stat".into(),
+                vec![
+                    stat.between_system_f_stat(),
+                    stat.between_topic_f_stat(),
+                    f64::NAN,
+                ],
+            ),
+            Series::new(
+                "P Value".into(),
+                vec![
+                    stat.between_system_p_value(),
+                    stat.between_topic_p_value(),
+                    f64::NAN,
+                ],
+            ),
+        ];
+        let df = DataFrame::new(columns)?;
+        df_to_prettytable(&df).printstd();
+
+        println!("## Between-system effect sizes from Tukey Hsd test");
         let effect_sizes = stat.between_system_effect_sizes();
         let mut columns = vec![Series::new(
             "ES".into(),
@@ -352,6 +403,7 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
+        println!("## P-values from randomized Tukey Hsd test");
         let stat = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
         let p_values = stat.p_values();
         let mut columns = vec![Series::new(
@@ -390,7 +442,14 @@ fn df_to_prettytable(df: &DataFrame) -> prettytable::Table {
                     row.push(prettytable::Cell::new(value));
                 }
                 AnyValue::Float64(value) => {
-                    row.push(prettytable::Cell::new(&format!("{value:.4}")));
+                    if value.is_nan() {
+                        row.push(prettytable::Cell::new(""));
+                    } else {
+                        row.push(prettytable::Cell::new(&format!("{value:.4}")));
+                    }
+                }
+                AnyValue::UInt64(value) => {
+                    row.push(prettytable::Cell::new(&format!("{value}")));
                 }
                 _ => {
                     row.push(prettytable::Cell::new("N/A"));
