@@ -51,7 +51,7 @@ fn main() -> Result<()> {
             let query_ids = scores.keys().map(|k| k.as_str()).collect::<Vec<_>>();
             columns.push(Series::new("query_id".into(), query_ids));
         }
-        let values = scores.values().map(|v| *v).collect::<Vec<_>>();
+        let values = scores.values().copied().collect::<Vec<_>>();
         columns.push(Series::new(format!("{metric:#}").into(), values));
     }
 

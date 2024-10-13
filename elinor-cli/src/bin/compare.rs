@@ -19,7 +19,7 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     if args.input_csvs.is_empty() {
-        return Err(anyhow::anyhow!("No input CSV files"))?;
+        return Err(anyhow::anyhow!("No input CSV files"));
     }
 
     let mut dfs = vec![];
@@ -68,7 +68,8 @@ fn main() -> Result<()> {
 
     if dfs.len() == 2 {
         compare_two_systems(&dfs[0], &dfs[1])?;
-    } else if dfs.len() > 2 {
+    }
+    if dfs.len() > 2 {
         compare_multiple_systems(&dfs)?;
     }
 
@@ -313,8 +314,8 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
         let mut tupled_scores = vec![];
         for i in 0..data[0].len() {
             let mut scores = vec![];
-            for j in 0..data.len() {
-                scores.push(data[j].get(i).unwrap());
+            for values in &data {
+                scores.push(values.get(i).unwrap());
             }
             tupled_scores.push(scores);
         }
@@ -330,10 +331,7 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
                     .map(|i| format!("System {i}"))
                     .collect::<Vec<_>>(),
             ),
-            Series::new(
-                "Mean".into(),
-                system_means.iter().cloned().collect::<Vec<_>>(),
-            ),
+            Series::new("Mean".into(), system_means.to_vec()),
             Series::new(
                 "95% MOE".into(),
                 (1..=dfs.len()).map(|_| moe95).collect::<Vec<_>>(),
@@ -438,7 +436,7 @@ fn df_to_prettytable(df: &DataFrame) -> prettytable::Table {
         columns
             .iter()
             .map(|s| s.name().as_str())
-            .map(|s| prettytable::Cell::new(s))
+            .map(prettytable::Cell::new)
             .collect(),
     ));
     for i in 0..df.height() {

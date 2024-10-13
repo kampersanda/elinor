@@ -18,8 +18,8 @@ impl FromStr for RelevanceType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "gold" => Ok(RelevanceType::Gold),
-            "pred" => Ok(RelevanceType::Pred),
+            "gold" => Ok(Self::Gold),
+            "pred" => Ok(Self::Pred),
             _ => Err(format!("Invalid relevance type: {}", s)),
         }
     }

@@ -4,6 +4,7 @@
 cargo run --release -p elinor-cli --bin elinor-evaluate -- \
   --gold-jsonl test-data/toy/gold.jsonl \
   --pred-jsonl test-data/toy/pred_1.jsonl \
+  --output-csv test-data/toy/pred_1.csv \
   --metrics precision@3 ap rr ndcg@3
 ```
 
