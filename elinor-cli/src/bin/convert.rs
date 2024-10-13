@@ -41,7 +41,7 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    let lines = elinor_commands::load_lines(&args.input_trec)?;
+    let lines = elinor_cli::load_lines(&args.input_trec)?;
     let mut writer = BufWriter::new(File::create(&args.output_jsonl)?);
 
     match args.rel_type {

@@ -24,13 +24,13 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    let gold_lines = elinor_commands::load_lines(&args.gold_jsonl)?;
+    let gold_lines = elinor_cli::load_lines(&args.gold_jsonl)?;
     let gold_records = gold_lines
         .into_iter()
         .map(|line| serde_json::from_str::<GoldRecord<String>>(&line).unwrap());
     let gold_rels = GoldRelStore::from_records(gold_records)?;
 
-    let pred_lines = elinor_commands::load_lines(&args.pred_jsonl)?;
+    let pred_lines = elinor_cli::load_lines(&args.pred_jsonl)?;
     let pred_records = pred_lines
         .into_iter()
         .map(|line| serde_json::from_str::<PredRecord<String>>(&line).unwrap());
