@@ -69,13 +69,13 @@ For example, you can obtain various statistics from several statistical tests, a
 | System_2 | -0.5070  | 0.0000   | 0.1690   |
 | System_3 | -0.6760  | -0.1690  | 0.0000   |
 +----------+----------+----------+----------+
-## P values from randomized Tukey Hsd test (n_iters=10000)
+## Between-system P values from randomized Tukey Hsd test (n_iters=10000)
 +----------+----------+----------+----------+
 | P Value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.2665   | 0.1004   |
-| System_2 | 0.2665   | 1.0000   | 0.8932   |
-| System_3 | 0.1004   | 0.8932   | 1.0000   |
+| System_1 | 1.0000   | 0.2734   | 0.1060   |
+| System_2 | 0.2734   | 1.0000   | 0.8913   |
+| System_3 | 0.1060   | 0.8913   | 1.0000   |
 +----------+----------+----------+----------+
 ```
 

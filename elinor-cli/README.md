@@ -216,13 +216,13 @@ The output will be:
 | System_2 | -1.4765  | 0.0000   | -0.6328  |
 | System_3 | -0.8437  | 0.6328   | 0.0000   |
 +----------+----------+----------+----------+
-## P values from randomized Tukey Hsd test (n_iters=10000)
+## Between-system P values from randomized Tukey Hsd test (n_iters=10000)
 +----------+----------+----------+----------+
 | P Value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.0212   | 0.2548   |
-| System_2 | 0.0212   | 1.0000   | 0.6430   |
-| System_3 | 0.2548   | 0.6430   | 1.0000   |
+| System_1 | 1.0000   | 0.0227   | 0.2512   |
+| System_2 | 0.0227   | 1.0000   | 0.6507   |
+| System_3 | 0.2512   | 0.6507   | 1.0000   |
 +----------+----------+----------+----------+
 
 (The statistics for the other metrics will be shown as well.)

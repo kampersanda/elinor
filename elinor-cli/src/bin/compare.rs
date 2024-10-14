@@ -348,10 +348,10 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             tupled_scores.push(scores);
         }
 
-        let stat =
+        let anove_stat =
             TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
-        let system_means = stat.system_means();
-        let moe95 = stat.margin_of_error(0.05)?;
+        let system_means = anove_stat.system_means();
+        let moe95 = anove_stat.margin_of_error(0.05)?;
         let columns = vec![
             Series::new(
                 "System".into(),
@@ -377,40 +377,40 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             Series::new(
                 "Variation ".into(),
                 vec![
-                    stat.between_system_variation(),
-                    stat.between_topic_variation(),
-                    stat.residual_variation(),
+                    anove_stat.between_system_variation(),
+                    anove_stat.between_topic_variation(),
+                    anove_stat.residual_variation(),
                 ],
             ),
             Series::new(
                 "DF".into(),
                 vec![
-                    stat.n_systems() as u64 - 1,
-                    stat.n_topics() as u64 - 1,
-                    (stat.n_systems() as u64 - 1) * (stat.n_topics() as u64 - 1),
+                    anove_stat.n_systems() as u64 - 1,
+                    anove_stat.n_topics() as u64 - 1,
+                    (anove_stat.n_systems() as u64 - 1) * (anove_stat.n_topics() as u64 - 1),
                 ],
             ),
             Series::new(
                 "Variance".into(),
                 vec![
-                    stat.between_system_variance(),
-                    stat.between_topic_variance(),
-                    stat.residual_variance(),
+                    anove_stat.between_system_variance(),
+                    anove_stat.between_topic_variance(),
+                    anove_stat.residual_variance(),
                 ],
             ),
             Series::new(
                 "F Stat".into(),
                 vec![
-                    stat.between_system_f_stat(),
-                    stat.between_topic_f_stat(),
+                    anove_stat.between_system_f_stat(),
+                    anove_stat.between_topic_f_stat(),
                     f64::NAN,
                 ],
             ),
             Series::new(
                 "P Value".into(),
                 vec![
-                    stat.between_system_p_value(),
-                    stat.between_topic_p_value(),
+                    anove_stat.between_system_p_value(),
+                    anove_stat.between_topic_p_value(),
                     f64::NAN,
                 ],
             ),
@@ -419,7 +419,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         df_to_prettytable(&df).printstd();
 
         println!("## Between-system effect sizes (ES) from Tukey Hsd test");
-        let effect_sizes = stat.between_system_effect_sizes();
+        let effect_sizes = anove_stat.between_system_effect_sizes();
         let mut columns = vec![Series::new(
             "ES".into(),
             (1..=dfs.len())
@@ -435,9 +435,9 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## P values from randomized Tukey Hsd test (n_iters={n_iters})");
-        let stat = hsd_tester.test(tupled_scores.iter())?;
-        let p_values = stat.p_values();
+        println!("## Between-system P values from randomized Tukey Hsd test (n_iters={n_iters})");
+        let hsd_stat = hsd_tester.test(tupled_scores.iter())?;
+        let p_values = hsd_stat.p_values();
         let mut columns = vec![Series::new(
             "P Value".into(),
             (1..=dfs.len())
