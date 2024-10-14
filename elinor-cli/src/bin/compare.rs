@@ -353,7 +353,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let columns = vec![
             Series::new(
                 "Factor".into(),
-                vec!["Between-systems", "Between-queries", "Residual"],
+                vec!["Between-systems", "Between-topics", "Residual"],
             ),
             Series::new(
                 "Variation ".into(),
