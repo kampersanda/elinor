@@ -1,6 +1,34 @@
 # elinor-cli
 
+elinor-cli is a set of command-line tools for evaluating IR systems:
+
+- [elinor-evaluate](#elinor-evaluate): Evaluate the ranking metrics of the system.
+- [elinor-compare](#elinor-compare): Compare the metrics of multiple systems with statistical tests.
+- [elinor-convert](#elinor-convert): Convert the TREC format into the JSONL format for elinor-evaluate.
+
 ## elinor-evaluate
+
+This tool evaluates the ranking metrics of the system.
+
+### Input format
+
+- `query_id`: The ID of the query.
+- `doc_id`: The ID of the document.
+- `score`: The relevance score of the query-document pair.
+
+```jsonl
+{"query_id":"q_1","doc_id":"d_1","score":2}
+{"query_id":"q_1","doc_id":"d_7","score":0}
+{"query_id":"q_2","doc_id":"d_3","score":2}
+```
+
+```jsonl
+{"query_id":"q_1","doc_id":"d_1","score":0.65}
+{"query_id":"q_1","doc_id":"d_4","score":0.23}
+{"query_id":"q_2","doc_id":"d_3","score":0.48}
+```
+
+### Example usage
 
 ```sh
 cargo run --release -p elinor-cli --bin elinor-evaluate -- \
@@ -22,6 +50,18 @@ cargo run --release -p elinor-cli --bin elinor-evaluate -- \
   --pred-jsonl test-data/sample/pred_1.jsonl \
   --output-csv test-data/sample/pred_1.csv \  # Specify output CSV
   --metrics precision@3 ap rr ndcg@3
+```
+
+```csv
+query_id,precision@3,ap,rr,ndcg@3
+q_1,0.6666666666666666,0.5833333333333333,0.5,0.66967181649423
+q_2,0.6666666666666666,1.0,1.0,0.8597186998521972
+q_3,0.6666666666666666,0.5833333333333333,0.5,0.6199062332840657
+q_4,0.6666666666666666,0.5833333333333333,0.5,0.66967181649423
+q_5,0.3333333333333333,1.0,1.0,1.0
+q_6,0.6666666666666666,0.8333333333333333,1.0,0.9502344167898356
+q_7,0.3333333333333333,1.0,1.0,1.0
+q_8,0.6666666666666666,1.0,1.0,0.8597186998521972
 ```
 
 ## elinor-compare
@@ -230,6 +270,22 @@ cargo run --release -p elinor-cli --bin elinor-compare -- \
 | System_2 | 0.1065   | 1.0000   | 0.9107   |
 | System_3 | 0.2874   | 0.9107   | 1.0000   |
 +----------+----------+----------+----------+
+```
+
+## elinor-convert
+
+```sh
+cargo run --release -p elinor-cli --bin elinor-convert -- \
+  --input-trec qrels.trec \
+  --output-jsonl qrels.jsonl \
+  --rel-type gold
+```
+
+```sh
+cargo run --release -p elinor-cli --bin elinor-convert -- \
+  --input-trec run.trec \
+  --output-jsonl run.jsonl \
+  --rel-type pred
 ```
 
 ## Licensing
