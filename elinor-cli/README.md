@@ -137,7 +137,7 @@ The output will be:
 | ndcg@3      | 0.8286   | 0.4649   |
 +-------------+----------+----------+
 
-# Paired Student's t-test for (System_1 - System_2)
+# Two-sided paired Student's t-test for (System_1 - System_2)
 +-------------+--------+--------+--------+--------+---------+---------+
 | Metric      | Mean   | Var    | ES     | T Stat | P Value | 95% MOE |
 +-------------+--------+--------+--------+--------+---------+---------+
@@ -147,24 +147,24 @@ The output will be:
 | ndcg@3      | 0.3637 | 0.1026 | 1.1356 | 3.2119 | 0.0148  | 0.2677  |
 +-------------+--------+--------+--------+--------+---------+---------+
 
-# Bootstrap test (n_resamples=10000)
+# Two-sided paired Bootstrap test (n_resamples=10000)
 +-------------+---------+
 | Metric      | P Value |
 +-------------+---------+
-| precision@3 | 0.0255  |
-| ap          | 0.0298  |
-| rr          | 0.0658  |
-| ndcg@3      | 0.0291  |
+| precision@3 | 0.0248  |
+| ap          | 0.0274  |
+| rr          | 0.0619  |
+| ndcg@3      | 0.0272  |
 +-------------+---------+
 
 # Fisher's randomized test (n_iters=10000)
 +-------------+---------+
 | Metric      | P Value |
 +-------------+---------+
-| precision@3 | 0.0649  |
-| ap          | 0.0645  |
-| rr          | 0.1226  |
-| ndcg@3      | 0.0627  |
+| precision@3 | 0.0620  |
+| ap          | 0.0619  |
+| rr          | 0.1251  |
+| ndcg@3      | 0.0631  |
 +-------------+---------+
 ```
 
@@ -207,7 +207,7 @@ The output will be:
 | Between-topics  | 0.3287     | 7  | 0.0470   | 1.2034 | 0.3623  |
 | Residual        | 0.5463     | 14 | 0.0390   |        |         |
 +-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes from Tukey Hsd test
+## Between-system effect sizes (ES) from Tukey Hsd test
 +----------+----------+----------+----------+
 | ES       | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
@@ -215,13 +215,13 @@ The output will be:
 | System_2 | -1.4765  | 0.0000   | -0.6328  |
 | System_3 | -0.8437  | 0.6328   | 0.0000   |
 +----------+----------+----------+----------+
-## P-values from randomized Tukey Hsd test (n_iters=10000)
+## P values from randomized Tukey Hsd test (n_iters=10000)
 +----------+----------+----------+----------+
 | P Value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.0244   | 0.2589   |
-| System_2 | 0.0244   | 1.0000   | 0.6500   |
-| System_3 | 0.2589   | 0.6500   | 1.0000   |
+| System_1 | 1.0000   | 0.0212   | 0.2548   |
+| System_2 | 0.0212   | 1.0000   | 0.6430   |
+| System_3 | 0.2548   | 0.6430   | 1.0000   |
 +----------+----------+----------+----------+
 
 (The statistics for the other metrics will be shown as well.)
