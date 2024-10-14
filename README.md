@@ -39,7 +39,10 @@ RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --features serde 
 
 ## Command-line tools
 
-See [elinor-cli](./elinor-cli/README.md).
+[elinor-cli](./elinor-cli) provides command-line tools for evaluating and comparing IR systems.
+See the [README](./elinor-cli/README.md) for more details.
+
+For example, you can obtain various statistics from several statistical tests, as shown below:
 
 ```
 # score
@@ -55,10 +58,10 @@ See [elinor-cli](./elinor-cli/README.md).
 | Factor          | Variation  | DF | Variance | F Stat | P Value |
 +-----------------+------------+----+----------+--------+---------+
 | Between-systems | 0.1083     | 2  | 0.0542   | 2.4749 | 0.0976  |
-| Between-queries | 1.0293     | 19 | 0.0542   | 2.4754 | 0.0086  |
+| Between-topics  | 1.0293     | 19 | 0.0542   | 2.4754 | 0.0086  |
 | Residual        | 0.8317     | 38 | 0.0219   |        |         |
 +-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes from Tukey Hsd test
+## Between-system effect sizes (ES) from Tukey Hsd test
 +----------+----------+----------+----------+
 | ES       | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
@@ -66,13 +69,13 @@ See [elinor-cli](./elinor-cli/README.md).
 | System_2 | -0.5070  | 0.0000   | 0.1690   |
 | System_3 | -0.6760  | -0.1690  | 0.0000   |
 +----------+----------+----------+----------+
-## P-values from randomized Tukey Hsd test (n_iters=10000)
+## P values from randomized Tukey Hsd test (n_iters=10000)
 +----------+----------+----------+----------+
 | P Value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.2622   | 0.1038   |
-| System_2 | 0.2622   | 1.0000   | 0.8903   |
-| System_3 | 0.1038   | 0.8903   | 1.0000   |
+| System_1 | 1.0000   | 0.2665   | 0.1004   |
+| System_2 | 0.2665   | 1.0000   | 0.8932   |
+| System_3 | 0.1004   | 0.8932   | 1.0000   |
 +----------+----------+----------+----------+
 ```
 

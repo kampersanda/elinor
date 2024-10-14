@@ -96,8 +96,9 @@ The CSV files can be input to elinor-compare to compare the metrics of multiple 
 ## elinor-compare
 
 elinor-compare compares the metrics of multiple systems with statistical tests.
+
 This tool supports several statistical tests and reports various statistics for in-depth analysis.
-This tool is designed for not only IR systems but also any systems that can be evaluated with metrics.
+This tool is designed not only for IR systems but also for any systems that can be evaluated with metrics.
 
 ### Input format
 
