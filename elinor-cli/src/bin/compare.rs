@@ -101,10 +101,7 @@ where
     let mut common_metrics = extract_metrics(dfs.next().unwrap());
     for df in dfs {
         let metrics = extract_metrics(df);
-        common_metrics = common_metrics
-            .into_iter()
-            .filter(|metric| metrics.contains(metric))
-            .collect();
+        common_metrics.retain(|metric| metrics.contains(metric));
     }
     common_metrics
 }
