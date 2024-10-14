@@ -83,6 +83,10 @@ For example, you can obtain various statistics from several statistical tests, a
 +----------+----------+----------+----------+
 ```
 
+## Correctness verification
+
+TBW
+
 ## Licensing
 
 Licensed under either of
