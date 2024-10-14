@@ -95,11 +95,28 @@ The CSV files can be input to elinor-compare to compare the metrics of multiple 
 
 ## elinor-compare
 
+elinor-compare compares the metrics of multiple systems with statistical tests.
+This tool supports several statistical tests and reports various statistics for in-depth analysis.
+This tool is designed for not only IR systems but also any systems that can be evaluated with metrics.
+
+### Input format
+
+elinor-compare requires multiple CSV files that contain the scores of the metrics for each query,
+such as the output of elinor-evaluate.
+
+### Example usage: comparing two systems
+
+Here is example usage with sample CSV files in the [`test-data/sample`](../test-data/sample/) directory.
+
+If you want to compare the metrics of two systems, run:
+
 ```sh
 cargo run --release -p elinor-cli --bin elinor-compare -- \
   --input-csvs test-data/sample/pred_1.csv \
   --input-csvs test-data/sample/pred_2.csv
 ```
+
+The output will be:
 
 ```
 # Alias
@@ -151,12 +168,18 @@ cargo run --release -p elinor-cli --bin elinor-compare -- \
 +-------------+---------+
 ```
 
+### Example usage: comparing three systems
+
+If you want to compare the metrics of three (or more) systems, run:
+
 ```sh
 cargo run --release -p elinor-cli --bin elinor-compare -- \
   --input-csvs test-data/sample/pred_1.csv \
   --input-csvs test-data/sample/pred_2.csv \
   --input-csvs test-data/sample/pred_3.csv
 ```
+
+The output will be:
 
 ```
 # Alias
@@ -201,104 +224,7 @@ cargo run --release -p elinor-cli --bin elinor-compare -- \
 | System_3 | 0.2589   | 0.6500   | 1.0000   |
 +----------+----------+----------+----------+
 
-# ap
-+----------+--------+---------+
-| System   | Mean   | 95% MOE |
-+----------+--------+---------+
-| System 1 | 0.8229 | 0.2785  |
-| System 2 | 0.4479 | 0.2785  |
-| System 3 | 0.4479 | 0.2785  |
-+----------+--------+---------+
-## Two-way ANOVA without replication
-+-----------------+------------+----+----------+--------+---------+
-| Factor          | Variation  | DF | Variance | F Stat | P Value |
-+-----------------+------------+----+----------+--------+---------+
-| Between-systems | 0.7500     | 2  | 0.3750   | 2.7794 | 0.0963  |
-| Between-topics  | 0.5182     | 7  | 0.0740   | 0.5487 | 0.7843  |
-| Residual        | 1.8889     | 14 | 0.1349   |        |         |
-+-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes from Tukey Hsd test
-+----------+----------+----------+----------+
-| ES       | System_1 | System_2 | System_3 |
-+----------+----------+----------+----------+
-| System_1 | 0.0000   | 1.0209   | 1.0209   |
-| System_2 | -1.0209  | 0.0000   | 0.0000   |
-| System_3 | -1.0209  | -0.0000  | 0.0000   |
-+----------+----------+----------+----------+
-## P-values from randomized Tukey Hsd test (n_iters=10000)
-+----------+----------+----------+----------+
-| P Value  | System_1 | System_2 | System_3 |
-+----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.1631   | 0.1631   |
-| System_2 | 0.1631   | 1.0000   | 1.0000   |
-| System_3 | 0.1631   | 1.0000   | 1.0000   |
-+----------+----------+----------+----------+
-
-# rr
-+----------+--------+---------+
-| System   | Mean   | 95% MOE |
-+----------+--------+---------+
-| System 1 | 0.8125 | 0.2681  |
-| System 2 | 0.5625 | 0.2681  |
-| System 3 | 0.5208 | 0.2681  |
-+----------+--------+---------+
-## Two-way ANOVA without replication
-+-----------------+------------+----+----------+--------+---------+
-| Factor          | Variation  | DF | Variance | F Stat | P Value |
-+-----------------+------------+----+----------+--------+---------+
-| Between-systems | 0.3981     | 2  | 0.1991   | 1.5926 | 0.2381  |
-| Between-topics  | 0.7396     | 7  | 0.1057   | 0.8452 | 0.5692  |
-| Residual        | 1.7500     | 14 | 0.1250   |        |         |
-+-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes from Tukey Hsd test
-+----------+----------+----------+----------+
-| ES       | System_1 | System_2 | System_3 |
-+----------+----------+----------+----------+
-| System_1 | 0.0000   | 0.7071   | 0.8250   |
-| System_2 | -0.7071  | 0.0000   | 0.1179   |
-| System_3 | -0.8250  | -0.1179  | 0.0000   |
-+----------+----------+----------+----------+
-## P-values from randomized Tukey Hsd test (n_iters=10000)
-+----------+----------+----------+----------+
-| P Value  | System_1 | System_2 | System_3 |
-+----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.4018   | 0.2543   |
-| System_2 | 0.4018   | 1.0000   | 0.9821   |
-| System_3 | 0.2543   | 0.9821   | 1.0000   |
-+----------+----------+----------+----------+
-
-# ndcg@3
-+----------+--------+---------+
-| System   | Mean   | 95% MOE |
-+----------+--------+---------+
-| System 1 | 0.8286 | 0.2519  |
-| System 2 | 0.4649 | 0.2519  |
-| System 3 | 0.5461 | 0.2519  |
-+----------+--------+---------+
-## Two-way ANOVA without replication
-+-----------------+------------+----+----------+--------+---------+
-| Factor          | Variation  | DF | Variance | F Stat | P Value |
-+-----------------+------------+----+----------+--------+---------+
-| Between-systems | 0.5831     | 2  | 0.2916   | 2.6414 | 0.1063  |
-| Between-topics  | 0.3676     | 7  | 0.0525   | 0.4758 | 0.8366  |
-| Residual        | 1.5454     | 14 | 0.1104   |        |         |
-+-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes from Tukey Hsd test
-+----------+----------+----------+----------+
-| ES       | System_1 | System_2 | System_3 |
-+----------+----------+----------+----------+
-| System_1 | 0.0000   | 1.0946   | 0.8504   |
-| System_2 | -1.0946  | 0.0000   | -0.2443  |
-| System_3 | -0.8504  | 0.2443   | 0.0000   |
-+----------+----------+----------+----------+
-## P-values from randomized Tukey Hsd test (n_iters=10000)
-+----------+----------+----------+----------+
-| P Value  | System_1 | System_2 | System_3 |
-+----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.1065   | 0.2874   |
-| System_2 | 0.1065   | 1.0000   | 0.9107   |
-| System_3 | 0.2874   | 0.9107   | 1.0000   |
-+----------+----------+----------+----------+
+(The statistics for the other metrics will be shown as well.)
 ```
 
 ## elinor-convert
