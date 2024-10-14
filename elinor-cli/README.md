@@ -229,12 +229,18 @@ The output will be:
 
 ## elinor-convert
 
+elinor-convert converts the TREC format into the JSONL format for elinor-evaluate.
+
+For [Qrels](https://trec.nist.gov/data/qrels_eng/) files:
+
 ```sh
 cargo run --release -p elinor-cli --bin elinor-convert -- \
   --input-trec qrels.trec \
   --output-jsonl qrels.jsonl \
   --rel-type gold
 ```
+
+For [Run](https://faculty.washington.edu/levow/courses/ling573_SPR2011/hw/trec_eval_desc.htm) files:
 
 ```sh
 cargo run --release -p elinor-cli --bin elinor-convert -- \
