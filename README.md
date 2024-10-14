@@ -46,14 +46,14 @@ For example, you can obtain various statistics from several statistical tests, a
 
 ```
 # score
-+----------+--------+---------+
-| System   | Mean   | 95% MOE |
-+----------+--------+---------+
-| System 1 | 0.3450 | 0.0670  |
-| System 2 | 0.2700 | 0.0670  |
-| System 3 | 0.2450 | 0.0670  |
-+----------+--------+---------+
-## Two-way ANOVA without replication
++----------+--------+
+| System   | Mean   |
++----------+--------+
+| System 1 | 0.3450 |
+| System 2 | 0.2700 |
+| System 3 | 0.2450 |
++----------+--------+
+## Two-way ANOVA without replication (95% MOE = 0.0670)
 +-----------------+------------+----+----------+--------+---------+
 | Factor          | Variation  | DF | Variance | F Stat | P Value |
 +-----------------+------------+----+----------+--------+---------+
@@ -73,9 +73,9 @@ For example, you can obtain various statistics from several statistical tests, a
 +----------+----------+----------+----------+
 | P Value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.2734   | 0.1060   |
-| System_2 | 0.2734   | 1.0000   | 0.8913   |
-| System_3 | 0.1060   | 0.8913   | 1.0000   |
+| System_1 | 1.0000   | 0.2588   | 0.1038   |
+| System_2 | 0.2588   | 1.0000   | 0.8966   |
+| System_3 | 0.1038   | 0.8966   | 1.0000   |
 +----------+----------+----------+----------+
 ```
 

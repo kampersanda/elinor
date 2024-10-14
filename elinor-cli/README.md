@@ -148,24 +148,24 @@ The output will be:
 | ndcg@3      | 0.3637 | 0.1026 | 1.1356 | 3.2119 | 0.0148  | 0.2677  |
 +-------------+--------+--------+--------+--------+---------+---------+
 
-# Two-sided paired Bootstrap test (n_resamples=10000)
+# Two-sided paired Bootstrap test (n_resamples = 10000)
 +-------------+---------+
 | Metric      | P Value |
 +-------------+---------+
-| precision@3 | 0.0248  |
-| ap          | 0.0274  |
-| rr          | 0.0619  |
-| ndcg@3      | 0.0272  |
+| precision@3 | 0.0222  |
+| ap          | 0.0264  |
+| rr          | 0.0661  |
+| ndcg@3      | 0.0311  |
 +-------------+---------+
 
-# Fisher's randomized test (n_iters=10000)
+# Fisher's randomized test (n_iters = 10000)
 +-------------+---------+
 | Metric      | P Value |
 +-------------+---------+
-| precision@3 | 0.0620  |
-| ap          | 0.0619  |
-| rr          | 0.1251  |
-| ndcg@3      | 0.0631  |
+| precision@3 | 0.0632  |
+| ap          | 0.0677  |
+| rr          | 0.1286  |
+| ndcg@3      | 0.0651  |
 +-------------+---------+
 ```
 
@@ -193,14 +193,14 @@ The output will be:
 +----------+-----------------------------+
 
 # precision@3
-+----------+--------+---------+
-| System   | Mean   | 95% MOE |
-+----------+--------+---------+
-| System 1 | 0.5833 | 0.1498  |
-| System 2 | 0.2917 | 0.1498  |
-| System 3 | 0.4167 | 0.1498  |
-+----------+--------+---------+
-## Two-way ANOVA without replication
++----------+--------+
+| System   | Mean   |
++----------+--------+
+| System 1 | 0.5833 |
+| System 2 | 0.2917 |
+| System 3 | 0.4167 |
++----------+--------+
+## Two-way ANOVA without replication (95% MOE = 0.1498)
 +-----------------+------------+----+----------+--------+---------+
 | Factor          | Variation  | DF | Variance | F Stat | P Value |
 +-----------------+------------+----+----------+--------+---------+
@@ -216,13 +216,13 @@ The output will be:
 | System_2 | -1.4765  | 0.0000   | -0.6328  |
 | System_3 | -0.8437  | 0.6328   | 0.0000   |
 +----------+----------+----------+----------+
-## Between-system P values from randomized Tukey Hsd test (n_iters=10000)
+## Between-system P values from randomized Tukey Hsd test (n_iters = 10000)
 +----------+----------+----------+----------+
 | P Value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.0227   | 0.2512   |
-| System_2 | 0.0227   | 1.0000   | 0.6507   |
-| System_3 | 0.2512   | 0.6507   | 1.0000   |
+| System_1 | 1.0000   | 0.0220   | 0.2444   |
+| System_2 | 0.0220   | 1.0000   | 0.6438   |
+| System_3 | 0.2444   | 0.6438   | 1.0000   |
 +----------+----------+----------+----------+
 
 (The statistics for the other metrics will be shown as well.)
