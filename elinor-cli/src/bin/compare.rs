@@ -174,7 +174,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
         df_metrics.push(joined);
     }
 
-    println!("\n# Paired Student's t-test for (System_1 - System_2)");
+    println!("\n# Two-sided paired Student's t-test for (System_1 - System_2)");
     {
         let mut stats = vec![];
         for df in df_metrics.iter() {
@@ -227,7 +227,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
     }
 
     let n_resamples = 10000;
-    println!("\n# Bootstrap test (n_resamples={n_resamples})");
+    println!("\n# Two-sided paired Bootstrap test (n_resamples={n_resamples})");
     {
         let mut stats = vec![];
         let tester = BootstrapTester::new().with_n_resamples(n_resamples);
@@ -418,7 +418,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Between-system effect sizes from Tukey Hsd test");
+        println!("## Between-system effect sizes (ES) from Tukey Hsd test");
         let effect_sizes = stat.between_system_effect_sizes();
         let mut columns = vec![Series::new(
             "ES".into(),
@@ -435,7 +435,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## P-values from randomized Tukey Hsd test (n_iters={n_iters})");
+        println!("## P values from randomized Tukey Hsd test (n_iters={n_iters})");
         let stat = hsd_tester.test(tupled_scores.iter())?;
         let p_values = stat.p_values();
         let mut columns = vec![Series::new(
