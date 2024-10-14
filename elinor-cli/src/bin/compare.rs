@@ -13,13 +13,21 @@ use polars_lazy::prelude::*;
 struct Args {
     #[arg(short, long, num_args = 1.., help = "Path to the input CSV files")]
     input_csvs: Vec<PathBuf>,
+
+    #[arg(
+        short,
+        long,
+        default_value = "query_id",
+        help = "Header name of the topic identifier column"
+    )]
+    topic_header: String,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
 
     if args.input_csvs.is_empty() {
-        return Err(anyhow::anyhow!("No input CSV files"));
+        return Err(anyhow::anyhow!("Specify at least one input CSV file."));
     }
 
     let mut dfs = vec![];
@@ -30,11 +38,12 @@ fn main() -> Result<()> {
         dfs.push(df);
     }
 
+    // If there is only one input CSV file, just print the means.
     if args.input_csvs.len() == 1 {
         println!("# Means");
         {
             let metrics = extract_metrics(&dfs[0]);
-            let values = get_means(&dfs[0], &metrics);
+            let values = get_means(&dfs[0], &metrics, &args.topic_header);
             let columns = vec![
                 Series::new("Metric".into(), metrics),
                 Series::new("Score".into(), values),
@@ -67,10 +76,10 @@ fn main() -> Result<()> {
     }
 
     if dfs.len() == 2 {
-        compare_two_systems(&dfs[0], &dfs[1])?;
+        compare_two_systems(&dfs[0], &dfs[1], &args.topic_header)?;
     }
     if dfs.len() > 2 {
-        compare_multiple_systems(&dfs)?;
+        compare_multiple_systems(&dfs, &args.topic_header)?;
     }
 
     Ok(())
@@ -84,11 +93,11 @@ fn extract_metrics(df: &DataFrame) -> Vec<String> {
         .collect()
 }
 
-fn get_means(df: &DataFrame, metrics: &[String]) -> Vec<f64> {
+fn get_means(df: &DataFrame, metrics: &[String], topic_header: &str) -> Vec<f64> {
     let means = df
         .clone()
         .lazy()
-        .select([col("*").exclude(["query_id"]).mean()])
+        .select([col("*").exclude([topic_header]).mean()])
         .collect()
         .unwrap();
     let values = metrics
@@ -106,7 +115,7 @@ fn get_means(df: &DataFrame, metrics: &[String]) -> Vec<f64> {
     values
 }
 
-fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
+fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -> Result<()> {
     let metrics = extract_metrics(df_1);
 
     println!("\n# Means");
@@ -116,7 +125,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
             metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
         )];
         for (i, df) in [df_1, df_2].into_iter().enumerate() {
-            let values = get_means(df, &metrics);
+            let values = get_means(df, &metrics, topic_header);
             columns.push(Series::new(format!("System_{}", i + 1).into(), values));
         }
         let df = DataFrame::new(columns)?;
@@ -129,20 +138,20 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
         let system_1 = df_1
             .clone()
             .lazy()
-            .select([col("query_id"), col(metric).alias("system_1")])
+            .select([col(topic_header), col(metric).alias("system_1")])
             .collect()?;
         let system_2 = df_2
             .clone()
             .lazy()
-            .select([col("query_id"), col(metric).alias("system_2")])
+            .select([col(topic_header), col(metric).alias("system_2")])
             .collect()?;
         let joined = system_1
             .clone()
             .lazy()
             .join(
                 system_2.clone().lazy(),
-                [col("query_id")],
-                [col("query_id")],
+                [col(topic_header)],
+                [col(topic_header)],
                 JoinArgs::new(JoinType::Left),
             )
             .collect()?;
@@ -263,7 +272,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame) -> Result<()> {
     Ok(())
 }
 
-fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
+fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()> {
     let metrics = extract_metrics(&dfs[0]);
 
     let mut df_metrics = vec![];
@@ -275,7 +284,7 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
                 .clone()
                 .lazy()
                 .select([
-                    col("query_id"),
+                    col(topic_header),
                     col(metric).alias(format!("system_{}", i + 1)),
                 ])
                 .collect()?;
@@ -288,8 +297,8 @@ fn compare_multiple_systems(dfs: &[DataFrame]) -> Result<()> {
                 acc.lazy()
                     .join(
                         df.clone().lazy(),
-                        [col("query_id")],
-                        [col("query_id")],
+                        [col(topic_header)],
+                        [col(topic_header)],
                         JoinArgs::new(JoinType::Left),
                     )
                     .collect()
