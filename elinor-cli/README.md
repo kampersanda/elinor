@@ -2,19 +2,26 @@
 
 elinor-cli is a set of command-line tools for evaluating IR systems:
 
-- [elinor-evaluate](#elinor-evaluate): Evaluate the ranking metrics of the system.
-- [elinor-compare](#elinor-compare): Compare the metrics of multiple systems with statistical tests.
-- [elinor-convert](#elinor-convert): Convert the TREC format into the JSONL format for elinor-evaluate.
+- [elinor-evaluate](#elinor-evaluate) evaluates the ranking metrics of the system.
+- [elinor-compare](#elinor-compare) compares the metrics of multiple systems with statistical tests.
+- [elinor-convert](#elinor-convert) converts the TREC format into the JSONL format for elinor-evaluate.
 
 ## elinor-evaluate
 
-This tool evaluates the ranking metrics of the system.
+elinor-evaluate evaluates the ranking metrics of the system.
 
 ### Input format
+
+elinor-evaluate requires two JSONL files: the gold-standard and predicted relevance scores.
+Each line in the JSONL file should be a JSON object with the following fields:
 
 - `query_id`: The ID of the query.
 - `doc_id`: The ID of the document.
 - `score`: The relevance score of the query-document pair.
+  - If it is gold-standard, the score should be an integer (e.g., 0, 1, 2).
+  - If it is predicted, the score can be a float (e.g., 0.1, 0.5, 1.0).
+
+An example of the gold-standard JSONL file is:
 
 ```jsonl
 {"query_id":"q_1","doc_id":"d_1","score":2}
@@ -22,13 +29,25 @@ This tool evaluates the ranking metrics of the system.
 {"query_id":"q_2","doc_id":"d_3","score":2}
 ```
 
+An example of the predicted JSONL file is:
+
 ```jsonl
 {"query_id":"q_1","doc_id":"d_1","score":0.65}
 {"query_id":"q_1","doc_id":"d_4","score":0.23}
 {"query_id":"q_2","doc_id":"d_3","score":0.48}
 ```
 
+The specifications are:
+
+- There is no need to sort the lines in the JSONL files.
+- The query-document pairs should be unique in each file.
+- The query IDs in the gold-standard and predicted files should be the same.
+
 ### Example usage
+
+Here is example usage with sample JSONL files in the [`test-data/sample`](../test-data/sample/) directory.
+
+If you want to evaluate the Precision@3, Average Precision (AP), Reciprocal Rank (RR), and nDCG@3 metrics, run:
 
 ```sh
 cargo run --release -p elinor-cli --bin elinor-evaluate -- \
@@ -36,6 +55,10 @@ cargo run --release -p elinor-cli --bin elinor-evaluate -- \
   --pred-jsonl test-data/sample/pred_1.jsonl \
   --metrics precision@3 ap rr ndcg@3
 ```
+
+The available metrics are shown in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
+
+The output will show the macro-averaged scores for each metric:
 
 ```
 precision@3     0.5833
@@ -44,13 +67,17 @@ rr      0.8125
 ndcg@3  0.8286
 ```
 
+The detailed results can be saved to a CSV file by specifying the `--output-csv` option:
+
 ```sh
 cargo run --release -p elinor-cli --bin elinor-evaluate -- \
   --gold-jsonl test-data/sample/gold.jsonl \
   --pred-jsonl test-data/sample/pred_1.jsonl \
-  --output-csv test-data/sample/pred_1.csv \  # Specify output CSV
+  --output-csv test-data/sample/pred_1.csv \  # Specify output CSV path
   --metrics precision@3 ap rr ndcg@3
 ```
+
+The CSV file will contain the scores for each query:
 
 ```csv
 query_id,precision@3,ap,rr,ndcg@3
@@ -63,6 +90,8 @@ q_6,0.6666666666666666,0.8333333333333333,1.0,0.9502344167898356
 q_7,0.3333333333333333,1.0,1.0,1.0
 q_8,0.6666666666666666,1.0,1.0,0.8597186998521972
 ```
+
+The CSV files can be input to elinor-compare to compare the metrics of multiple systems.
 
 ## elinor-compare
 
