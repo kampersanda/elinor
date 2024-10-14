@@ -25,6 +25,10 @@ offering an intuitive and easy-to-use interface.
   Elinor includes several statistical tests, such as Student's t-test or Randomized Tukey HSD test, to verify the generalizability of results.
   Not only p-values but also other statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
   See the [statistical_tests](https://docs.rs/elinor/latest/elinor/statistical_tests/index.html) module for more details.
+- **Command-line tools:**
+  Elinor provides command-line tools for evaluating and comparing IR systems.
+  The tools support various metrics and statistical tests, enabling users to perform comprehensive evaluations with ease.
+  See the [elinor-cli](./elinor-cli) directory for more details.
 
 ## API documentation
 
