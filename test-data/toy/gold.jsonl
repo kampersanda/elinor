@@ -1,10 +1,20 @@
-{"query_id": "q_1", "doc_id": "d_1", "score": 1}
-{"query_id": "q_1", "doc_id": "d_2", "score": 2}
-{"query_id": "q_1", "doc_id": "d_3", "score": 0}
-{"query_id": "q_2", "doc_id": "d_1", "score": 1}
-{"query_id": "q_2", "doc_id": "d_4", "score": 2}
-{"query_id": "q_3", "doc_id": "d_2", "score": 1}
-{"query_id": "q_3", "doc_id": "d_5", "score": 2}
-{"query_id": "q_4", "doc_id": "d_3", "score": 0}
-{"query_id": "q_4", "doc_id": "d_4", "score": 1}
-{"query_id": "q_5", "doc_id": "d_5", "score": 2}
+{"query_id":"q_1","doc_id":"d_1","score":2}
+{"query_id":"q_1","doc_id":"d_4","score":1}
+{"query_id":"q_1","doc_id":"d_7","score":0}
+{"query_id":"q_2","doc_id":"d_3","score":2}
+{"query_id":"q_2","doc_id":"d_6","score":1}
+{"query_id":"q_3","doc_id":"d_2","score":0}
+{"query_id":"q_3","doc_id":"d_5","score":2}
+{"query_id":"q_3","doc_id":"d_8","score":1}
+{"query_id":"q_4","doc_id":"d_1","score":1}
+{"query_id":"q_4","doc_id":"d_3","score":0}
+{"query_id":"q_4","doc_id":"d_7","score":2}
+{"query_id":"q_5","doc_id":"d_2","score":1}
+{"query_id":"q_5","doc_id":"d_5","score":0}
+{"query_id":"q_6","doc_id":"d_4","score":2}
+{"query_id":"q_6","doc_id":"d_6","score":0}
+{"query_id":"q_6","doc_id":"d_8","score":1}
+{"query_id":"q_7","doc_id":"d_1","score":0}
+{"query_id":"q_7","doc_id":"d_4","score":2}
+{"query_id":"q_8","doc_id":"d_3","score":1}
+{"query_id":"q_8","doc_id":"d_7","score":2}

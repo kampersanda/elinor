@@ -1,12 +1,24 @@
-{"query_id": "q_1", "doc_id": "d_1", "score": 0.85}
-{"query_id": "q_1", "doc_id": "d_4", "score": 0.32}
-{"query_id": "q_1", "doc_id": "d_2", "score": 1.0}
-{"query_id": "q_2", "doc_id": "d_4", "score": 0.67}
-{"query_id": "q_2", "doc_id": "d_3", "score": 0.15}
-{"query_id": "q_2", "doc_id": "d_5", "score": 0.88}
-{"query_id": "q_3", "doc_id": "d_5", "score": 0.93}
-{"query_id": "q_3", "doc_id": "d_4", "score": 0.45}
-{"query_id": "q_4", "doc_id": "d_2", "score": 0.78}
-{"query_id": "q_4", "doc_id": "d_5", "score": 0.0}
-{"query_id": "q_5", "doc_id": "d_3", "score": 0.59}
-{"query_id": "q_5", "doc_id": "d_4", "score": 0.21}
+{"query_id":"q_1","doc_id":"d_2","score":0.65}
+{"query_id":"q_1","doc_id":"d_4","score":0.23}
+{"query_id":"q_1","doc_id":"d_7","score":0.89}
+{"query_id":"q_2","doc_id":"d_1","score":0.48}
+{"query_id":"q_2","doc_id":"d_5","score":0.91}
+{"query_id":"q_2","doc_id":"d_8","score":0.33}
+{"query_id":"q_3","doc_id":"d_3","score":0.76}
+{"query_id":"q_3","doc_id":"d_6","score":0.27}
+{"query_id":"q_3","doc_id":"d_8","score":0.58}
+{"query_id":"q_4","doc_id":"d_2","score":0.15}
+{"query_id":"q_4","doc_id":"d_4","score":0.83}
+{"query_id":"q_4","doc_id":"d_7","score":0.62}
+{"query_id":"q_5","doc_id":"d_1","score":0.93}
+{"query_id":"q_5","doc_id":"d_6","score":0.40}
+{"query_id":"q_5","doc_id":"d_8","score":0.17}
+{"query_id":"q_6","doc_id":"d_3","score":0.71}
+{"query_id":"q_6","doc_id":"d_5","score":0.54}
+{"query_id":"q_6","doc_id":"d_7","score":0.21}
+{"query_id":"q_7","doc_id":"d_2","score":0.36}
+{"query_id":"q_7","doc_id":"d_4","score":0.82}
+{"query_id":"q_7","doc_id":"d_8","score":0.29}
+{"query_id":"q_8","doc_id":"d_1","score":0.46}
+{"query_id":"q_8","doc_id":"d_3","score":0.95}
+{"query_id":"q_8","doc_id":"d_6","score":0.64}
