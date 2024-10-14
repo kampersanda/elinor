@@ -93,6 +93,22 @@ fn extract_metrics(df: &DataFrame) -> Vec<String> {
         .collect()
 }
 
+fn extract_common_metrics<'a, I>(dfs: I) -> Vec<String>
+where
+    I: IntoIterator<Item = &'a DataFrame>,
+{
+    let mut dfs = dfs.into_iter();
+    let mut common_metrics = extract_metrics(dfs.next().unwrap());
+    for df in dfs {
+        let metrics = extract_metrics(df);
+        common_metrics = common_metrics
+            .into_iter()
+            .filter(|metric| metrics.contains(metric))
+            .collect();
+    }
+    common_metrics
+}
+
 fn get_means(df: &DataFrame, metrics: &[String], topic_header: &str) -> Vec<f64> {
     let means = df
         .clone()
@@ -116,7 +132,10 @@ fn get_means(df: &DataFrame, metrics: &[String], topic_header: &str) -> Vec<f64>
 }
 
 fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -> Result<()> {
-    let metrics = extract_metrics(df_1);
+    let metrics = extract_common_metrics([df_1, df_2]);
+    if metrics.is_empty() {
+        return Err(anyhow::anyhow!("No common metrics found."));
+    }
 
     println!("\n# Means");
     {
@@ -273,7 +292,10 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
 }
 
 fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()> {
-    let metrics = extract_metrics(&dfs[0]);
+    let metrics = extract_common_metrics(dfs);
+    if metrics.is_empty() {
+        return Err(anyhow::anyhow!("No common metrics found."));
+    }
 
     let mut df_metrics = vec![];
     for metric in &metrics {
