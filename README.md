@@ -34,7 +34,49 @@ Or, you can build and open the documentation locally
 by running the following command:
 
 ```sh
-RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --open
+RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --features serde --open
+```
+
+## Command-line tools
+
+[elinor-cli](./elinor-cli) provides command-line tools for evaluating and comparing IR systems.
+See the [README](./elinor-cli/README.md) for more details.
+
+For example, you can obtain various statistics from several statistical tests, as shown below:
+
+```
+# score
++----------+--------+---------+
+| System   | Mean   | 95% MOE |
++----------+--------+---------+
+| System 1 | 0.3450 | 0.0670  |
+| System 2 | 0.2700 | 0.0670  |
+| System 3 | 0.2450 | 0.0670  |
++----------+--------+---------+
+## Two-way ANOVA without replication
++-----------------+------------+----+----------+--------+---------+
+| Factor          | Variation  | DF | Variance | F Stat | P Value |
++-----------------+------------+----+----------+--------+---------+
+| Between-systems | 0.1083     | 2  | 0.0542   | 2.4749 | 0.0976  |
+| Between-topics  | 1.0293     | 19 | 0.0542   | 2.4754 | 0.0086  |
+| Residual        | 0.8317     | 38 | 0.0219   |        |         |
++-----------------+------------+----+----------+--------+---------+
+## Between-system effect sizes (ES) from Tukey Hsd test
++----------+----------+----------+----------+
+| ES       | System_1 | System_2 | System_3 |
++----------+----------+----------+----------+
+| System_1 | 0.0000   | 0.5070   | 0.6760   |
+| System_2 | -0.5070  | 0.0000   | 0.1690   |
+| System_3 | -0.6760  | -0.1690  | 0.0000   |
++----------+----------+----------+----------+
+## Between-system P values from randomized Tukey Hsd test (n_iters=10000)
++----------+----------+----------+----------+
+| P Value  | System_1 | System_2 | System_3 |
++----------+----------+----------+----------+
+| System_1 | 1.0000   | 0.2734   | 0.1060   |
+| System_2 | 0.2734   | 1.0000   | 0.8913   |
+| System_3 | 0.1060   | 0.8913   | 1.0000   |
++----------+----------+----------+----------+
 ```
 
 ## Licensing

@@ -1,0 +1,39 @@
+[package]
+name = "elinor-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["Shunsuke Kanda (kampersanda) <shnsk.knd@gmail.com>"]
+description = "Command line tools for elinor."
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+documentation = "https://docs.rs/elinor"
+repository = "https://github.com/kampersanda/elinor"
+homepage = "https://github.com/kampersanda/elinor"
+keywords = ["information", "retrieval", "evaluation"]
+categories = ["science"]
+rust-version = "1.65.0"
+
+[dependencies]
+anyhow = "1.0.89"
+clap = { version = "4.5.20", features = ["derive"] }
+polars = "0.43.1"
+polars-lazy = "0.43.1"
+prettytable-rs = "0.10.0"
+serde_json = "1.0.128"
+
+[dependencies.elinor]
+path = ".."
+features = ["serde"]
+default-features = false
+
+[[bin]]
+name = "elinor-convert"
+path = "src/bin/convert.rs"
+
+[[bin]]
+name = "elinor-evaluate"
+path = "src/bin/evaluate.rs"
+
+[[bin]]
+name = "elinor-compare"
+path = "src/bin/compare.rs"

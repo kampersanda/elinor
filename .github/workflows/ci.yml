@@ -73,12 +73,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.12
-      - name: Build elinor-evaluate
-        run: cargo build --release -p elinor-evaluate
+      - name: Build elinor-cli
+        run: cargo build --release -p elinor-cli
       - name: Run correctness test
         run: |
-          ./correctness-test/prepare_trec_eval.sh
-          ./correctness-test/compare_with_trec_eval.py trec_eval-9.0.8 target/release
+          ./scripts/compare_with_trec_eval.py target/release test-data/trec-eval/qrels.test.jsonl test-data/trec-eval/results.test.jsonl test-data/trec-eval/qrels.test.output.json
+          ./scripts/compare_with_trec_eval.py target/release test-data/trec-eval/qrels.rel_level.jsonl test-data/trec-eval/results.test.jsonl test-data/trec-eval/qrels.rel_level.output.json
 
   publish:
     name: Publish
