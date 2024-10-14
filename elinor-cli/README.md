@@ -105,6 +105,17 @@ This tool is designed not only for IR systems but also for any systems that can 
 elinor-compare requires multiple CSV files that contain the scores of the metrics for each query,
 such as the output of elinor-evaluate.
 
+Precisely, the CSV files should have the following columns:
+
+- `topic_id`: The ID of the topic (e.g., query).
+  - The colum name is arbitrary.
+  - The column names must be the same across the CSV files.
+  - The topic IDs should be the same across the CSV files.
+- `metric_1`, `metric_2`, ...: The scores of the metrics for the query.
+  - The column names are the metric names.
+  - The column names should be the same across the CSV files.
+  - The metric scores should be floats.
+
 ### Example usage: comparing two systems
 
 Here is example usage with sample CSV files in the [`test-data/sample`](../test-data/sample/) directory.
