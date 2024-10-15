@@ -50,14 +50,15 @@ For example, you can obtain various statistics from several statistical tests, a
 
 ```
 # score
-+----------+--------+
-| System   | Mean   |
-+----------+--------+
-| System 1 | 0.3450 |
-| System 2 | 0.2700 |
-| System 3 | 0.2450 |
-+----------+--------+
-## Two-way ANOVA without replication (95% MOE = 0.0670)
+## System means and 95% MOE from two-way ANOVA without replication
++----------+--------+---------+
+| System   | Mean   | 95% MOE |
++----------+--------+---------+
+| System_1 | 0.3450 | 0.0670  |
+| System_2 | 0.2700 | 0.0670  |
+| System_3 | 0.2450 | 0.0670  |
++----------+--------+---------+
+## Two-way ANOVA without replication
 +-----------------+------------+----+----------+--------+---------+
 | Factor          | Variation  | DF | Variance | F Stat | P Value |
 +-----------------+------------+----+----------+--------+---------+
@@ -65,7 +66,7 @@ For example, you can obtain various statistics from several statistical tests, a
 | Between-topics  | 1.0293     | 19 | 0.0542   | 2.4754 | 0.0086  |
 | Residual        | 0.8317     | 38 | 0.0219   |        |         |
 +-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes (ES) from Tukey Hsd test
+## Between-system effect sizes for randomized Tukey HSD test
 +----------+----------+----------+----------+
 | ES       | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
@@ -73,13 +74,13 @@ For example, you can obtain various statistics from several statistical tests, a
 | System_2 | -0.5070  | 0.0000   | 0.1690   |
 | System_3 | -0.6760  | -0.1690  | 0.0000   |
 +----------+----------+----------+----------+
-## Between-system P values from randomized Tukey Hsd test (n_iters=10000)
+## Between-system P values for randomized Tukey HSD test (n_iters = 10000)
 +----------+----------+----------+----------+
 | P Value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.2588   | 0.1038   |
-| System_2 | 0.2588   | 1.0000   | 0.8966   |
-| System_3 | 0.1038   | 0.8966   | 1.0000   |
+| System_1 | 1.0000   | 0.2580   | 0.1037   |
+| System_2 | 0.2580   | 1.0000   | 0.8936   |
+| System_3 | 0.1037   | 0.8936   | 1.0000   |
 +----------+----------+----------+----------+
 ```
 
