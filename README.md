@@ -89,7 +89,8 @@ For example, you can obtain various statistics from several statistical tests, a
 In addition to the unit tests,
 Elinor's evaluation results are validated to ensure accuracy and reliability:
 
-- The metrics are validated against trec_eval using its test data.
+- The metrics are validated against [trec_eval](https://github.com/usnistgov/trec_eval)
+  using its test data.
 - The statistical tests are validated against the results in
   [Sakai's book](https://www.coronasha.co.jp/np/isbn/9784339024968/)
   using its sample data.
