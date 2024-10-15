@@ -227,7 +227,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
     }
 
     let n_resamples = 10000;
-    println!("\n# Two-sided paired Bootstrap test (n_resamples={n_resamples})");
+    println!("\n# Two-sided paired Bootstrap test (n_resamples = {n_resamples})");
     {
         let mut stats = vec![];
         let tester = BootstrapTester::new().with_n_resamples(n_resamples);
@@ -255,7 +255,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
     }
 
     let n_iters = 10000;
-    println!("\n# Fisher's randomized test (n_iters={n_iters})");
+    println!("\n# Fisher's randomized test (n_iters = {n_iters})");
     {
         let mut stats = vec![];
         let tester = RandomizedTukeyHsdTester::new(2).with_n_iters(n_iters);
@@ -348,6 +348,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             tupled_scores.push(scores);
         }
 
+        println!("## Statistics for system means");
         let anove_stat =
             TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
         let system_means = anove_stat.system_means();
@@ -356,14 +357,11 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             Series::new(
                 "System".into(),
                 (1..=dfs.len())
-                    .map(|i| format!("System {i}"))
+                    .map(|i| format!("System_{i}"))
                     .collect::<Vec<_>>(),
             ),
             Series::new("Mean".into(), system_means.to_vec()),
-            Series::new(
-                "95% MOE".into(),
-                (1..=dfs.len()).map(|_| moe95).collect::<Vec<_>>(),
-            ),
+            Series::new("95% MOE".into(), vec![moe95; dfs.len()]),
         ];
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
@@ -418,7 +416,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Between-system effect sizes (ES) from Tukey Hsd test");
+        println!("## Between-system effect sizes for randomized Tukey HSD test");
         let effect_sizes = anove_stat.between_system_effect_sizes();
         let mut columns = vec![Series::new(
             "ES".into(),
@@ -435,7 +433,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Between-system P values from randomized Tukey Hsd test (n_iters={n_iters})");
+        println!("## Between-system P values for randomized Tukey HSD test (n_iters = {n_iters})");
         let hsd_stat = hsd_tester.test(tupled_scores.iter())?;
         let p_values = hsd_stat.p_values();
         let mut columns = vec![Series::new(

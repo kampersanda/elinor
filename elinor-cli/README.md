@@ -105,6 +105,17 @@ This tool is designed not only for IR systems but also for any systems that can 
 elinor-compare requires multiple CSV files that contain the scores of the metrics for each query,
 such as the output of elinor-evaluate.
 
+Precisely, the CSV files should have the following columns:
+
+- `topic_id`: The ID of the topic (e.g., query).
+  - The colum name is arbitrary.
+  - The column names must be the same across the CSV files.
+  - The topic IDs should be the same across the CSV files.
+- `metric_1`, `metric_2`, ...: The scores of the metrics for the query.
+  - The column names are the metric names.
+  - The column names should be the same across the CSV files.
+  - The metric scores should be floats.
+
 ### Example usage: comparing two systems
 
 Here is example usage with sample CSV files in the [`test-data/sample`](../test-data/sample/) directory.
@@ -148,24 +159,24 @@ The output will be:
 | ndcg@3      | 0.3637 | 0.1026 | 1.1356 | 3.2119 | 0.0148  | 0.2677  |
 +-------------+--------+--------+--------+--------+---------+---------+
 
-# Two-sided paired Bootstrap test (n_resamples=10000)
+# Two-sided paired Bootstrap test (n_resamples = 10000)
 +-------------+---------+
 | Metric      | P Value |
 +-------------+---------+
-| precision@3 | 0.0248  |
-| ap          | 0.0274  |
-| rr          | 0.0619  |
-| ndcg@3      | 0.0272  |
+| precision@3 | 0.0222  |
+| ap          | 0.0264  |
+| rr          | 0.0661  |
+| ndcg@3      | 0.0311  |
 +-------------+---------+
 
-# Fisher's randomized test (n_iters=10000)
+# Fisher's randomized test (n_iters = 10000)
 +-------------+---------+
 | Metric      | P Value |
 +-------------+---------+
-| precision@3 | 0.0620  |
-| ap          | 0.0619  |
-| rr          | 0.1251  |
-| ndcg@3      | 0.0631  |
+| precision@3 | 0.0632  |
+| ap          | 0.0677  |
+| rr          | 0.1286  |
+| ndcg@3      | 0.0651  |
 +-------------+---------+
 ```
 
@@ -193,12 +204,13 @@ The output will be:
 +----------+-----------------------------+
 
 # precision@3
+## Statistics for system means
 +----------+--------+---------+
 | System   | Mean   | 95% MOE |
 +----------+--------+---------+
-| System 1 | 0.5833 | 0.1498  |
-| System 2 | 0.2917 | 0.1498  |
-| System 3 | 0.4167 | 0.1498  |
+| System_1 | 0.5833 | 0.1498  |
+| System_2 | 0.2917 | 0.1498  |
+| System_3 | 0.4167 | 0.1498  |
 +----------+--------+---------+
 ## Two-way ANOVA without replication
 +-----------------+------------+----+----------+--------+---------+
@@ -208,7 +220,7 @@ The output will be:
 | Between-topics  | 0.3287     | 7  | 0.0470   | 1.2034 | 0.3623  |
 | Residual        | 0.5463     | 14 | 0.0390   |        |         |
 +-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes (ES) from Tukey Hsd test
+## Between-system effect sizes for randomized Tukey HSD test
 +----------+----------+----------+----------+
 | ES       | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
@@ -216,13 +228,13 @@ The output will be:
 | System_2 | -1.4765  | 0.0000   | -0.6328  |
 | System_3 | -0.8437  | 0.6328   | 0.0000   |
 +----------+----------+----------+----------+
-## Between-system P values from randomized Tukey Hsd test (n_iters=10000)
+## Between-system P values for randomized Tukey HSD test (n_iters = 10000)
 +----------+----------+----------+----------+
 | P Value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.0227   | 0.2512   |
-| System_2 | 0.0227   | 1.0000   | 0.6507   |
-| System_3 | 0.2512   | 0.6507   | 1.0000   |
+| System_1 | 1.0000   | 0.0223   | 0.2581   |
+| System_2 | 0.0223   | 1.0000   | 0.6568   |
+| System_3 | 0.2581   | 0.6568   | 1.0000   |
 +----------+----------+----------+----------+
 
 (The statistics for the other metrics will be shown as well.)

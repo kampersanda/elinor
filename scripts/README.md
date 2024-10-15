@@ -1,8 +1,9 @@
-# Correctness test compared with the reference implementation
+# elinor/scripts
 
-## With trec_eval
+This directory contains utility scripts.
 
-```shell
-./correctness-test/prepare_trec_eval.sh
-./correctness-test/compare_with_trec_eval.py trec_eval-9.0.8 target/release
-```
+## Correctness tests over [trec_eval](https://github.com/usnistgov/trec_eval)
+
+- `prepare_trec_eval.sh`: Download and compile trec_eval.
+- `run_trec_eval.py`: Run trec_eval and save the results.
+- `compare_with_trec_eval.py`: Compare the elinor results with trec_eval results.
