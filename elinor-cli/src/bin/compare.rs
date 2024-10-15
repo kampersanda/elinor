@@ -355,7 +355,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             Series::new(
                 "System".into(),
                 (1..=dfs.len())
-                    .map(|i| format!("System {i}"))
+                    .map(|i| format!("System_{i}"))
                     .collect::<Vec<_>>(),
             ),
             Series::new("Mean".into(), system_means.to_vec()),
