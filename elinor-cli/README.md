@@ -204,7 +204,7 @@ The output will be:
 +----------+-----------------------------+
 
 # precision@3
-## System means and 95% MOE from two-way ANOVA without replication
+## Statistics for system means
 +----------+--------+---------+
 | System   | Mean   | 95% MOE |
 +----------+--------+---------+

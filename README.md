@@ -50,7 +50,7 @@ For example, you can obtain various statistics from several statistical tests, a
 
 ```
 # score
-## System means and 95% MOE from two-way ANOVA without replication
+## Statistics for system means
 +----------+--------+---------+
 | System   | Mean   | 95% MOE |
 +----------+--------+---------+

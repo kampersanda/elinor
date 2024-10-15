@@ -348,7 +348,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             tupled_scores.push(scores);
         }
 
-        println!("## System means and 95% MOE from two-way ANOVA without replication");
+        println!("## Statistics for system means");
         let anove_stat =
             TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
         let system_means = anove_stat.system_means();
