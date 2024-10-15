@@ -204,14 +204,15 @@ The output will be:
 +----------+-----------------------------+
 
 # precision@3
-+----------+--------+
-| System   | Mean   |
-+----------+--------+
-| System 1 | 0.5833 |
-| System 2 | 0.2917 |
-| System 3 | 0.4167 |
-+----------+--------+
-## Two-way ANOVA without replication (95% MOE = 0.1498)
+## System means and 95% MOE from two-way ANOVA without replication
++----------+--------+---------+
+| System   | Mean   | 95% MOE |
++----------+--------+---------+
+| System_1 | 0.5833 | 0.1498  |
+| System_2 | 0.2917 | 0.1498  |
+| System_3 | 0.4167 | 0.1498  |
++----------+--------+---------+
+## Two-way ANOVA without replication
 +-----------------+------------+----+----------+--------+---------+
 | Factor          | Variation  | DF | Variance | F Stat | P Value |
 +-----------------+------------+----+----------+--------+---------+
@@ -219,7 +220,7 @@ The output will be:
 | Between-topics  | 0.3287     | 7  | 0.0470   | 1.2034 | 0.3623  |
 | Residual        | 0.5463     | 14 | 0.0390   |        |         |
 +-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes (ES) from Tukey Hsd test
+## Between-system effect sizes for randomized Tukey HSD test
 +----------+----------+----------+----------+
 | ES       | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
@@ -227,13 +228,13 @@ The output will be:
 | System_2 | -1.4765  | 0.0000   | -0.6328  |
 | System_3 | -0.8437  | 0.6328   | 0.0000   |
 +----------+----------+----------+----------+
-## Between-system P values from randomized Tukey Hsd test (n_iters = 10000)
+## Between-system P values for randomized Tukey HSD test (n_iters = 10000)
 +----------+----------+----------+----------+
 | P Value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.0220   | 0.2444   |
-| System_2 | 0.0220   | 1.0000   | 0.6438   |
-| System_3 | 0.2444   | 0.6438   | 1.0000   |
+| System_1 | 1.0000   | 0.0223   | 0.2581   |
+| System_2 | 0.0223   | 1.0000   | 0.6568   |
+| System_3 | 0.2581   | 0.6568   | 1.0000   |
 +----------+----------+----------+----------+
 
 (The statistics for the other metrics will be shown as well.)
