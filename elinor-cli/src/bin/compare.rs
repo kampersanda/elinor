@@ -348,9 +348,11 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             tupled_scores.push(scores);
         }
 
+        println!("## System means and 95% MOE from two-way ANOVA without replication");
         let anove_stat =
             TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
         let system_means = anove_stat.system_means();
+        let moe95 = anove_stat.margin_of_error(0.05)?;
         let columns = vec![
             Series::new(
                 "System".into(),
@@ -359,12 +361,12 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
                     .collect::<Vec<_>>(),
             ),
             Series::new("Mean".into(), system_means.to_vec()),
+            Series::new("95% MOE".into(), vec![moe95; dfs.len()]),
         ];
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        let moe95 = anove_stat.margin_of_error(0.05)?;
-        println!("## Two-way ANOVA without replication (95% MOE = {moe95:.4})");
+        println!("## Two-way ANOVA without replication");
         let columns = vec![
             Series::new(
                 "Factor".into(),
@@ -414,7 +416,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Between-system effect sizes (ES) from Tukey Hsd test");
+        println!("## Between-system effect sizes for randomized Tukey HSD test");
         let effect_sizes = anove_stat.between_system_effect_sizes();
         let mut columns = vec![Series::new(
             "ES".into(),
@@ -431,7 +433,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Between-system P values from randomized Tukey Hsd test (n_iters = {n_iters})");
+        println!("## Between-system P values for randomized Tukey HSD test (n_iters = {n_iters})");
         let hsd_stat = hsd_tester.test(tupled_scores.iter())?;
         let p_values = hsd_stat.p_values();
         let mut columns = vec![Series::new(
