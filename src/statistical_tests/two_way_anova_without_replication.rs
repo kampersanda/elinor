@@ -664,7 +664,7 @@ mod tests {
     }
 
     #[test]
-    fn test_two_way_anova_without_replication_sakai_book() {
+    fn test_two_way_anova_without_replication_sakai_book_15() {
         // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
         let a = vec![
             0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
@@ -687,7 +687,7 @@ mod tests {
         assert_eq!(stat.n_systems(), 3);
         assert_eq!(stat.n_topics(), 20);
 
-        // Comparing with the values in Sakai's book.
+        // Comparing with the values in 情報アクセス評価方法論.
         assert_abs_diff_eq!(stat.between_system_variation(), 0.1083, epsilon = 1e-4);
         assert_abs_diff_eq!(stat.between_topic_variation(), 1.0293, epsilon = 1e-4);
         assert_abs_diff_eq!(stat.residual_variation(), 0.8317, epsilon = 1e-4);
@@ -699,6 +699,7 @@ mod tests {
         assert_abs_diff_eq!(stat.between_system_p_value(), 0.098, epsilon = 1e-3);
         assert_abs_diff_eq!(stat.between_topic_p_value(), 0.009, epsilon = 1e-3);
         assert_abs_diff_eq!(stat.margin_of_error(0.05).unwrap(), 0.0670, epsilon = 1e-4);
+
         let effect_sizes = stat.between_system_effect_sizes();
         assert_abs_diff_eq!(effect_sizes[0][1], 0.5070, epsilon = 1e-4);
         assert_abs_diff_eq!(effect_sizes[0][2], 0.6760, epsilon = 1e-4);
