@@ -348,7 +348,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             tupled_scores.push(scores);
         }
 
-        println!("## Statistics for system means");
+        println!("## System means");
         let anove_stat =
             TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
         let system_means = anove_stat.system_means();
@@ -416,7 +416,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Between-system effect sizes for randomized Tukey HSD test");
+        println!("## Effect sizes for randomized Tukey HSD test");
         let hsd_stat = hsd_tester.test(tupled_scores.iter())?;
         let effect_sizes = hsd_stat.effect_sizes();
         let mut columns = vec![Series::new(
@@ -434,7 +434,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Between-system P values for randomized Tukey HSD test (n_iters = {n_iters})");
+        println!("## P values for randomized Tukey HSD test (n_iters = {n_iters})");
         let p_values = hsd_stat.p_values();
         let mut columns = vec![Series::new(
             "P Value".into(),
