@@ -570,60 +570,6 @@ impl TwoWayAnovaWithoutReplication {
             .system_t_dist
             .inverse_cdf(1.0 - (significance_level / 2.0)))
     }
-
-    /// Effect sizes for all combinations of systems,
-    /// returning a matrix of size $`m \times m`$.
-    ///
-    /// The $`(i, j)`$-th element is $`\text{ES}_{ij}`$.
-    /// The diagonal elements are always zero.
-    ///
-    /// # Formula
-    ///
-    /// ```math
-    /// \text{ES}_{ij} = \frac{\bar{x}_{i*} - \bar{x}_{j*}}{\sqrt{V_E}}
-    /// ```
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// use approx::assert_abs_diff_eq;
-    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
-    ///
-    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
-    /// let effect_sizes = stat.between_system_effect_sizes();
-    /// let mean_system_a: f64 = (1. + 2.) / 2.;
-    /// let mean_system_b: f64 = (2. + 4.) / 2.;
-    /// let mean_system_c: f64 = (3. + 2.) / 2.;
-    ///
-    /// assert_eq!(effect_sizes.len(), 3);
-    /// assert_eq!(effect_sizes[0].len(), 3);
-    /// assert_eq!(effect_sizes[1].len(), 3);
-    /// assert_eq!(effect_sizes[2].len(), 3);
-    /// assert_abs_diff_eq!(effect_sizes[0][0], 0.0);
-    /// assert_abs_diff_eq!(effect_sizes[1][1], 0.0);
-    /// assert_abs_diff_eq!(effect_sizes[2][2], 0.0);
-    /// assert_abs_diff_eq!(effect_sizes[0][1], (mean_system_a - mean_system_b) / stat.residual_variance().sqrt(), epsilon = 1e-10);
-    /// assert_abs_diff_eq!(effect_sizes[0][2], (mean_system_a - mean_system_c) / stat.residual_variance().sqrt(), epsilon = 1e-10);
-    /// assert_abs_diff_eq!(effect_sizes[1][2], (mean_system_b - mean_system_c) / stat.residual_variance().sqrt(), epsilon = 1e-10);
-    /// assert_abs_diff_eq!(effect_sizes[1][0], -effect_sizes[0][1], epsilon = 1e-10);
-    /// assert_abs_diff_eq!(effect_sizes[2][0], -effect_sizes[0][2], epsilon = 1e-10);
-    /// assert_abs_diff_eq!(effect_sizes[2][1], -effect_sizes[1][2], epsilon = 1e-10);
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn between_system_effect_sizes(&self) -> Vec<Vec<f64>> {
-        let mut effect_sizes = vec![vec![0.0; self.n_systems]; self.n_systems];
-        for i in 0..self.n_systems {
-            for j in (i + 1)..self.n_systems {
-                let diff = self.system_means[i] - self.system_means[j];
-                let effect_size = diff / self.residual_variance.sqrt();
-                effect_sizes[i][j] = effect_size;
-                effect_sizes[j][i] = -effect_size;
-            }
-        }
-        effect_sizes
-    }
 }
 
 #[cfg(test)]
@@ -699,10 +645,5 @@ mod tests {
         assert_abs_diff_eq!(stat.between_system_p_value(), 0.098, epsilon = 1e-3);
         assert_abs_diff_eq!(stat.between_topic_p_value(), 0.009, epsilon = 1e-3);
         assert_abs_diff_eq!(stat.margin_of_error(0.05).unwrap(), 0.0670, epsilon = 1e-4);
-
-        let effect_sizes = stat.between_system_effect_sizes();
-        assert_abs_diff_eq!(effect_sizes[0][1], 0.5070, epsilon = 1e-4);
-        assert_abs_diff_eq!(effect_sizes[0][2], 0.6760, epsilon = 1e-4);
-        assert_abs_diff_eq!(effect_sizes[1][2], 0.1690, epsilon = 1e-4);
     }
 }

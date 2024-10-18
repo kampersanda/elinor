@@ -417,7 +417,8 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         df_to_prettytable(&df).printstd();
 
         println!("## Between-system effect sizes for randomized Tukey HSD test");
-        let effect_sizes = anove_stat.between_system_effect_sizes();
+        let hsd_stat = hsd_tester.test(tupled_scores.iter())?;
+        let effect_sizes = hsd_stat.effect_sizes();
         let mut columns = vec![Series::new(
             "ES".into(),
             (1..=dfs.len())
@@ -434,7 +435,6 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         df_to_prettytable(&df).printstd();
 
         println!("## Between-system P values for randomized Tukey HSD test (n_iters = {n_iters})");
-        let hsd_stat = hsd_tester.test(tupled_scores.iter())?;
         let p_values = hsd_stat.p_values();
         let mut columns = vec![Series::new(
             "P Value".into(),
