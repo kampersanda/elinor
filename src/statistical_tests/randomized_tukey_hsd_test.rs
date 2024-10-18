@@ -108,8 +108,8 @@ impl RandomizedTukeyHsdTest {
     /// The $`(i, j)`$-th element has the p-value
     /// between the $`i`$-th and $`j`$-th systems.
     /// The diagonal elements are always one.
-    pub const fn p_values(&self) -> &Vec<Vec<f64>> {
-        &self.p_values
+    pub fn p_values(&self) -> Vec<Vec<f64>> {
+        self.p_values.clone()
     }
 
     /// Effect sizes for all combinations of systems,
