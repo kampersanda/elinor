@@ -4,8 +4,9 @@ use anyhow::Result;
 use clap::Parser;
 use elinor::statistical_tests::bootstrap_test::BootstrapTester;
 use elinor::statistical_tests::randomized_tukey_hsd_test::RandomizedTukeyHsdTester;
+use elinor::statistical_tests::StudentTTest;
 use elinor::statistical_tests::TukeyHsdTest;
-use elinor::statistical_tests::{StudentTTest, TwoWayAnovaWithoutReplication};
+use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
 use polars::prelude::*;
 use polars_lazy::prelude::*;
 
