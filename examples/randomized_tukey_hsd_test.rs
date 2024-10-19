@@ -34,5 +34,10 @@ fn main() -> Result<()> {
     println!("p-value for 0 and 2: {:.4}", p_values[0][2]);
     println!("p-value for 1 and 2: {:.4}", p_values[1][2]);
 
+    let effect_sizes = result.effect_sizes();
+    println!("Effect size for 0 and 1: {:.4}", effect_sizes[0][1]);
+    println!("Effect size for 0 and 2: {:.4}", effect_sizes[0][2]);
+    println!("Effect size for 1 and 2: {:.4}", effect_sizes[1][2]);
+
     Ok(())
 }
