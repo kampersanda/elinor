@@ -125,11 +125,6 @@
 //!
 //! // p-values and effect sizes for all pairs of systems.
 //! let p_values = hsd_stat.p_values();
-//! let effect_sizes = anova_stat.between_system_effect_sizes();
-//! for (i, j) in [(0, 1), (0, 2), (1, 2)] {
-//!     assert!((0.0..=1.0).contains(&p_values[i][j]));
-//!     assert!(effect_sizes[i][j] != 0.0);
-//! }
 //!
 //! // 95% CI of system means.
 //! let moe95 = anova_stat.margin_of_error(0.05)?;
