@@ -3,15 +3,20 @@
 use crate::errors::ElinorError;
 use crate::statistical_tests::TwoWayAnovaWithoutReplication;
 
-/// Tukey HSD test.
-///
-/// It can be used to compare three or more systems.
+/// Tukey HSD (with paired observations) test for comparing three or more systems.
 ///
 /// # Notes
 ///
-/// This struct does not provide p-values and only provides effect sizes
+/// **This struct does not provide p-values and only provides effect sizes**
 /// because we are unaware of Rust libraries that can calculate the studentized range distribution.
 /// You can use [`RandomizedTukeyHsdTest`](crate::statistical_tests::RandomizedTukeyHsdTest) instead if you need p-values.
+///
+/// # References
+///
+/// * Tetsuya Sakai.
+///   Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power
+///   (The Information Retrieval Series Book 40).
+///   Chapter 4. Springer, 2018.
 #[derive(Debug, Clone)]
 pub struct TukeyHsdTest {
     anova: TwoWayAnovaWithoutReplication,

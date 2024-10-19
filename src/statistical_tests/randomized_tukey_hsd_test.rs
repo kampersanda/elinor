@@ -62,6 +62,10 @@ use crate::errors::ElinorError;
 /// * Benjamin A. Carterette.
 ///   [Multiple testing in statistical analysis of systems-based information retrieval experiments](https://doi.org/10.1145/2094072.2094076).
 ///   TOIS 2012.
+/// * Tetsuya Sakai.
+///   Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power
+///   (The Information Retrieval Series Book 40).
+///   Chapter 4. Springer, 2018.
 #[derive(Debug, Clone)]
 pub struct RandomizedTukeyHsdTest {
     n_systems: usize,
