@@ -4,6 +4,7 @@ use anyhow::Result;
 use clap::Parser;
 use elinor::statistical_tests::bootstrap_test::BootstrapTester;
 use elinor::statistical_tests::randomized_tukey_hsd_test::RandomizedTukeyHsdTester;
+use elinor::statistical_tests::TukeyHsdTest;
 use elinor::statistical_tests::{StudentTTest, TwoWayAnovaWithoutReplication};
 use polars::prelude::*;
 use polars_lazy::prelude::*;
@@ -327,7 +328,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
     }
 
     let n_iters = 10000;
-    let hsd_tester = RandomizedTukeyHsdTester::new(dfs.len()).with_n_iters(n_iters);
+    let rthsd_tester = RandomizedTukeyHsdTester::new(dfs.len()).with_n_iters(n_iters);
 
     for (metric, df_metric) in metrics.iter().zip(df_metrics.iter()) {
         println!("\n# {metric:#}");
@@ -416,8 +417,8 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Effect sizes for randomized Tukey HSD test");
-        let hsd_stat = hsd_tester.test(tupled_scores.iter())?;
+        println!("## Effect sizes for Tukey HSD test");
+        let hsd_stat = TukeyHsdTest::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
         let effect_sizes = hsd_stat.effect_sizes();
         let mut columns = vec![Series::new(
             "ES".into(),
@@ -435,7 +436,8 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         df_to_prettytable(&df).printstd();
 
         println!("## P values for randomized Tukey HSD test (n_iters = {n_iters})");
-        let p_values = hsd_stat.p_values();
+        let rthsd_stat = rthsd_tester.test(tupled_scores)?;
+        let p_values = rthsd_stat.p_values();
         let mut columns = vec![Series::new(
             "P Value".into(),
             (1..=dfs.len())
