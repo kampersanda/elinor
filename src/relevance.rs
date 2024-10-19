@@ -4,9 +4,12 @@ use std::collections::BTreeMap;
 use std::fmt::Display;
 
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+#[cfg(feature = "serde")]
+use serde::Serialize;
 
-use crate::errors::{ElinorError, Result};
+use crate::errors::ElinorError;
+use crate::errors::Result;
 
 /// Record of a query-document pair.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

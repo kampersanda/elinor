@@ -62,6 +62,10 @@ use crate::errors::ElinorError;
 /// * Benjamin A. Carterette.
 ///   [Multiple testing in statistical analysis of systems-based information retrieval experiments](https://doi.org/10.1145/2094072.2094076).
 ///   TOIS 2012.
+/// * Tetsuya Sakai.
+///   Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power
+///   (The Information Retrieval Series Book 40).
+///   Chapter 4. Springer, 2018.
 #[derive(Debug, Clone)]
 pub struct RandomizedTukeyHsdTest {
     n_systems: usize,
@@ -100,11 +104,14 @@ impl RandomizedTukeyHsdTest {
     }
 
     /// p-values for all combinations of systems,
-    /// returning a matrix of size $`n_systems \times n_systems`$.
+    /// returning a matrix of size $`m \times m`$,
+    /// where $`m`$ is the number of systems.
     ///
+    /// The $`(i, j)`$-th element has the p-value
+    /// between the $`i`$-th and $`j`$-th systems.
     /// The diagonal elements are always one.
-    pub const fn p_values(&self) -> &Vec<Vec<f64>> {
-        &self.p_values
+    pub fn p_values(&self) -> Vec<Vec<f64>> {
+        self.p_values.clone()
     }
 }
 

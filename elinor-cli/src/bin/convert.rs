@@ -1,5 +1,6 @@
 use std::fs::File;
-use std::io::{BufWriter, Write};
+use std::io::BufWriter;
+use std::io::Write;
 use std::path::PathBuf;
 use std::str::FromStr;
 

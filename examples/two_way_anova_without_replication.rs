@@ -58,13 +58,5 @@ fn main() -> Result<()> {
         println!("Mean and 95% CI of system {i}: {mean:.4} [{ci95_btm:.4}, {ci95_top:.4}]");
     }
 
-    let effect_sizes = stat.between_system_effect_sizes();
-    for i in 0..stat.n_systems() {
-        for j in (i + 1)..stat.n_systems() {
-            let effect_size = effect_sizes[i][j];
-            println!("Effect size between system {i} and {j}: {effect_size:.4}");
-        }
-    }
-
     Ok(())
 }

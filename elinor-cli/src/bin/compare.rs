@@ -4,7 +4,9 @@ use anyhow::Result;
 use clap::Parser;
 use elinor::statistical_tests::bootstrap_test::BootstrapTester;
 use elinor::statistical_tests::randomized_tukey_hsd_test::RandomizedTukeyHsdTester;
-use elinor::statistical_tests::{StudentTTest, TwoWayAnovaWithoutReplication};
+use elinor::statistical_tests::StudentTTest;
+use elinor::statistical_tests::TukeyHsdTest;
+use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
 use polars::prelude::*;
 use polars_lazy::prelude::*;
 
@@ -327,7 +329,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
     }
 
     let n_iters = 10000;
-    let hsd_tester = RandomizedTukeyHsdTester::new(dfs.len()).with_n_iters(n_iters);
+    let rthsd_tester = RandomizedTukeyHsdTester::new(dfs.len()).with_n_iters(n_iters);
 
     for (metric, df_metric) in metrics.iter().zip(df_metrics.iter()) {
         println!("\n# {metric:#}");
@@ -348,7 +350,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             tupled_scores.push(scores);
         }
 
-        println!("## Statistics for system means");
+        println!("## System means");
         let anove_stat =
             TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
         let system_means = anove_stat.system_means();
@@ -416,8 +418,9 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Between-system effect sizes for randomized Tukey HSD test");
-        let effect_sizes = anove_stat.between_system_effect_sizes();
+        println!("## Effect sizes for Tukey HSD test");
+        let hsd_stat = TukeyHsdTest::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
+        let effect_sizes = hsd_stat.effect_sizes();
         let mut columns = vec![Series::new(
             "ES".into(),
             (1..=dfs.len())
@@ -433,9 +436,9 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## Between-system P values for randomized Tukey HSD test (n_iters = {n_iters})");
-        let hsd_stat = hsd_tester.test(tupled_scores.iter())?;
-        let p_values = hsd_stat.p_values();
+        println!("## P values for randomized Tukey HSD test (n_iters = {n_iters})");
+        let rthsd_stat = rthsd_tester.test(tupled_scores)?;
+        let p_values = rthsd_stat.p_values();
         let mut columns = vec![Series::new(
             "P Value".into(),
             (1..=dfs.len())

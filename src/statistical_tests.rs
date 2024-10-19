@@ -4,8 +4,9 @@
 //!
 //! * [Student's t-test](StudentTTest) for comparing two systems.
 //! * [Bootstrap test](BootstrapTest) for comparing two systems.
-//! * [Randomized Tukey HSD test](RandomizedTukeyHsdTest) for comparing two or more systems.
 //! * [Two-way ANOVA without replication](TwoWayAnovaWithoutReplication) for comparing three or more systems.
+//! * [Tukey HSD test](TukeyHsdTest) for comparing three or more systems.
+//! * [Randomized Tukey HSD test](RandomizedTukeyHsdTest) for comparing two or more systems.
 //!
 //! # Example: Statistical tests for comparing two systems
 //!
@@ -124,11 +125,6 @@
 //!
 //! // p-values and effect sizes for all pairs of systems.
 //! let p_values = hsd_stat.p_values();
-//! let effect_sizes = anova_stat.between_system_effect_sizes();
-//! for (i, j) in [(0, 1), (0, 2), (1, 2)] {
-//!     assert!((0.0..=1.0).contains(&p_values[i][j]));
-//!     assert!(effect_sizes[i][j] != 0.0);
-//! }
 //!
 //! // 95% CI of system means.
 //! let moe95 = anova_stat.margin_of_error(0.05)?;
@@ -142,9 +138,11 @@
 pub mod bootstrap_test;
 pub mod randomized_tukey_hsd_test;
 pub mod student_t_test;
+pub mod tukey_hsd_test;
 pub mod two_way_anova_without_replication;
 
 pub use bootstrap_test::BootstrapTest;
 pub use randomized_tukey_hsd_test::RandomizedTukeyHsdTest;
 pub use student_t_test::StudentTTest;
+pub use tukey_hsd_test::TukeyHsdTest;
 pub use two_way_anova_without_replication::TwoWayAnovaWithoutReplication;
