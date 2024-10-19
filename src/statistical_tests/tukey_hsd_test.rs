@@ -9,8 +9,8 @@ use crate::statistical_tests::TwoWayAnovaWithoutReplication;
 ///
 /// # Notes
 ///
-/// We are unaware of Rust libraries that can calculate the studentized range distribution,
-/// so this struct does not provide p-values. Only effect sizes are obtained.
+/// This struct does not provide p-values and only provides effect sizes
+/// because we are unaware of Rust libraries that can calculate the studentized range distribution.
 /// You can use [`RandomizedTukeyHsdTest`](crate::statistical_tests::RandomizedTukeyHsdTest) instead if you need p-values.
 #[derive(Debug, Clone)]
 pub struct TukeyHsdTest {
