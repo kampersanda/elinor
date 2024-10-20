@@ -47,9 +47,9 @@
 //! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
 //! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
 //!
-//! // Perform Student's t-test.
-//! let paired_scores = elinor::paired_scores_from_evaluations(&evaluated_a, &evaluated_b)?;
-//! let stat = StudentTTest::from_paired_samples(paired_scores)?;
+//! // Perform Two-sided paired Student's t-test.
+//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&evaluated_a, &evaluated_b])?;
+//! let stat = StudentTTest::from_samples(tupled_scores.iter().map(|x| x[0] - x[1]))?;
 //!
 //! // Various statistics can be obtained from the t-test result.
 //! assert!(stat.mean() > 0.0);

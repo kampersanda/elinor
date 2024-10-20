@@ -7,7 +7,7 @@ use rand::SeedableRng;
 use crate::errors::ElinorError;
 use crate::statistical_tests::student_t_test::compute_t_stat;
 
-/// Two-sided paired Bootstrap test.
+/// Two-sided Bootstrap test.
 ///
 /// # Examples
 ///
@@ -19,8 +19,8 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 /// let a = vec![0.70, 0.30, 0.20, 0.60, 0.40];
 /// let b = vec![0.50, 0.10, 0.00, 0.20, 0.40];
 ///
-/// let paired_samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| (x, y));
-/// let result = BootstrapTest::from_paired_samples(paired_samples)?;
+/// let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
+/// let result = BootstrapTest::from_samples(samples)?;
 /// assert!((0.0..=1.0).contains(&result.p_value()));
 /// # Ok(())
 /// # }
@@ -55,21 +55,6 @@ impl BootstrapTest {
         I: IntoIterator<Item = f64>,
     {
         BootstrapTester::new().test(samples)
-    }
-
-    /// Computes a paired bootstrap test for differences between paired samples.
-    ///
-    /// It uses the default parameters defined in [`BootstrapTester`].
-    /// To customize the parameters, use [`BootstrapTester`].
-    ///
-    /// # Errors
-    ///
-    /// See [`BootstrapTester::test`].
-    pub fn from_paired_samples<I>(paired_samples: I) -> Result<Self, ElinorError>
-    where
-        I: IntoIterator<Item = (f64, f64)>,
-    {
-        BootstrapTester::new().test_for_paired_samples(paired_samples)
     }
 
     /// Number of resamples.
@@ -178,22 +163,6 @@ impl BootstrapTester {
             random_state,
             p_value,
         })
-    }
-
-    /// Computes a paired bootstrap test for differences between paired samples.
-    ///
-    /// # Errors
-    ///
-    /// See [`BootstrapTester::test`].
-    pub fn test_for_paired_samples<I>(
-        &self,
-        paired_samples: I,
-    ) -> Result<BootstrapTest, ElinorError>
-    where
-        I: IntoIterator<Item = (f64, f64)>,
-    {
-        let diffs = paired_samples.into_iter().map(|(x, y)| x - y);
-        self.test(diffs)
     }
 }
 
