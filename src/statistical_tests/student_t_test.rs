@@ -5,6 +5,7 @@ use statrs::distribution::StudentsT;
 use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
+use crate::errors::Result;
 
 /// Two-sided paired Student's t-test
 ///
@@ -61,7 +62,7 @@ impl StudentTTest {
     ///
     /// * [`ElinorError::InvalidArgument`] if the input does not have at least two samples.
     /// * [`ElinorError::Uncomputable`] if the variance is zero.
-    pub fn from_samples<I>(samples: I) -> Result<Self, ElinorError>
+    pub fn from_samples<I>(samples: I) -> Result<Self>
     where
         I: IntoIterator<Item = f64>,
     {
@@ -90,7 +91,7 @@ impl StudentTTest {
     /// # Errors
     ///
     /// See [`StudentTTest::from_samples`].
-    pub fn from_paired_samples<I>(paired_samples: I) -> Result<Self, ElinorError>
+    pub fn from_paired_samples<I>(paired_samples: I) -> Result<Self>
     where
         I: IntoIterator<Item = (f64, f64)>,
     {
@@ -128,7 +129,7 @@ impl StudentTTest {
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
-    pub fn margin_of_error(&self, significance_level: f64) -> Result<f64, ElinorError> {
+    pub fn margin_of_error(&self, significance_level: f64) -> Result<f64> {
         if significance_level <= 0.0 || significance_level > 1.0 {
             return Err(ElinorError::InvalidArgument(
                 "The significance level must be in the range (0, 1].".to_string(),
@@ -144,7 +145,7 @@ impl StudentTTest {
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
-    pub fn confidence_interval(&self, significance_level: f64) -> Result<(f64, f64), ElinorError> {
+    pub fn confidence_interval(&self, significance_level: f64) -> Result<(f64, f64)> {
         let moe = self.margin_of_error(significance_level)?;
         Ok((self.mean - moe, self.mean + moe))
     }
@@ -159,7 +160,7 @@ impl StudentTTest {
 /// # Errors
 ///
 /// * [`ElinorError::Uncomputable`] if the variance is zero.
-pub fn compute_t_stat(samples: &[f64]) -> Result<(f64, f64, f64), ElinorError> {
+pub fn compute_t_stat(samples: &[f64]) -> Result<(f64, f64, f64)> {
     let mean = Statistics::mean(samples);
     let variance = Statistics::variance(samples);
     if variance == 0.0 {
