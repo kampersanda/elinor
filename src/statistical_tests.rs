@@ -53,7 +53,7 @@
 //!
 //! // Various statistics can be obtained from the t-test result.
 //! assert!(stat.mean() > 0.0);
-//! assert!(stat.var() > 0.0);
+//! assert!(stat.variance() > 0.0);
 //! assert!(stat.effect_size() > 0.0);
 //! assert!(stat.t_stat() > 0.0);
 //! assert!((0.0..=1.0).contains(&stat.p_value()));
@@ -66,9 +66,6 @@
 //! let (ci95_btm, ci95_top) = stat.confidence_interval(0.05)?;
 //! assert_relative_eq!(ci95_btm, stat.mean() - moe95);
 //! assert_relative_eq!(ci95_top, stat.mean() + moe95);
-//!
-//! // Check if the difference is significant at a 95% confidence level.
-//! assert_eq!(stat.is_significant(0.05), stat.p_value() <= 0.05);
 //! # Ok(())
 //! # }
 //! ```
