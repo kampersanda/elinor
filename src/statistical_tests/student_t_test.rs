@@ -6,7 +6,7 @@ use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
 
-/// Student's t-test.
+/// Two-sided paired Student's t-test
 ///
 /// # Examples
 ///
@@ -150,11 +150,6 @@ impl StudentTTest {
     pub fn confidence_interval(&self, significance_level: f64) -> Result<(f64, f64), ElinorError> {
         let moe = self.margin_of_error(significance_level)?;
         Ok((self.mean - moe, self.mean + moe))
-    }
-
-    /// Returns true if the difference is significant at the given significance level.
-    pub fn is_significant(&self, significance_level: f64) -> bool {
-        self.p_value <= significance_level
     }
 }
 
