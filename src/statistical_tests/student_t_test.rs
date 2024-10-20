@@ -26,8 +26,8 @@ use crate::errors::Result;
 ///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
 /// ];
 ///
-/// let paired_samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
-/// let result = StudentTTest::from_samples(paired_samples)?;
+/// let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
+/// let result = StudentTTest::from_samples(samples)?;
 ///
 /// // Various statistics can be obtained.
 /// assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
