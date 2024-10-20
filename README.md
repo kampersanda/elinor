@@ -9,8 +9,7 @@
 </p>
 
 Elinor is a Rust library for evaluating information retrieval (IR) systems.
-It provides a comprehensive set of tools and metrics tailored for IR engineers,
-offering an intuitive and easy-to-use interface.
+It provides a comprehensive set of metrics and statistical tests for evaluating and comparing IR systems.
 
 ## Key features
 
@@ -22,13 +21,12 @@ offering an intuitive and easy-to-use interface.
   The supported metrics are available in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
   The evaluation results are validated against trec_eval to ensure accuracy and reliability.
 - **In-depth statistical testing:**
-  Elinor includes several statistical tests, such as Student's t-test or Randomized Tukey HSD test, to verify the generalizability of results.
-  Not only p-values but also other statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
+  Elinor includes several statistical tests, such as Student's t-test, Bootstrap test, and Randomized Tukey HSD test.
+  Not only p-values but also other important statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
   See the [statistical_tests](https://docs.rs/elinor/latest/elinor/statistical_tests/index.html) module for more details.
 - **Command-line tools:**
-  Elinor provides command-line tools for evaluating and comparing IR systems.
-  The tools support various metrics and statistical tests, enabling users to perform comprehensive evaluations with ease.
-  See the [elinor-cli](./elinor-cli) directory for more details.
+  [elinor-cli](./elinor-cli) provides command-line tools for evaluating and comparing IR systems.
+  The tools support various metrics and statistical tests, facilitating comprehensive evaluations and in-depth analyses.
 
 ## API documentation
 
@@ -44,13 +42,46 @@ RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --features serde 
 ## Command-line tools
 
 [elinor-cli](./elinor-cli) provides command-line tools for evaluating and comparing IR systems.
-See the [README](./elinor-cli/README.md) for more details.
 
 For example, you can obtain various statistics from several statistical tests, as shown below:
 
+### Two-system comparison
+
 ```
-# score
-## Statistics for system means
+# Means
++--------+----------+----------+
+| Metric | System_1 | System_2 |
++--------+----------+----------+
+| ndcg@5 | 0.3450   | 0.2700   |
++--------+----------+----------+
+
+# Two-sided paired Student's t-test for (System_1 - System_2)
++--------+--------+--------+--------+--------+---------+---------+
+| Metric | Mean   | Var    | ES     | t-stat | p-value | 95% MOE |
++--------+--------+--------+--------+--------+---------+---------+
+| ndcg@5 | 0.0750 | 0.0251 | 0.4731 | 2.1158 | 0.0478  | 0.0742  |
++--------+--------+--------+--------+--------+---------+---------+
+
+# Two-sided paired Bootstrap test (n_resamples = 10000)
++--------+---------+
+| Metric | p-value |
++--------+---------+
+| ndcg@5 | 0.0511  |
++--------+---------+
+
+# Fisher's randomized test (n_iters = 10000)
++--------+---------+
+| Metric | p-value |
++--------+---------+
+| ndcg@5 | 0.0498  |
++--------+---------+
+```
+
+### Multi-system comparison
+
+```
+# ndcg@5
+## System means
 +----------+--------+---------+
 | System   | Mean   | 95% MOE |
 +----------+--------+---------+
@@ -60,13 +91,13 @@ For example, you can obtain various statistics from several statistical tests, a
 +----------+--------+---------+
 ## Two-way ANOVA without replication
 +-----------------+------------+----+----------+--------+---------+
-| Factor          | Variation  | DF | Variance | F Stat | P Value |
+| Factor          | Variation  | DF | Variance | F-stat | p-value |
 +-----------------+------------+----+----------+--------+---------+
 | Between-systems | 0.1083     | 2  | 0.0542   | 2.4749 | 0.0976  |
 | Between-topics  | 1.0293     | 19 | 0.0542   | 2.4754 | 0.0086  |
 | Residual        | 0.8317     | 38 | 0.0219   |        |         |
 +-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes for randomized Tukey HSD test
+## Effect sizes for Tukey HSD test
 +----------+----------+----------+----------+
 | ES       | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
@@ -74,13 +105,13 @@ For example, you can obtain various statistics from several statistical tests, a
 | System_2 | -0.5070  | 0.0000   | 0.1690   |
 | System_3 | -0.6760  | -0.1690  | 0.0000   |
 +----------+----------+----------+----------+
-## Between-system P values for randomized Tukey HSD test (n_iters = 10000)
+## p-values for randomized Tukey HSD test (n_iters = 10000)
 +----------+----------+----------+----------+
-| P Value  | System_1 | System_2 | System_3 |
+| p-value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.2580   | 0.1037   |
-| System_2 | 0.2580   | 1.0000   | 0.8936   |
-| System_3 | 0.1037   | 0.8936   | 1.0000   |
+| System_1 | 1.0000   | 0.2561   | 0.1040   |
+| System_2 | 0.2561   | 1.0000   | 0.8926   |
+| System_3 | 0.1040   | 0.8926   | 1.0000   |
 +----------+----------+----------+----------+
 ```
 

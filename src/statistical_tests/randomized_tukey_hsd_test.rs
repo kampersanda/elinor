@@ -7,9 +7,8 @@ use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
 
-/// Randomized Tukey HSD test.
+/// Randomized Tukey HSD test for comparing two or more systems.
 ///
-/// It can be used to compare two or more systems.
 /// When comparing two systems, it is equivalent to Fisher's randomization test.
 ///
 /// # Examples
@@ -19,33 +18,19 @@ use crate::errors::ElinorError;
 /// use approx::assert_abs_diff_eq;
 /// use elinor::statistical_tests::RandomizedTukeyHsdTest;
 ///
-/// // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
-/// let a = vec![
-///     0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
-///     0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
-/// ];
-/// let b = vec![
-///     0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
-///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
-/// ];
-/// let c = vec![
-///     0.00, 0.00, 0.20, 0.10, 0.30, 0.30, 0.10, 0.20, 0.40, 0.40, //
-///     0.40, 0.30, 0.30, 0.20, 0.20, 0.20, 0.10, 0.50, 0.40, 0.30,
-/// ];
+/// let a = vec![0.70, 0.30, 0.20, 0.60, 0.40];
+/// let b = vec![0.50, 0.10, 0.00, 0.20, 0.40];
+/// let c = vec![0.00, 0.00, 0.20, 0.10, 0.30];
 ///
-/// // Comparing two systems, equivalent to Fisher's randomization test.
-/// let tupled_samples = a.iter().zip(b.iter()).map(|(&a, &b)| [a, b]);
-/// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 2)?;
-/// let p_values = result.p_values();
-/// assert!((0.0..=1.0).contains(&p_values[0][1]));  // a vs. b
-///
-/// // Comparing three systems.
 /// let tupled_samples = a
 ///     .iter()
 ///     .zip(b.iter())
 ///     .zip(c.iter())
 ///     .map(|((&a, &b), &c)| [a, b, c]);
 /// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 3)?;
+/// assert_eq!(result.n_systems(), 3);
+/// assert_eq!(result.n_topics(), 5);
+///
 /// let p_values = result.p_values();
 /// assert!((0.0..=1.0).contains(&p_values[0][1]));  // a vs. b
 /// assert!((0.0..=1.0).contains(&p_values[0][2]));  // a vs. c
@@ -63,12 +48,12 @@ use crate::errors::ElinorError;
 ///   [Multiple testing in statistical analysis of systems-based information retrieval experiments](https://doi.org/10.1145/2094072.2094076).
 ///   TOIS 2012.
 /// * Tetsuya Sakai.
-///   Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power
-///   (The Information Retrieval Series Book 40).
+///   [Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power](https://doi.org/10.1007/978-981-13-1199-4).
 ///   Chapter 4. Springer, 2018.
 #[derive(Debug, Clone)]
 pub struct RandomizedTukeyHsdTest {
     n_systems: usize,
+    n_topics: usize,
     n_iters: usize,
     random_state: u64,
     p_values: Vec<Vec<f64>>,
@@ -76,6 +61,12 @@ pub struct RandomizedTukeyHsdTest {
 
 impl RandomizedTukeyHsdTest {
     /// Creates a new randomized Tukey HSD test.
+    /// from samples $`x_{ij}`$ for $`i \in [1,m]`$ systems and $`j \in [1,n]`$ topics.
+    ///
+    /// # Arguments
+    ///
+    /// * `samples` - Iterator of tupled samples, where each record is an array of $`m`$ system samples for a topic.
+    /// * `n_systems` - Number of systems, $`m`$.
     ///
     /// # Errors
     ///
@@ -88,9 +79,14 @@ impl RandomizedTukeyHsdTest {
         RandomizedTukeyHsdTester::new(n_systems).test(samples)
     }
 
-    /// Number of systems.
+    /// Number of systems, $`m`$.
     pub const fn n_systems(&self) -> usize {
         self.n_systems
+    }
+
+    /// Number of topics, $`n`$.
+    pub const fn n_topics(&self) -> usize {
+        self.n_topics
     }
 
     /// Number of iterations.
@@ -164,15 +160,15 @@ impl RandomizedTukeyHsdTester {
     {
         let samples: Vec<Vec<f64>> = samples
             .into_iter()
-            .map(|sample| {
-                let sample = sample.as_ref();
-                if sample.len() != self.n_systems {
+            .map(|topic| {
+                let topic = topic.as_ref();
+                if topic.len() != self.n_systems {
                     return Err(ElinorError::InvalidArgument(
                         "The length of each sample must be equal to the number of systems."
                             .to_string(),
                     ));
                 }
-                Ok(sample.to_vec())
+                Ok(topic.to_vec())
             })
             .collect::<Result<_, _>>()?;
 
@@ -237,6 +233,7 @@ impl RandomizedTukeyHsdTester {
 
         Ok(RandomizedTukeyHsdTest {
             n_systems: self.n_systems,
+            n_topics: samples.len(),
             n_iters: self.n_iters,
             random_state,
             p_values,

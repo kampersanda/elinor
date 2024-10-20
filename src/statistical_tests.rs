@@ -44,11 +44,11 @@
 //!
 //! // Evaluate Precision for both systems.
 //! let metric = Metric::Precision { k: 0 };
-//! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
-//! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
+//! let result_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
+//! let result_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
 //!
-//! // Perform Two-sided paired Student's t-test.
-//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&evaluated_a, &evaluated_b])?;
+//! // Perform two-sided paired Student's t-test.
+//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&result_a, &result_b])?;
 //! let stat = StudentTTest::from_samples(tupled_scores.iter().map(|x| x[0] - x[1]))?;
 //!
 //! // Various statistics can be obtained from the t-test result.
@@ -72,12 +72,13 @@
 //!
 //! # Example: Statistical tests for comparing three systems
 //!
-//! [Randomized Tukey HSD test](RandomizedTukeyHsdTest) can be used to compare two or more systems.
+//! This example shows how to perform [Tukey HSD test](TukeyHsdTest) and [Randomized Tukey HSD test](RandomizedTukeyHsdTest)
+//! for Precision scores among three systems.
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
-//! use elinor::statistical_tests::{RandomizedTukeyHsdTest, TwoWayAnovaWithoutReplication};
+//! use elinor::statistical_tests::{RandomizedTukeyHsdTest, TukeyHsdTest};
 //!
 //! // Prepare gold relevance scores.
 //! let mut b = GoldRelStoreBuilder::new();
@@ -111,24 +112,20 @@
 //!
 //! // Evaluate Precision for all systems.
 //! let metric = Metric::Precision { k: 0 };
-//! let evaluated_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
-//! let evaluated_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
-//! let evaluated_c = elinor::evaluate(&gold_rels, &pred_rels_c, metric)?;
+//! let result_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
+//! let result_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
+//! let result_c = elinor::evaluate(&gold_rels, &pred_rels_c, metric)?;
 //!
-//! // Perform Randomized Tukey HSD test and Two-way ANOVA without replication.
-//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&evaluated_a, &evaluated_b, &evaluated_c])?;
+//! // Prepare tupled scores for tests.
+//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&result_a, &result_b, &result_c])?;
+//!
+//! // Perform Tukey HSD test with paired observations.
+//! let hsd_stat = TukeyHsdTest::from_tupled_samples(tupled_scores.iter(), 3)?;
+//! let effect_sizes = hsd_stat.effect_sizes();
+//!
+//! // Perform randomized Tukey HSD test.
 //! let hsd_stat = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores.iter(), 3)?;
-//! let anova_stat = TwoWayAnovaWithoutReplication::from_tupled_samples(tupled_scores.iter(), 3)?;
-//!
-//! // p-values and effect sizes for all pairs of systems.
 //! let p_values = hsd_stat.p_values();
-//!
-//! // 95% CI of system means.
-//! let moe95 = anova_stat.margin_of_error(0.05)?;
-//! let system_means = anova_stat.system_means();
-//! for (i, mean) in system_means.iter().enumerate() {
-//!     assert!(mean - moe95 <= mean + moe95);
-//! }
 //! # Ok(())
 //! # }
 //! ```

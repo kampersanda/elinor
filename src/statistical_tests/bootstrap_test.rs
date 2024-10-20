@@ -1,5 +1,4 @@
 //! Bootstrap test.
-
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
@@ -10,6 +9,8 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 /// Two-sided Bootstrap test.
 ///
 /// # Examples
+///
+/// An example to compare two systems:
 ///
 /// ```
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -67,13 +68,13 @@ impl BootstrapTest {
         self.random_state
     }
 
-    /// p-value.
+    /// p-value for the two-sided test.
     pub const fn p_value(&self) -> f64 {
         self.p_value
     }
 }
 
-/// Two-sided paired Bootstrap tester.
+/// Two-sided Bootstrap tester.
 ///
 /// # Default parameters
 ///

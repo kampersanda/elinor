@@ -1,7 +1,6 @@
 //! Elinor (**E**valuation **l**ibrary in **in**f**o**rmation **r**etrieval) is a library
 //! for evaluating information retrieval (IR) systems.
-//! It provides a comprehensive set of tools and metrics tailored for IR engineers,
-//! offering an intuitive and easy-to-use interface.
+//! It provides a comprehensive set of metrics and statistical tests for evaluating and comparing IR systems.
 //!
 //! # Key features
 //!
@@ -13,8 +12,8 @@
 //!     The supported metrics are available in [`Metric`].
 //!     The evaluation results are validated against trec_eval to ensure accuracy and reliability.
 //! * **In-depth statistical testing:**
-//!     Elinor includes several statistical tests, such as Student's t-test or Randomized Tukey HSD test, to verify the generalizability of results.
-//!     Not only p-values but also other statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
+//!     Elinor includes several statistical tests, such as Student's t-test, Bootstrap test, and Randomized Tukey HSD test.
+//!     Not only p-values but also other important statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
 //!     See the [`statistical_tests`] module for more details.
 //!
 //! # Basic usage in evaluating several metrics
@@ -54,20 +53,20 @@
 //! let pred_rels = b.build();
 //!
 //! // Evaluate Precision@3.
-//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
-//! assert_abs_diff_eq!(evaluated.mean(), 0.5000, epsilon = 1e-4);
+//! let result = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
+//! assert_abs_diff_eq!(result.mean(), 0.5000, epsilon = 1e-4);
 //!
 //! // Evaluate MAP, where all documents are considered via k=0.
-//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
-//! assert_abs_diff_eq!(evaluated.mean(), 0.5000, epsilon = 1e-4);
+//! let result = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
+//! assert_abs_diff_eq!(result.mean(), 0.5000, epsilon = 1e-4);
 //!
 //! // Evaluate MRR, where the metric is specified via a string representation.
-//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
-//! assert_abs_diff_eq!(evaluated.mean(), 0.6667, epsilon = 1e-4);
+//! let result = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
+//! assert_abs_diff_eq!(result.mean(), 0.6667, epsilon = 1e-4);
 //!
 //! // Evaluate nDCG@3, where the metric is specified via a string representation.
-//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
-//! assert_abs_diff_eq!(evaluated.mean(), 0.4751, epsilon = 1e-4);
+//! let result = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
+//! assert_abs_diff_eq!(result.mean(), 0.4751, epsilon = 1e-4);
 //! # Ok(())
 //! # }
 //! ```

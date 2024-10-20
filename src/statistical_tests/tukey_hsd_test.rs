@@ -1,5 +1,4 @@
 //! Tukey HSD test.
-
 use crate::errors::ElinorError;
 use crate::statistical_tests::TwoWayAnovaWithoutReplication;
 
@@ -14,8 +13,7 @@ use crate::statistical_tests::TwoWayAnovaWithoutReplication;
 /// # References
 ///
 /// * Tetsuya Sakai.
-///   Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power
-///   (The Information Retrieval Series Book 40).
+///   [Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power](https://doi.org/10.1007/978-981-13-1199-4).
 ///   Chapter 4. Springer, 2018.
 #[derive(Debug, Clone)]
 pub struct TukeyHsdTest {
@@ -23,7 +21,18 @@ pub struct TukeyHsdTest {
 }
 
 impl TukeyHsdTest {
-    /// Creates a new Tukey HSD test.
+    /// Creates a new Tukey HSD test
+    /// from samples $`x_{ij}`$ for $`i \in [1,m]`$ systems and $`j \in [1,n]`$ topics.
+    ///
+    /// # Arguments
+    ///
+    /// * `samples` - Iterator of tupled samples, where each record is an array of $`m`$ system samples for a topic.
+    /// * `n_systems` - Number of systems, $`m`$.
+    ///
+    /// # Errors
+    ///
+    /// * [`ElinorError::InvalidArgument`] if the length of each record is not equal to the number of systems.
+    /// * [`ElinorError::InvalidArgument`] if the input does not have at least two records.
     pub fn from_tupled_samples<I, S>(samples: I, n_systems: usize) -> Result<Self, ElinorError>
     where
         I: IntoIterator<Item = S>,
@@ -33,14 +42,18 @@ impl TukeyHsdTest {
         Ok(Self { anova })
     }
 
-    /// Number of systems.
+    /// Number of systems, $`m`$.
     pub const fn n_systems(&self) -> usize {
         self.anova.n_systems()
     }
 
+    /// Number of topics, $`n`$.
+    pub const fn n_topics(&self) -> usize {
+        self.anova.n_topics()
+    }
+
     /// Effect sizes for all combinations of systems,
-    /// returning a matrix of size $`m \times m`$.
-    /// where $`m`$ is the number of systems.
+    /// returning a matrix of size $`m \times m`$ for $`m`$ systems.
     ///
     /// The $`(i, j)`$-th element is $`\text{ES}_{ij}`$.
     /// The diagonal elements are always zero.

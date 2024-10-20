@@ -11,43 +11,42 @@ use crate::errors::Result;
 ///
 /// # Examples
 ///
+/// An example to compare two systems:
+///
 /// ```
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// use approx::assert_abs_diff_eq;
 /// use elinor::statistical_tests::StudentTTest;
 ///
-/// // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
-/// let a = vec![
-///     0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
-///     0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
-/// ];
-/// let b = vec![
-///     0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
-///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
-/// ];
+/// let a = vec![0.60, 0.10, 0.20];
+/// let b = vec![0.50, 0.10, 0.00];
 ///
+/// // [0.10, 0.00, 0.20]
 /// let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
 /// let result = StudentTTest::from_samples(samples)?;
+/// assert_eq!(result.n_samples(), 3);
 ///
-/// // Various statistics can be obtained.
-/// assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.variance(), 0.0251, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.effect_size(), 0.473, epsilon = 1e-3);
-/// assert_abs_diff_eq!(result.t_stat(), 2.116, epsilon = 1e-3);
-/// assert_abs_diff_eq!(result.p_value(), 0.048, epsilon = 1e-3);
+/// // Various statistics.
+/// assert_abs_diff_eq!(result.mean(), (0.10 + 0.00 + 0.20) / 3.0);
+/// assert_abs_diff_eq!(result.variance(), ((0.10 - result.mean()).powi(2) + (0.00 - result.mean()).powi(2) + (0.20 - result.mean()).powi(2)) / 2.0);
+/// assert_abs_diff_eq!(result.effect_size(), result.mean() / result.variance().sqrt());
+/// assert_abs_diff_eq!(result.t_stat(), result.mean() / (result.variance() / 3.0).sqrt());
+/// assert!((0.0..=1.0).contains(&result.p_value()));
 ///
 /// // Margin of error at a 95% confidence level.
-/// assert_abs_diff_eq!(result.margin_of_error(0.05)?, 0.0742, epsilon = 1e-4);
+/// let moe95 = result.margin_of_error(0.05)?;
+/// assert!(moe95 > 0.0);
 ///
 /// // Confidence interval at a 95% confidence level.
 /// let (ci95_btm, ci95_top) = result.confidence_interval(0.05)?;
-/// assert_abs_diff_eq!(ci95_btm, 0.0750 - 0.0742, epsilon = 1e-4);
-/// assert_abs_diff_eq!(ci95_top, 0.0750 + 0.0742, epsilon = 1e-4);
+/// assert_abs_diff_eq!(ci95_btm, result.mean() - moe95);
+/// assert_abs_diff_eq!(ci95_top, result.mean() + moe95);
 /// # Ok(())
 /// # }
 /// ```
 #[derive(Debug, Clone)]
 pub struct StudentTTest {
+    n_samples: usize,
     mean: f64,
     variance: f64,
     t_stat: f64,
@@ -56,7 +55,7 @@ pub struct StudentTTest {
 }
 
 impl StudentTTest {
-    /// Computes a Student's t-test for the samples.
+    /// Computes a Student's t-test for $`n`$ samples $`x_{1},x_{2},\dots,x_{n}`$.
     ///
     /// # Errors
     ///
@@ -78,6 +77,7 @@ impl StudentTTest {
         let p_value = t_dist.sf(t_stat.abs()) * 2.0; // two-tailed
         let scaled_t_dist = StudentsT::new(0.0, (variance / n).sqrt(), n - 1.0).unwrap();
         Ok(Self {
+            n_samples: samples.len(),
             mean,
             variance,
             t_stat,
@@ -86,36 +86,80 @@ impl StudentTTest {
         })
     }
 
-    /// Mean.
+    /// Number of samples, $`n`$.
+    pub const fn n_samples(&self) -> usize {
+        self.n_samples
+    }
+
+    /// Mean of the samples.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_{i}
+    /// ```
     pub const fn mean(&self) -> f64 {
         self.mean
     }
 
     /// Unbiased population variance.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// V = \frac{1}{n-1} \sum_{i=1}^{n} (x_{i} - \bar{x})^{2}
+    /// ```
     pub const fn variance(&self) -> f64 {
         self.variance
     }
 
-    /// Effect size.
+    /// Sample effect size.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \text{ES} = \frac{\bar{x}}{\sqrt{V}}
+    /// ```
     pub fn effect_size(&self) -> f64 {
         self.mean / self.variance.sqrt()
     }
 
     /// t-statistic.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// t_0 = \frac{\bar{x}}{\sqrt{V/n}}
+    /// ```
     pub const fn t_stat(&self) -> f64 {
         self.t_stat
     }
 
-    /// p-value.
+    /// p-value for the two-sided test.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// p = P(|t_0| > t_{\alpha/2}(n-1))
+    /// ```
+    ///
+    /// where $`t_{\alpha/2}(n-1)`$ is the $`1 - \alpha/2`$ quantile of the Student's t-distribution
+    /// with $`n-1`$ degrees of freedom.
     pub const fn p_value(&self) -> f64 {
         self.p_value
     }
 
-    /// Margin of error at a `1 - significance_level` confidence level.
+    /// Margin of error at a given significance level $`\alpha`$.
     ///
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \text{MOE} = t_{\alpha/2}(n-1) \sqrt{\frac{V}{n}}
+    /// ```
     pub fn margin_of_error(&self, significance_level: f64) -> Result<f64> {
         if significance_level <= 0.0 || significance_level > 1.0 {
             return Err(ElinorError::InvalidArgument(
@@ -127,11 +171,17 @@ impl StudentTTest {
             .inverse_cdf(1.0 - (significance_level / 2.0)))
     }
 
-    /// Confidence interval at a `1 - significance_level` confidence level.
+    /// Confidence interval at a given significance level $`\alpha`$.
     ///
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \text{CI} = [\bar{x} - \text{MOE}, \bar{x} + \text{MOE}]
+    /// ```
     pub fn confidence_interval(&self, significance_level: f64) -> Result<(f64, f64)> {
         let moe = self.margin_of_error(significance_level)?;
         Ok((self.mean - moe, self.mean + moe))
@@ -228,5 +278,34 @@ mod tests {
         let (ci95_btm, ci95_top) = result.confidence_interval(1.0).unwrap();
         assert_abs_diff_eq!(ci95_btm, result.mean(), epsilon = 1e-4);
         assert_abs_diff_eq!(ci95_top, result.mean(), epsilon = 1e-4);
+    }
+
+    #[test]
+    fn test_student_t_test_sakai_book_15() {
+        // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
+        let a = vec![
+            0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
+            0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
+        ];
+        let b = vec![
+            0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
+            0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
+        ];
+
+        let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
+        let result = StudentTTest::from_samples(samples).unwrap();
+
+        assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
+        assert_abs_diff_eq!(result.variance(), 0.0251, epsilon = 1e-4);
+        assert_abs_diff_eq!(result.effect_size(), 0.473, epsilon = 1e-3);
+        assert_abs_diff_eq!(result.t_stat(), 2.116, epsilon = 1e-3);
+        assert_abs_diff_eq!(result.p_value(), 0.048, epsilon = 1e-3);
+
+        let moe95 = result.margin_of_error(0.05).unwrap();
+        assert_abs_diff_eq!(moe95, 0.0742, epsilon = 1e-4);
+
+        let (ci95_btm, ci95_top) = result.confidence_interval(0.05).unwrap();
+        assert_abs_diff_eq!(ci95_btm, result.mean() - moe95, epsilon = 1e-4);
+        assert_abs_diff_eq!(ci95_top, result.mean() + moe95, epsilon = 1e-4);
     }
 }
