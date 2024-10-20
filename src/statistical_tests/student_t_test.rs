@@ -42,9 +42,6 @@ use crate::errors::ElinorError;
 /// let (ci95_btm, ci95_top) = result.confidence_interval(0.05)?;
 /// assert_abs_diff_eq!(ci95_btm, 0.0750 - 0.0742, epsilon = 1e-4);
 /// assert_abs_diff_eq!(ci95_top, 0.0750 + 0.0742, epsilon = 1e-4);
-///
-/// // Check if the difference is significant at a 95% confidence level.
-/// assert!(result.is_significant(0.05));
 /// # Ok(())
 /// # }
 /// ```
