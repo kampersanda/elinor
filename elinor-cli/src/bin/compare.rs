@@ -236,11 +236,11 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
         for df in df_metrics.iter() {
             let values_1 = df.column("system_1")?.f64()?;
             let values_2 = df.column("system_2")?.f64()?;
-            let paired_scores = values_1
+            let diff_scores = values_1
                 .into_iter()
                 .zip(values_2.into_iter())
-                .map(|(x, y)| (x.unwrap(), y.unwrap()));
-            stats.push(tester.test_for_paired_samples(paired_scores)?);
+                .map(|(x, y)| x.unwrap() - y.unwrap());
+            stats.push(tester.test(diff_scores)?);
         }
         let columns = vec![
             Series::new(
