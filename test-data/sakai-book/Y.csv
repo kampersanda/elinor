@@ -1,4 +1,4 @@
-query_id,score
+query_id,ndcg@5
 Q1,0.50
 Q2,0.10
 Q3,0.00

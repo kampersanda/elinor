@@ -48,9 +48,39 @@ See the [README](./elinor-cli/README.md) for more details.
 
 For example, you can obtain various statistics from several statistical tests, as shown below:
 
+```shell
+# Means
++--------+----------+----------+
+| Metric | System_1 | System_2 |
++--------+----------+----------+
+| ndcg@5 | 0.3450   | 0.2700   |
++--------+----------+----------+
+
+# Two-sided paired Student's t-test for (System_1 - System_2)
++--------+--------+--------+--------+--------+---------+---------+
+| Metric | Mean   | Var    | ES     | t-stat | p-value | 95% MOE |
++--------+--------+--------+--------+--------+---------+---------+
+| ndcg@5 | 0.0750 | 0.0251 | 0.4731 | 2.1158 | 0.0478  | 0.0742  |
++--------+--------+--------+--------+--------+---------+---------+
+
+# Two-sided paired Bootstrap test (n_resamples = 10000)
++--------+---------+
+| Metric | p-value |
++--------+---------+
+| ndcg@5 | 0.0505  |
++--------+---------+
+
+# Fisher's randomized test (n_iters = 10000)
++--------+---------+
+| Metric | p-value |
++--------+---------+
+| ndcg@5 | 0.0482  |
++--------+---------+
 ```
-# score
-## Statistics for system means
+
+```shell
+# ndcg@5
+## System means
 +----------+--------+---------+
 | System   | Mean   | 95% MOE |
 +----------+--------+---------+
@@ -60,13 +90,13 @@ For example, you can obtain various statistics from several statistical tests, a
 +----------+--------+---------+
 ## Two-way ANOVA without replication
 +-----------------+------------+----+----------+--------+---------+
-| Factor          | Variation  | DF | Variance | F Stat | P Value |
+| Factor          | Variation  | DF | Variance | F-stat | p-value |
 +-----------------+------------+----+----------+--------+---------+
 | Between-systems | 0.1083     | 2  | 0.0542   | 2.4749 | 0.0976  |
 | Between-topics  | 1.0293     | 19 | 0.0542   | 2.4754 | 0.0086  |
 | Residual        | 0.8317     | 38 | 0.0219   |        |         |
 +-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes for randomized Tukey HSD test
+## Effect sizes for Tukey HSD test
 +----------+----------+----------+----------+
 | ES       | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
@@ -74,13 +104,13 @@ For example, you can obtain various statistics from several statistical tests, a
 | System_2 | -0.5070  | 0.0000   | 0.1690   |
 | System_3 | -0.6760  | -0.1690  | 0.0000   |
 +----------+----------+----------+----------+
-## Between-system P values for randomized Tukey HSD test (n_iters = 10000)
+## p-values for randomized Tukey HSD test (n_iters = 10000)
 +----------+----------+----------+----------+
-| P Value  | System_1 | System_2 | System_3 |
+| p-value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.2580   | 0.1037   |
-| System_2 | 0.2580   | 1.0000   | 0.8936   |
-| System_3 | 0.1037   | 0.8936   | 1.0000   |
+| System_1 | 1.0000   | 0.2672   | 0.1014   |
+| System_2 | 0.2672   | 1.0000   | 0.8957   |
+| System_3 | 0.1014   | 0.8957   | 1.0000   |
 +----------+----------+----------+----------+
 ```
 

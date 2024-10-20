@@ -209,11 +209,11 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
                     .collect::<Vec<_>>(),
             ),
             Series::new(
-                "T Stat".into(),
+                "t-stat".into(),
                 stats.iter().map(|stat| stat.t_stat()).collect::<Vec<_>>(),
             ),
             Series::new(
-                "P Value".into(),
+                "p-value".into(),
                 stats.iter().map(|stat| stat.p_value()).collect::<Vec<_>>(),
             ),
             Series::new(
@@ -248,7 +248,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
                 metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
             ),
             Series::new(
-                "P Value".into(),
+                "p-value".into(),
                 stats.iter().map(|stat| stat.p_value()).collect::<Vec<_>>(),
             ),
         ];
@@ -276,7 +276,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
                 metrics.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
             ),
             Series::new(
-                "P Value".into(),
+                "p-value".into(),
                 stats
                     .iter()
                     .map(|stat| stat.p_values()[0][1])
@@ -399,7 +399,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
                 ],
             ),
             Series::new(
-                "F Stat".into(),
+                "F-stat".into(),
                 vec![
                     anove_stat.between_system_f_stat(),
                     anove_stat.between_topic_f_stat(),
@@ -407,7 +407,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
                 ],
             ),
             Series::new(
-                "P Value".into(),
+                "p-value".into(),
                 vec![
                     anove_stat.between_system_p_value(),
                     anove_stat.between_topic_p_value(),
@@ -436,11 +436,11 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
         let df = DataFrame::new(columns)?;
         df_to_prettytable(&df).printstd();
 
-        println!("## P values for randomized Tukey HSD test (n_iters = {n_iters})");
+        println!("## p-values for randomized Tukey HSD test (n_iters = {n_iters})");
         let rthsd_stat = rthsd_tester.test(tupled_scores)?;
         let p_values = rthsd_stat.p_values();
         let mut columns = vec![Series::new(
-            "P Value".into(),
+            "p-value".into(),
             (1..=dfs.len())
                 .map(|i| format!("System_{}", i))
                 .collect::<Vec<_>>(),
