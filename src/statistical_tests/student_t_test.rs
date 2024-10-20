@@ -130,7 +130,7 @@ impl StudentTTest {
         self.t_stat
     }
 
-    /// p-value.
+    /// p-value for the two-sided test.
     ///
     /// # Formula
     ///
