@@ -26,9 +26,49 @@ offering an intuitive and easy-to-use interface.
   Not only p-values but also other statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
   See the [statistical_tests](https://docs.rs/elinor/latest/elinor/statistical_tests/index.html) module for more details.
 - **Command-line tools:**
-  Elinor provides command-line tools for evaluating and comparing IR systems.
-  The tools support various metrics and statistical tests, enabling users to perform comprehensive evaluations with ease.
-  See the [elinor-cli](./elinor-cli) directory for more details.
+  [elinor-cli](./elinor-cli) provides command-line tools for evaluating and comparing IR systems.
+  The tools support various metrics and statistical tests, facilitating comprehensive evaluations and in-depth analyses.
+  For example, you can obtain various statistics from several statistical tests, as shown below:
+
+  - Comparing two systems:
+
+    ```
+    # Two-sided paired Student's t-test for (System_1 - System_2)
+    +--------+--------+--------+--------+--------+---------+---------+
+    | Metric | Mean   | Var    | ES     | t-stat | p-value | 95% MOE |
+    +--------+--------+--------+--------+--------+---------+---------+
+    | ndcg@5 | 0.0750 | 0.0251 | 0.4731 | 2.1158 | 0.0478  | 0.0742  |
+    +--------+--------+--------+--------+--------+---------+---------+
+
+    # Two-sided paired Bootstrap test (n_resamples = 10000)
+    +--------+---------+
+    | Metric | p-value |
+    +--------+---------+
+    | ndcg@5 | 0.0505  |
+    +--------+---------+
+    ```
+
+  - Comparing multiple systems:
+
+    ```
+    # ndcg@5
+    ## Effect sizes for Tukey HSD test
+    +----------+----------+----------+----------+
+    | ES       | System_1 | System_2 | System_3 |
+    +----------+----------+----------+----------+
+    | System_1 | 0.0000   | 0.5070   | 0.6760   |
+    | System_2 | -0.5070  | 0.0000   | 0.1690   |
+    | System_3 | -0.6760  | -0.1690  | 0.0000   |
+    +----------+----------+----------+----------+
+    ## p-values for randomized Tukey HSD test (n_iters = 10000)
+    +----------+----------+----------+----------+
+    | p-value  | System_1 | System_2 | System_3 |
+    +----------+----------+----------+----------+
+    | System_1 | 1.0000   | 0.2672   | 0.1014   |
+    | System_2 | 0.2672   | 1.0000   | 0.8957   |
+    | System_3 | 0.1014   | 0.8957   | 1.0000   |
+    +----------+----------+----------+----------+
+    ```
 
 ## API documentation
 
@@ -45,74 +85,6 @@ RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --features serde 
 
 [elinor-cli](./elinor-cli) provides command-line tools for evaluating and comparing IR systems.
 See the [README](./elinor-cli/README.md) for more details.
-
-For example, you can obtain various statistics from several statistical tests, as shown below:
-
-```shell
-# Means
-+--------+----------+----------+
-| Metric | System_1 | System_2 |
-+--------+----------+----------+
-| ndcg@5 | 0.3450   | 0.2700   |
-+--------+----------+----------+
-
-# Two-sided paired Student's t-test for (System_1 - System_2)
-+--------+--------+--------+--------+--------+---------+---------+
-| Metric | Mean   | Var    | ES     | t-stat | p-value | 95% MOE |
-+--------+--------+--------+--------+--------+---------+---------+
-| ndcg@5 | 0.0750 | 0.0251 | 0.4731 | 2.1158 | 0.0478  | 0.0742  |
-+--------+--------+--------+--------+--------+---------+---------+
-
-# Two-sided paired Bootstrap test (n_resamples = 10000)
-+--------+---------+
-| Metric | p-value |
-+--------+---------+
-| ndcg@5 | 0.0505  |
-+--------+---------+
-
-# Fisher's randomized test (n_iters = 10000)
-+--------+---------+
-| Metric | p-value |
-+--------+---------+
-| ndcg@5 | 0.0482  |
-+--------+---------+
-```
-
-```shell
-# ndcg@5
-## System means
-+----------+--------+---------+
-| System   | Mean   | 95% MOE |
-+----------+--------+---------+
-| System_1 | 0.3450 | 0.0670  |
-| System_2 | 0.2700 | 0.0670  |
-| System_3 | 0.2450 | 0.0670  |
-+----------+--------+---------+
-## Two-way ANOVA without replication
-+-----------------+------------+----+----------+--------+---------+
-| Factor          | Variation  | DF | Variance | F-stat | p-value |
-+-----------------+------------+----+----------+--------+---------+
-| Between-systems | 0.1083     | 2  | 0.0542   | 2.4749 | 0.0976  |
-| Between-topics  | 1.0293     | 19 | 0.0542   | 2.4754 | 0.0086  |
-| Residual        | 0.8317     | 38 | 0.0219   |        |         |
-+-----------------+------------+----+----------+--------+---------+
-## Effect sizes for Tukey HSD test
-+----------+----------+----------+----------+
-| ES       | System_1 | System_2 | System_3 |
-+----------+----------+----------+----------+
-| System_1 | 0.0000   | 0.5070   | 0.6760   |
-| System_2 | -0.5070  | 0.0000   | 0.1690   |
-| System_3 | -0.6760  | -0.1690  | 0.0000   |
-+----------+----------+----------+----------+
-## p-values for randomized Tukey HSD test (n_iters = 10000)
-+----------+----------+----------+----------+
-| p-value  | System_1 | System_2 | System_3 |
-+----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.2672   | 0.1014   |
-| System_2 | 0.2672   | 1.0000   | 0.8957   |
-| System_3 | 0.1014   | 0.8957   | 1.0000   |
-+----------+----------+----------+----------+
-```
 
 ## Correctness verification
 
