@@ -43,6 +43,8 @@ The specifications are:
 - The query-document pairs should be unique in each file.
 - The query IDs in the gold-standard and predicted files should be the same.
 
+Sample JSONL files are available in the [`test-data/sample`](../test-data/sample/) directory.
+
 ### Example usage
 
 Here is example usage with sample JSONL files in the [`test-data/sample`](../test-data/sample/) directory.
@@ -116,6 +118,8 @@ Precisely, the CSV files should have the following columns:
   - The column names should be the same across the CSV files.
   - The metric scores should be floats.
 
+Sample CSV files are available in the [`test-data/sample`](../test-data/sample/) directory.
+
 ### Example usage: comparing two systems
 
 Here is example usage with sample CSV files in the [`test-data/sample`](../test-data/sample/) directory.
@@ -151,7 +155,7 @@ The output will be:
 
 # Two-sided paired Student's t-test for (System_1 - System_2)
 +-------------+--------+--------+--------+--------+---------+---------+
-| Metric      | Mean   | Var    | ES     | T Stat | P Value | 95% MOE |
+| Metric      | Mean   | Var    | ES     | t-stat | p-value | 95% MOE |
 +-------------+--------+--------+--------+--------+---------+---------+
 | precision@3 | 0.2917 | 0.0774 | 1.0485 | 2.9656 | 0.0209  | 0.2326  |
 | ap          | 0.3750 | 0.1012 | 1.1789 | 3.3343 | 0.0125  | 0.2659  |
@@ -161,22 +165,22 @@ The output will be:
 
 # Two-sided paired Bootstrap test (n_resamples = 10000)
 +-------------+---------+
-| Metric      | P Value |
+| Metric      | p-value |
 +-------------+---------+
-| precision@3 | 0.0222  |
-| ap          | 0.0264  |
-| rr          | 0.0661  |
-| ndcg@3      | 0.0311  |
+| precision@3 | 0.0240  |
+| ap          | 0.0292  |
+| rr          | 0.0602  |
+| ndcg@3      | 0.0283  |
 +-------------+---------+
 
 # Fisher's randomized test (n_iters = 10000)
 +-------------+---------+
-| Metric      | P Value |
+| Metric      | p-value |
 +-------------+---------+
-| precision@3 | 0.0632  |
-| ap          | 0.0677  |
-| rr          | 0.1286  |
-| ndcg@3      | 0.0651  |
+| precision@3 | 0.0596  |
+| ap          | 0.0657  |
+| rr          | 0.1248  |
+| ndcg@3      | 0.0612  |
 +-------------+---------+
 ```
 
@@ -204,7 +208,7 @@ The output will be:
 +----------+-----------------------------+
 
 # precision@3
-## Statistics for system means
+## System means
 +----------+--------+---------+
 | System   | Mean   | 95% MOE |
 +----------+--------+---------+
@@ -214,13 +218,13 @@ The output will be:
 +----------+--------+---------+
 ## Two-way ANOVA without replication
 +-----------------+------------+----+----------+--------+---------+
-| Factor          | Variation  | DF | Variance | F Stat | P Value |
+| Factor          | Variation  | DF | Variance | F-stat | p-value |
 +-----------------+------------+----+----------+--------+---------+
 | Between-systems | 0.3426     | 2  | 0.1713   | 4.3898 | 0.0331  |
 | Between-topics  | 0.3287     | 7  | 0.0470   | 1.2034 | 0.3623  |
 | Residual        | 0.5463     | 14 | 0.0390   |        |         |
 +-----------------+------------+----+----------+--------+---------+
-## Between-system effect sizes for randomized Tukey HSD test
+## Effect sizes for Tukey HSD test
 +----------+----------+----------+----------+
 | ES       | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
@@ -228,13 +232,13 @@ The output will be:
 | System_2 | -1.4765  | 0.0000   | -0.6328  |
 | System_3 | -0.8437  | 0.6328   | 0.0000   |
 +----------+----------+----------+----------+
-## Between-system P values for randomized Tukey HSD test (n_iters = 10000)
+## p-values for randomized Tukey HSD test (n_iters = 10000)
 +----------+----------+----------+----------+
-| P Value  | System_1 | System_2 | System_3 |
+| p-value  | System_1 | System_2 | System_3 |
 +----------+----------+----------+----------+
-| System_1 | 1.0000   | 0.0223   | 0.2581   |
-| System_2 | 0.0223   | 1.0000   | 0.6568   |
-| System_3 | 0.2581   | 0.6568   | 1.0000   |
+| System_1 | 1.0000   | 0.0248   | 0.2511   |
+| System_2 | 0.0248   | 1.0000   | 0.6557   |
+| System_3 | 0.2511   | 0.6557   | 1.0000   |
 +----------+----------+----------+----------+
 
 (The statistics for the other metrics will be shown as well.)
