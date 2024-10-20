@@ -22,8 +22,8 @@ offering an intuitive and easy-to-use interface.
   The supported metrics are available in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
   The evaluation results are validated against trec_eval to ensure accuracy and reliability.
 - **In-depth statistical testing:**
-  Elinor includes several statistical tests, such as Student's t-test or Randomized Tukey HSD test, to verify the generalizability of results.
-  Not only p-values but also other statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
+  Elinor includes several statistical tests, such as Student's t-test, Bootstrap test, and Randomized Tukey HSD test.
+  Not only p-values but also other important statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
   See the [statistical_tests](https://docs.rs/elinor/latest/elinor/statistical_tests/index.html) module for more details.
 - **Command-line tools:**
   [elinor-cli](./elinor-cli) provides command-line tools for evaluating and comparing IR systems.
