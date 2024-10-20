@@ -235,44 +235,6 @@ where
     })
 }
 
-/// Extracts paired scores from two [`Evaluation`] results.
-///
-/// # Errors
-///
-/// * [`ElinorError::InvalidArgument`] if the two evaluation results have different sets of queries.
-pub fn paired_scores_from_evaluations<K>(
-    a: &Evaluation<K>,
-    b: &Evaluation<K>,
-) -> Result<Vec<(f64, f64)>>
-where
-    K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
-{
-    let a = a.scores();
-    let b = b.scores();
-    if a.len() != b.len() {
-        return Err(ElinorError::InvalidArgument(
-            "The two evaluation results must have the same number of queries.".to_string(),
-        ));
-    }
-
-    // Sort query ids to ensure the order of paired scores.
-    let mut query_ids = a.keys().cloned().collect::<Vec<_>>();
-    query_ids.sort_unstable();
-
-    let mut paired_scores = vec![];
-    for query_id in query_ids {
-        let score_a = a.get(&query_id).unwrap();
-        let score_b = b.get(&query_id).ok_or_else(|| {
-            ElinorError::InvalidArgument(format!(
-                "The query id {} is not found in the second evaluation result.",
-                query_id
-            ))
-        })?;
-        paired_scores.push((*score_a, *score_b));
-    }
-    Ok(paired_scores)
-}
-
 /// Extracts tupled scores from multiple [`Evaluation`] results.
 ///
 /// # Errors
@@ -356,93 +318,6 @@ mod tests {
         assert_eq!(scores.len(), 2);
         assert_relative_eq!(scores["q_1"], 2. / 3.);
         assert_relative_eq!(scores["q_2"], 1. / 3.);
-    }
-
-    #[test]
-    fn test_paired_scores_from_evaluations() {
-        let evaluated_a = Evaluation {
-            scores: btreemap! {
-                "q_1" => 2.,
-                "q_2" => 5.,
-            },
-            // The following values are not used in this test.
-            metric: Metric::Precision { k: 0 },
-            mean: 0.0,
-            variance: 0.0,
-        };
-        let evaluated_b = Evaluation {
-            scores: btreemap! {
-                "q_1" => 1.,
-                "q_2" => 0.,
-            },
-            // The following values are not used in this test.
-            metric: Metric::Precision { k: 0 },
-            mean: 0.0,
-            variance: 0.0,
-        };
-        let paired_scores = paired_scores_from_evaluations(&evaluated_a, &evaluated_b).unwrap();
-        assert_eq!(paired_scores, vec![(2., 1.), (5., 0.)]);
-    }
-
-    #[test]
-    fn test_paired_scores_from_evaluations_different_n_queries() {
-        let evaluated_a = Evaluation {
-            scores: btreemap! {
-                "q_1" => 2.,
-                "q_2" => 5.,
-            },
-            // The following values are not used in this test.
-            metric: Metric::Precision { k: 0 },
-            mean: 0.0,
-            variance: 0.0,
-        };
-        let evaluated_b = Evaluation {
-            scores: btreemap! {
-                "q_1" => 1.,
-            },
-            // The following values are not used in this test.
-            metric: Metric::Precision { k: 0 },
-            mean: 0.0,
-            variance: 0.0,
-        };
-        let result = paired_scores_from_evaluations(&evaluated_a, &evaluated_b);
-        assert_eq!(
-            result.unwrap_err(),
-            ElinorError::InvalidArgument(
-                "The two evaluation results must have the same number of queries.".to_string()
-            )
-        );
-    }
-
-    #[test]
-    fn test_paired_scores_from_evaluations_missing_query_id() {
-        let evaluated_a = Evaluation {
-            scores: btreemap! {
-                "q_1" => 2.,
-                "q_2" => 5.,
-            },
-            // The following values are not used in this test.
-            metric: Metric::Precision { k: 0 },
-            mean: 0.0,
-            variance: 0.0,
-        };
-        let evaluated_b = Evaluation {
-            scores: btreemap! {
-                "q_1" => 1.,
-                "q_3" => 0.,
-            },
-            // The following values are not used in this test.
-            metric: Metric::Precision { k: 0 },
-            mean: 0.0,
-            variance: 0.0,
-        };
-        let result = paired_scores_from_evaluations(&evaluated_a, &evaluated_b);
-        assert_eq!(
-            result.unwrap_err(),
-            ElinorError::InvalidArgument(
-                "The query id q_2 is not found in the second evaluation result.".to_string()
-            )
-        );
     }
 
     #[test]
