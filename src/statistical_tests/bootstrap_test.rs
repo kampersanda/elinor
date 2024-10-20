@@ -7,7 +7,7 @@ use rand::SeedableRng;
 use crate::errors::ElinorError;
 use crate::statistical_tests::student_t_test::compute_t_stat;
 
-/// Bootstrap test.
+/// Two-sided paired Bootstrap test.
 ///
 /// # Examples
 ///
@@ -16,23 +16,11 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 /// use approx::assert_abs_diff_eq;
 /// use elinor::statistical_tests::BootstrapTest;
 ///
-/// // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
-/// let a = vec![
-///     0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
-///     0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
-/// ];
-/// let b = vec![
-///     0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
-///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
-/// ];
+/// let a = vec![0.70, 0.30, 0.20, 0.60, 0.40];
+/// let b = vec![0.50, 0.10, 0.00, 0.20, 0.40];
 ///
 /// let paired_samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| (x, y));
 /// let result = BootstrapTest::from_paired_samples(paired_samples)?;
-///
-/// // Various statistics can be obtained.
-/// assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.var(), 0.0251, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.effect_size(), 0.473, epsilon = 1e-3);
 /// assert!((0.0..=1.0).contains(&result.p_value()));
 /// # Ok(())
 /// # }
@@ -50,8 +38,6 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 pub struct BootstrapTest {
     n_resamples: usize,
     random_state: u64,
-    mean: f64,
-    var: f64,
     p_value: f64,
 }
 
@@ -86,26 +72,6 @@ impl BootstrapTest {
         BootstrapTester::new().test_for_paired_samples(paired_samples)
     }
 
-    /// Mean.
-    pub const fn mean(&self) -> f64 {
-        self.mean
-    }
-
-    /// Unbiased population variance.
-    pub const fn var(&self) -> f64 {
-        self.var
-    }
-
-    /// Effect size.
-    pub fn effect_size(&self) -> f64 {
-        self.mean / self.var.sqrt()
-    }
-
-    /// p-value.
-    pub const fn p_value(&self) -> f64 {
-        self.p_value
-    }
-
     /// Number of resamples.
     pub const fn n_resamples(&self) -> usize {
         self.n_resamples
@@ -115,9 +81,14 @@ impl BootstrapTest {
     pub const fn random_state(&self) -> u64 {
         self.random_state
     }
+
+    /// p-value.
+    pub const fn p_value(&self) -> f64 {
+        self.p_value
+    }
 }
 
-/// Bootstrap tester.
+/// Two-sided paired Bootstrap tester.
 ///
 /// # Default parameters
 ///
@@ -182,7 +153,7 @@ impl BootstrapTester {
         let mut rng = StdRng::seed_from_u64(random_state);
 
         // Compute the t-statistic for the original samples.
-        let (t_stat, mean, var) = compute_t_stat(&samples)?;
+        let (t_stat, mean, _) = compute_t_stat(&samples)?;
 
         // Shift the samples to have a mean of zero.
         let samples: Vec<f64> = samples.iter().map(|x| x - mean).collect();
@@ -205,8 +176,6 @@ impl BootstrapTester {
         Ok(BootstrapTest {
             n_resamples: self.n_resamples,
             random_state,
-            mean,
-            var,
             p_value,
         })
     }
