@@ -18,7 +18,7 @@ Each line in the JSONL file should be a JSON object with the following fields:
 - `query_id`: The ID of the query.
 - `doc_id`: The ID of the document.
 - `score`: The relevance score of the query-document pair.
-  - If it is gold-standard, the score should be an integer (e.g., 0, 1, 2).
+  - If it is gold-standard, the score should be a non-negative integer (e.g., 0, 1, 2).
   - If it is predicted, the score can be a float (e.g., 0.1, 0.5, 1.0).
 
 An example of the gold-standard JSONL file is:
