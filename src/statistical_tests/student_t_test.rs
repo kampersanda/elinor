@@ -11,43 +11,42 @@ use crate::errors::Result;
 ///
 /// # Examples
 ///
+/// An example to compare two systems:
+///
 /// ```
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// use approx::assert_abs_diff_eq;
 /// use elinor::statistical_tests::StudentTTest;
 ///
-/// // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
-/// let a = vec![
-///     0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
-///     0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
-/// ];
-/// let b = vec![
-///     0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
-///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
-/// ];
+/// let a = vec![0.60, 0.10, 0.20];
+/// let b = vec![0.50, 0.10, 0.00];
 ///
+/// // [0.10, 0.00, 0.20]
 /// let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
-/// let result = StudentTTest::from_samples(samples)?;
+/// let stat = StudentTTest::from_samples(samples)?;
+/// assert_eq!(stat.n_samples(), 3);
 ///
-/// // Various statistics can be obtained.
-/// assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.variance(), 0.0251, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.effect_size(), 0.473, epsilon = 1e-3);
-/// assert_abs_diff_eq!(result.t_stat(), 2.116, epsilon = 1e-3);
-/// assert_abs_diff_eq!(result.p_value(), 0.048, epsilon = 1e-3);
+/// // Various statistics.
+/// assert_abs_diff_eq!(stat.mean(), (0.10 + 0.00 + 0.20) / 3.0);
+/// assert_abs_diff_eq!(stat.variance(), ((0.10 - stat.mean()).powi(2) + (0.00 - stat.mean()).powi(2) + (0.20 - stat.mean()).powi(2)) / 2.0);
+/// assert_abs_diff_eq!(stat.effect_size(), stat.mean() / stat.variance().sqrt());
+/// assert_abs_diff_eq!(stat.t_stat(), stat.mean() / (stat.variance() / 3.0).sqrt());
+/// assert!((0.0..=1.0).contains(&stat.p_value()));
 ///
 /// // Margin of error at a 95% confidence level.
-/// assert_abs_diff_eq!(result.margin_of_error(0.05)?, 0.0742, epsilon = 1e-4);
+/// let moe95 = stat.margin_of_error(0.05)?;
+/// assert!(moe95 > 0.0);
 ///
 /// // Confidence interval at a 95% confidence level.
-/// let (ci95_btm, ci95_top) = result.confidence_interval(0.05)?;
-/// assert_abs_diff_eq!(ci95_btm, 0.0750 - 0.0742, epsilon = 1e-4);
-/// assert_abs_diff_eq!(ci95_top, 0.0750 + 0.0742, epsilon = 1e-4);
+/// let (ci95_btm, ci95_top) = stat.confidence_interval(0.05)?;
+/// assert_abs_diff_eq!(ci95_btm, stat.mean() - moe95);
+/// assert_abs_diff_eq!(ci95_top, stat.mean() + moe95);
 /// # Ok(())
 /// # }
 /// ```
 #[derive(Debug, Clone)]
 pub struct StudentTTest {
+    n_samples: usize,
     mean: f64,
     variance: f64,
     t_stat: f64,
@@ -78,12 +77,18 @@ impl StudentTTest {
         let p_value = t_dist.sf(t_stat.abs()) * 2.0; // two-tailed
         let scaled_t_dist = StudentsT::new(0.0, (variance / n).sqrt(), n - 1.0).unwrap();
         Ok(Self {
+            n_samples: samples.len(),
             mean,
             variance,
             t_stat,
             p_value,
             scaled_t_dist,
         })
+    }
+
+    /// Number of samples, $`n`$.
+    pub const fn n_samples(&self) -> usize {
+        self.n_samples
     }
 
     /// Mean of the samples.
@@ -273,5 +278,34 @@ mod tests {
         let (ci95_btm, ci95_top) = result.confidence_interval(1.0).unwrap();
         assert_abs_diff_eq!(ci95_btm, result.mean(), epsilon = 1e-4);
         assert_abs_diff_eq!(ci95_top, result.mean(), epsilon = 1e-4);
+    }
+
+    #[test]
+    fn test_student_t_test_sakai_book_15() {
+        // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
+        let a = vec![
+            0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
+            0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
+        ];
+        let b = vec![
+            0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
+            0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
+        ];
+
+        let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
+        let result = StudentTTest::from_samples(samples).unwrap();
+
+        assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
+        assert_abs_diff_eq!(result.variance(), 0.0251, epsilon = 1e-4);
+        assert_abs_diff_eq!(result.effect_size(), 0.473, epsilon = 1e-3);
+        assert_abs_diff_eq!(result.t_stat(), 2.116, epsilon = 1e-3);
+        assert_abs_diff_eq!(result.p_value(), 0.048, epsilon = 1e-3);
+
+        let moe95 = result.margin_of_error(0.05).unwrap();
+        assert_abs_diff_eq!(moe95, 0.0742, epsilon = 1e-4);
+
+        let (ci95_btm, ci95_top) = result.confidence_interval(0.05).unwrap();
+        assert_abs_diff_eq!(ci95_btm, result.mean() - moe95, epsilon = 1e-4);
+        assert_abs_diff_eq!(ci95_top, result.mean() + moe95, epsilon = 1e-4);
     }
 }

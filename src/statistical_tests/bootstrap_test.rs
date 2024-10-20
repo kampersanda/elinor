@@ -21,8 +21,8 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 /// let b = vec![0.50, 0.10, 0.00, 0.20, 0.40];
 ///
 /// let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
-/// let result = BootstrapTest::from_samples(samples)?;
-/// assert!((0.0..=1.0).contains(&result.p_value()));
+/// let stat = BootstrapTest::from_samples(samples)?;
+/// assert!((0.0..=1.0).contains(&stat.p_value()));
 /// # Ok(())
 /// # }
 /// ```
