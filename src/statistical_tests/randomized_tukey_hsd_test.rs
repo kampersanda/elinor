@@ -18,33 +18,19 @@ use crate::errors::ElinorError;
 /// use approx::assert_abs_diff_eq;
 /// use elinor::statistical_tests::RandomizedTukeyHsdTest;
 ///
-/// // From Table 5.1 in Sakai's book, "情報アクセス評価方法論".
-/// let a = vec![
-///     0.70, 0.30, 0.20, 0.60, 0.40, 0.40, 0.00, 0.70, 0.10, 0.30, //
-///     0.50, 0.40, 0.00, 0.60, 0.50, 0.30, 0.10, 0.50, 0.20, 0.10,
-/// ];
-/// let b = vec![
-///     0.50, 0.10, 0.00, 0.20, 0.40, 0.30, 0.00, 0.50, 0.30, 0.30, //
-///     0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
-/// ];
-/// let c = vec![
-///     0.00, 0.00, 0.20, 0.10, 0.30, 0.30, 0.10, 0.20, 0.40, 0.40, //
-///     0.40, 0.30, 0.30, 0.20, 0.20, 0.20, 0.10, 0.50, 0.40, 0.30,
-/// ];
+/// let a = vec![0.70, 0.30, 0.20, 0.60, 0.40];
+/// let b = vec![0.50, 0.10, 0.00, 0.20, 0.40];
+/// let c = vec![0.00, 0.00, 0.20, 0.10, 0.30];
 ///
-/// // Comparing two systems, equivalent to Fisher's randomization test.
-/// let tupled_samples = a.iter().zip(b.iter()).map(|(&a, &b)| [a, b]);
-/// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 2)?;
-/// let p_values = result.p_values();
-/// assert!((0.0..=1.0).contains(&p_values[0][1]));  // a vs. b
-///
-/// // Comparing three systems.
 /// let tupled_samples = a
 ///     .iter()
 ///     .zip(b.iter())
 ///     .zip(c.iter())
 ///     .map(|((&a, &b), &c)| [a, b, c]);
 /// let result = RandomizedTukeyHsdTest::from_tupled_samples(tupled_samples, 3)?;
+/// assert_eq!(result.n_systems(), 3);
+/// assert_eq!(result.n_topics(), 5);
+///
 /// let p_values = result.p_values();
 /// assert!((0.0..=1.0).contains(&p_values[0][1]));  // a vs. b
 /// assert!((0.0..=1.0).contains(&p_values[0][2]));  // a vs. c
@@ -76,7 +62,6 @@ pub struct RandomizedTukeyHsdTest {
 impl RandomizedTukeyHsdTest {
     /// Creates a new randomized Tukey HSD test.
     /// from samples $`x_{ij}`$ for $`i \in [1,m]`$ systems and $`j \in [1,n]`$ topics.
-    ///
     ///
     /// # Arguments
     ///

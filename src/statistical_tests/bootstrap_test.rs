@@ -1,5 +1,4 @@
 //! Bootstrap test.
-
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;

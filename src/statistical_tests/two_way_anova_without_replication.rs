@@ -45,7 +45,7 @@ impl TwoWayAnovaWithoutReplication {
     ///
     /// # Arguments
     ///
-    /// * `samples` - Iterator of tupled samples, where each record is an array of $`m`$ system samples.
+    /// * `samples` - Iterator of tupled samples, where each record is an array of $`m`$ system samples for a topic.
     /// * `n_systems` - Number of systems, $`m`$.
     ///
     /// # Errors
