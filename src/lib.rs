@@ -1,7 +1,6 @@
 //! Elinor (**E**valuation **l**ibrary in **in**f**o**rmation **r**etrieval) is a library
 //! for evaluating information retrieval (IR) systems.
-//! It provides a comprehensive set of tools and metrics tailored for IR engineers,
-//! offering an intuitive and easy-to-use interface.
+//! It provides a comprehensive set of metrics and statistical tests for evaluating and comparing IR systems.
 //!
 //! # Key features
 //!
@@ -13,8 +12,8 @@
 //!     The supported metrics are available in [`Metric`].
 //!     The evaluation results are validated against trec_eval to ensure accuracy and reliability.
 //! * **In-depth statistical testing:**
-//!     Elinor includes several statistical tests, such as Student's t-test or Randomized Tukey HSD test, to verify the generalizability of results.
-//!     Not only p-values but also other statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
+//!     Elinor includes several statistical tests, such as Student's t-test, Bootstrap test, and Randomized Tukey HSD test.
+//!     Not only p-values but also other important statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
 //!     See the [`statistical_tests`] module for more details.
 //!
 //! # Basic usage in evaluating several metrics
