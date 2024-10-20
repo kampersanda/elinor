@@ -46,9 +46,9 @@ RUSTDOCFLAGS="--html-in-header katex.html" cargo doc --no-deps --features serde 
 
 For example, you can obtain various statistics from several statistical tests, as shown below:
 
-```
-(Two-system comparison)
+### Two-system comparison
 
+```
 # Means
 +--------+----------+----------+
 | Metric | System_1 | System_2 |
@@ -78,9 +78,9 @@ For example, you can obtain various statistics from several statistical tests, a
 +--------+---------+
 ```
 
-```
-(Multi-system comparison)
+### Multi-system comparison
 
+```
 # ndcg@5
 ## System means
 +----------+--------+---------+
