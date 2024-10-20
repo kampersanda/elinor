@@ -199,10 +199,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
             ),
             Series::new(
                 "Var".into(),
-                stats
-                    .iter()
-                    .map(|stat| stat.variation())
-                    .collect::<Vec<_>>(),
+                stats.iter().map(|stat| stat.variance()).collect::<Vec<_>>(),
             ),
             Series::new(
                 "ES".into(),
