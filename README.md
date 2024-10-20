@@ -30,45 +30,41 @@ offering an intuitive and easy-to-use interface.
   The tools support various metrics and statistical tests, facilitating comprehensive evaluations and in-depth analyses.
   For example, you can obtain various statistics from several statistical tests, as shown below:
 
-  - Comparing two systems:
+  ```
+  # Two-sided paired Student's t-test for (System_1 - System_2)
+  +--------+--------+--------+--------+--------+---------+---------+
+  | Metric | Mean   | Var    | ES     | t-stat | p-value | 95% MOE |
+  +--------+--------+--------+--------+--------+---------+---------+
+  | ndcg@5 | 0.0750 | 0.0251 | 0.4731 | 2.1158 | 0.0478  | 0.0742  |
+  +--------+--------+--------+--------+--------+---------+---------+
 
-    ```
-    # Two-sided paired Student's t-test for (System_1 - System_2)
-    +--------+--------+--------+--------+--------+---------+---------+
-    | Metric | Mean   | Var    | ES     | t-stat | p-value | 95% MOE |
-    +--------+--------+--------+--------+--------+---------+---------+
-    | ndcg@5 | 0.0750 | 0.0251 | 0.4731 | 2.1158 | 0.0478  | 0.0742  |
-    +--------+--------+--------+--------+--------+---------+---------+
+  # Two-sided paired Bootstrap test (n_resamples = 10000)
+  +--------+---------+
+  | Metric | p-value |
+  +--------+---------+
+  | ndcg@5 | 0.0505  |
+  +--------+---------+
+  ```
 
-    # Two-sided paired Bootstrap test (n_resamples = 10000)
-    +--------+---------+
-    | Metric | p-value |
-    +--------+---------+
-    | ndcg@5 | 0.0505  |
-    +--------+---------+
-    ```
-
-  - Comparing multiple systems:
-
-    ```
-    # ndcg@5
-    ## Effect sizes for Tukey HSD test
-    +----------+----------+----------+----------+
-    | ES       | System_1 | System_2 | System_3 |
-    +----------+----------+----------+----------+
-    | System_1 | 0.0000   | 0.5070   | 0.6760   |
-    | System_2 | -0.5070  | 0.0000   | 0.1690   |
-    | System_3 | -0.6760  | -0.1690  | 0.0000   |
-    +----------+----------+----------+----------+
-    ## p-values for randomized Tukey HSD test (n_iters = 10000)
-    +----------+----------+----------+----------+
-    | p-value  | System_1 | System_2 | System_3 |
-    +----------+----------+----------+----------+
-    | System_1 | 1.0000   | 0.2672   | 0.1014   |
-    | System_2 | 0.2672   | 1.0000   | 0.8957   |
-    | System_3 | 0.1014   | 0.8957   | 1.0000   |
-    +----------+----------+----------+----------+
-    ```
+  ```
+  # ndcg@5
+  ## Effect sizes for Tukey HSD test
+  +----------+----------+----------+----------+
+  | ES       | System_1 | System_2 | System_3 |
+  +----------+----------+----------+----------+
+  | System_1 | 0.0000   | 0.5070   | 0.6760   |
+  | System_2 | -0.5070  | 0.0000   | 0.1690   |
+  | System_3 | -0.6760  | -0.1690  | 0.0000   |
+  +----------+----------+----------+----------+
+  ## p-values for randomized Tukey HSD test (n_iters = 10000)
+  +----------+----------+----------+----------+
+  | p-value  | System_1 | System_2 | System_3 |
+  +----------+----------+----------+----------+
+  | System_1 | 1.0000   | 0.2672   | 0.1014   |
+  | System_2 | 0.2672   | 1.0000   | 0.8957   |
+  | System_3 | 0.1014   | 0.8957   | 1.0000   |
+  +----------+----------+----------+----------+
+  ```
 
 ## API documentation
 
