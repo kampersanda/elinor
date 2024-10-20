@@ -56,7 +56,7 @@ pub struct StudentTTest {
 }
 
 impl StudentTTest {
-    /// Computes a Student's t-test for the samples.
+    /// Computes a Student's t-test for $`n`$ samples $`x_{1},x_{2},\dots,x_{n}`$.
     ///
     /// # Errors
     ///
@@ -86,36 +86,75 @@ impl StudentTTest {
         })
     }
 
-    /// Mean.
+    /// Mean of the samples.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_{i}
+    /// ```
     pub const fn mean(&self) -> f64 {
         self.mean
     }
 
     /// Unbiased population variance.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// V = \frac{1}{n-1} \sum_{i=1}^{n} (x_{i} - \bar{x})^{2}
+    /// ```
     pub const fn variance(&self) -> f64 {
         self.variance
     }
 
-    /// Effect size.
+    /// Sample effect size.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \text{ES} = \frac{\bar{x}}{\sqrt{V}}
+    /// ```
     pub fn effect_size(&self) -> f64 {
         self.mean / self.variance.sqrt()
     }
 
     /// t-statistic.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// t_0 = \frac{\bar{x}}{\sqrt{V/n}}
+    /// ```
     pub const fn t_stat(&self) -> f64 {
         self.t_stat
     }
 
     /// p-value.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// p = P(|t_0| > t_{\alpha/2}(n-1))
+    /// ```
+    ///
+    /// where $`t_{\alpha/2}(n-1)`$ is the $`1 - \alpha/2`$ quantile of the Student's t-distribution
+    /// with $`n-1`$ degrees of freedom.
     pub const fn p_value(&self) -> f64 {
         self.p_value
     }
 
-    /// Margin of error at a `1 - significance_level` confidence level.
+    /// Margin of error at a given significance level $`\alpha`$.
     ///
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \text{MOE} = t_{\alpha/2}(n-1) \sqrt{\frac{V}{n}}
+    /// ```
     pub fn margin_of_error(&self, significance_level: f64) -> Result<f64> {
         if significance_level <= 0.0 || significance_level > 1.0 {
             return Err(ElinorError::InvalidArgument(
@@ -127,11 +166,17 @@ impl StudentTTest {
             .inverse_cdf(1.0 - (significance_level / 2.0)))
     }
 
-    /// Confidence interval at a `1 - significance_level` confidence level.
+    /// Confidence interval at a given significance level $`\alpha`$.
     ///
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the significance level is not in the range `(0, 1]`.
+    ///
+    /// # Formula
+    ///
+    /// ```math
+    /// \text{CI} = [\bar{x} - \text{MOE}, \bar{x} + \text{MOE}]
+    /// ```
     pub fn confidence_interval(&self, significance_level: f64) -> Result<(f64, f64)> {
         let moe = self.margin_of_error(significance_level)?;
         Ok((self.mean - moe, self.mean + moe))
