@@ -14,10 +14,6 @@ fn main() -> Result<()> {
 
     let paired_samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| (x, y));
     let result = BootstrapTest::from_paired_samples(paired_samples)?;
-
-    println!("Mean: {:.4}", result.mean());
-    println!("Variance: {:.4}", result.var());
-    println!("Effect size: {:.4}", result.effect_size());
     println!("p-value: {:.4}", result.p_value());
 
     Ok(())
