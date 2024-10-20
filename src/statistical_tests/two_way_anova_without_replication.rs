@@ -12,8 +12,14 @@ use crate::errors::ElinorError;
 ///
 /// * $`m`$: Number of systems.
 /// * $`n`$: Number of topics.
-/// * $`x_{ij}`$: Score of the $`i`$-th system on the $`j`$-th topic.
-/// * $`\bar{x}`$: Mean of all scores $`x_{ij}`$.
+/// * $`x_{ij}`$: Sample of the $`i`$-th system and the $`j`$-th topic.
+/// * $`\bar{x}`$: Mean of all samples $`x_{ij}`$.
+///
+/// # References
+///
+/// * Tetsuya Sakai.
+///   [Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power](https://doi.org/10.1007/978-981-13-1199-4).
+///   Chapter 3. Springer, 2018.
 #[derive(Debug, Clone)]
 pub struct TwoWayAnovaWithoutReplication {
     n_systems: usize,
@@ -34,18 +40,29 @@ pub struct TwoWayAnovaWithoutReplication {
 }
 
 impl TwoWayAnovaWithoutReplication {
-    /// Computes a new Two-way ANOVA without replication
-    /// from scores $`x_{ij}`$ of $`i \in [1,m]`$ systems and $`j \in [1,n]`$ topics.
+    /// Computes a new two-way ANOVA without replication
+    /// from samples $`x_{ij}`$ for $`i \in [1,m]`$ systems and $`j \in [1,n]`$ topics.
     ///
     /// # Arguments
     ///
-    /// * `samples` - Iterator of tupled samples, where each sample is an array of $`m`$ system scores.
+    /// * `samples` - Iterator of tupled samples, where each record is an array of $`m`$ system samples.
     /// * `n_systems` - Number of systems, $`m`$.
     ///
     /// # Errors
     ///
-    /// * [`ElinorError::InvalidArgument`] if the length of each sample is not equal to the number of systems.
-    /// * [`ElinorError::InvalidArgument`] if the input does not have at least two samples.
+    /// * [`ElinorError::InvalidArgument`] if the length of each record is not equal to the number of systems.
+    /// * [`ElinorError::InvalidArgument`] if the input does not have at least two records.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
+    ///
+    /// let stat = TwoWayAnovaWithoutReplication::from_tupled_samples([[1., 2., 3.], [2., 4., 2.]], 3)?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn from_tupled_samples<I, S>(samples: I, n_systems: usize) -> Result<Self, ElinorError>
     where
         I: IntoIterator<Item = S>,
@@ -53,21 +70,21 @@ impl TwoWayAnovaWithoutReplication {
     {
         let samples: Vec<Vec<f64>> = samples
             .into_iter()
-            .map(|sample| {
-                let sample = sample.as_ref();
-                if sample.len() != n_systems {
+            .map(|record| {
+                let record = record.as_ref();
+                if record.len() != n_systems {
                     return Err(ElinorError::InvalidArgument(
-                        "The length of each sample must be equal to the number of systems."
+                        "The length of each record must be equal to the number of systems."
                             .to_string(),
                     ));
                 }
-                Ok(sample.to_vec())
+                Ok(record.to_vec())
             })
             .collect::<Result<_, _>>()?;
 
         if samples.len() <= 1 {
             return Err(ElinorError::InvalidArgument(
-                "The input must have at least two samples.".to_string(),
+                "The input must have at least two records.".to_string(),
             ));
         }
 
@@ -547,7 +564,7 @@ impl TwoWayAnovaWithoutReplication {
         self.between_topic_p_value
     }
 
-    /// Margin of error at a given significance level.
+    /// Margin of error at a given significance level $`\alpha`$.
     ///
     /// # Errors
     ///
@@ -583,7 +600,7 @@ mod tests {
         let stat = TwoWayAnovaWithoutReplication::from_tupled_samples(samples, 2);
         assert_eq!(
             stat.unwrap_err(),
-            ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
+            ElinorError::InvalidArgument("The input must have at least two records.".to_string())
         );
     }
 
@@ -593,7 +610,7 @@ mod tests {
         let stat = TwoWayAnovaWithoutReplication::from_tupled_samples(samples, 2);
         assert_eq!(
             stat.unwrap_err(),
-            ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
+            ElinorError::InvalidArgument("The input must have at least two records.".to_string())
         );
     }
 
@@ -604,7 +621,7 @@ mod tests {
         assert_eq!(
             stat.unwrap_err(),
             ElinorError::InvalidArgument(
-                "The length of each sample must be equal to the number of systems.".to_string()
+                "The length of each record must be equal to the number of systems.".to_string()
             )
         );
     }

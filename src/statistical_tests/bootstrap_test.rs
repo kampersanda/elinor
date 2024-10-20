@@ -11,6 +11,8 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 ///
 /// # Examples
 ///
+/// An example to compare two systems:
+///
 /// ```
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// use approx::assert_abs_diff_eq;
@@ -73,7 +75,7 @@ impl BootstrapTest {
     }
 }
 
-/// Two-sided paired Bootstrap tester.
+/// Two-sided Bootstrap tester.
 ///
 /// # Default parameters
 ///
