@@ -54,20 +54,20 @@
 //! let pred_rels = b.build();
 //!
 //! // Evaluate Precision@3.
-//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
-//! assert_abs_diff_eq!(evaluated.mean(), 0.5000, epsilon = 1e-4);
+//! let result = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
+//! assert_abs_diff_eq!(result.mean(), 0.5000, epsilon = 1e-4);
 //!
 //! // Evaluate MAP, where all documents are considered via k=0.
-//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
-//! assert_abs_diff_eq!(evaluated.mean(), 0.5000, epsilon = 1e-4);
+//! let result = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
+//! assert_abs_diff_eq!(result.mean(), 0.5000, epsilon = 1e-4);
 //!
 //! // Evaluate MRR, where the metric is specified via a string representation.
-//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
-//! assert_abs_diff_eq!(evaluated.mean(), 0.6667, epsilon = 1e-4);
+//! let result = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
+//! assert_abs_diff_eq!(result.mean(), 0.6667, epsilon = 1e-4);
 //!
 //! // Evaluate nDCG@3, where the metric is specified via a string representation.
-//! let evaluated = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
-//! assert_abs_diff_eq!(evaluated.mean(), 0.4751, epsilon = 1e-4);
+//! let result = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
+//! assert_abs_diff_eq!(result.mean(), 0.4751, epsilon = 1e-4);
 //! # Ok(())
 //! # }
 //! ```
