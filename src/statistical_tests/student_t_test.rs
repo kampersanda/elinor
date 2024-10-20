@@ -30,7 +30,7 @@ use crate::errors::ElinorError;
 ///
 /// // Various statistics can be obtained.
 /// assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
-/// assert_abs_diff_eq!(result.var(), 0.0251, epsilon = 1e-4);
+/// assert_abs_diff_eq!(result.variation(), 0.0251, epsilon = 1e-4);
 /// assert_abs_diff_eq!(result.effect_size(), 0.473, epsilon = 1e-3);
 /// assert_abs_diff_eq!(result.t_stat(), 2.116, epsilon = 1e-3);
 /// assert_abs_diff_eq!(result.p_value(), 0.048, epsilon = 1e-3);
@@ -51,7 +51,7 @@ use crate::errors::ElinorError;
 #[derive(Debug, Clone)]
 pub struct StudentTTest {
     mean: f64,
-    var: f64,
+    variation: f64,
     t_stat: f64,
     p_value: f64,
     scaled_t_dist: StudentsT,
@@ -74,14 +74,14 @@ impl StudentTTest {
                 "The input must have at least two samples.".to_string(),
             ));
         }
-        let (t_stat, mean, var) = compute_t_stat(&samples)?;
+        let (t_stat, mean, variation) = compute_t_stat(&samples)?;
         let n = samples.len() as f64;
         let t_dist = StudentsT::new(0.0, 1.0, n - 1.0).unwrap();
         let p_value = t_dist.sf(t_stat.abs()) * 2.0; // two-tailed
-        let scaled_t_dist = StudentsT::new(0.0, (var / n).sqrt(), n - 1.0).unwrap();
+        let scaled_t_dist = StudentsT::new(0.0, (variation / n).sqrt(), n - 1.0).unwrap();
         Ok(Self {
             mean,
-            var,
+            variation,
             t_stat,
             p_value,
             scaled_t_dist,
@@ -107,13 +107,13 @@ impl StudentTTest {
     }
 
     /// Unbiased population variance.
-    pub const fn var(&self) -> f64 {
-        self.var
+    pub const fn variation(&self) -> f64 {
+        self.variation
     }
 
     /// Effect size.
     pub fn effect_size(&self) -> f64 {
-        self.mean / self.var.sqrt()
+        self.mean / self.variation.sqrt()
     }
 
     /// t-statistic.
@@ -169,15 +169,15 @@ impl StudentTTest {
 /// * [`ElinorError::Uncomputable`] if the variance is zero.
 pub fn compute_t_stat(samples: &[f64]) -> Result<(f64, f64, f64), ElinorError> {
     let mean = Statistics::mean(samples);
-    let var = Statistics::variance(samples);
-    if var == 0.0 {
+    let variation = Statistics::variance(samples);
+    if variation == 0.0 {
         return Err(ElinorError::Uncomputable(
             "The variance is zero.".to_string(),
         ));
     }
     let n = samples.len() as f64;
-    let t_stat = mean / (var / n).sqrt();
-    Ok((t_stat, mean, var))
+    let t_stat = mean / (variation / n).sqrt();
+    Ok((t_stat, mean, variation))
 }
 
 #[cfg(test)]
