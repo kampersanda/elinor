@@ -224,18 +224,22 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use elinor::{GoldRelStore, GoldRecord, PredRelStore, PredRecord};
 //!
-//! let gold_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 1}
+//! let gold_data = r#"
+//! {"query_id": "q_1", "doc_id": "d_1", "score": 1}
 //! {"query_id": "q_1", "doc_id": "d_2", "score": 0}
 //! {"query_id": "q_1", "doc_id": "d_3", "score": 2}
 //! {"query_id": "q_2", "doc_id": "d_2", "score": 2}
-//! {"query_id": "q_2", "doc_id": "d_4", "score": 1}"#;
+//! {"query_id": "q_2", "doc_id": "d_4", "score": 1}
+//! "#.trim();
 //!
-//! let pred_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 0.5}
+//! let pred_data = r#"
+//! {"query_id": "q_1", "doc_id": "d_1", "score": 0.5}
 //! {"query_id": "q_1", "doc_id": "d_2", "score": 0.4}
 //! {"query_id": "q_1", "doc_id": "d_3", "score": 0.3}
 //! {"query_id": "q_2", "doc_id": "d_4", "score": 0.1}
 //! {"query_id": "q_2", "doc_id": "d_1", "score": 0.2}
-//! {"query_id": "q_2", "doc_id": "d_3", "score": 0.3}"#;
+//! {"query_id": "q_2", "doc_id": "d_3", "score": 0.3}
+//! "#.trim();
 //!
 //! let gold_records = gold_data
 //!     .lines()
