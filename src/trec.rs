@@ -14,6 +14,11 @@ use crate::PredScore;
 /// Each line should be `<QueryID> <Dummy> <DocID> <Score>`,
 /// where `<Dummy>` is ignored.
 ///
+/// # Caution
+///
+/// The score should be non-negative.
+/// If the score is negative, it will be clamped to 0.
+///
 /// # Example
 ///
 /// ```rust
@@ -64,6 +69,10 @@ where
 ///
 /// Each line should be `<QueryID> <Dummy> <DocID> <Rank> <Score> <RunName>`,
 /// where `<Dummy>`, `<Rank>`, and `<RunName>` are ignored.
+///
+/// # Caution
+///
+/// Ties are arbitrarily broken because the rank is ignored.
 ///
 /// # Example
 ///

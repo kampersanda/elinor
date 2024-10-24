@@ -25,7 +25,7 @@
 //! Then, you can evaluate the predicted relevance scores using the [`evaluate`] function and
 //! the specified metric. The available metrics are defined in the [`Metric`] enum.
 //!
-//! An example is shown below:
+//! An example to evaluate Precision@3, MAP, MRR, and nDCG@3 is shown below:
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -71,6 +71,133 @@
 //! # }
 //! ```
 //!
+//! # Statistical tests for comparing two systems
+//!
+//! The [`statistical_tests`] module provides various statistical tests for comparing systems.
+//!
+//! The example shows how to perform [Student's t-test](statistical_tests::StudentTTest) for Precision scores between two systems.
+//! Not only the p-value but also various statistics, such as variance and effect size, are provided for thorough reporting.
+//!
+//! ```
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use approx::assert_relative_eq;
+//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+//! use elinor::statistical_tests::StudentTTest;
+//!
+//! // Prepare gold relevance scores.
+//! let mut b = GoldRelStoreBuilder::new();
+//! b.add_record("q_1", "d_1", 1)?;
+//! b.add_record("q_1", "d_2", 1)?;
+//! b.add_record("q_2", "d_1", 1)?;
+//! b.add_record("q_2", "d_2", 1)?;
+//! let gold_rels = b.build();
+//!
+//! // Prepare predicted relevance scores for system A.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_record("q_1", "d_1", 0.2.into())?;
+//! b.add_record("q_1", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_1", 0.2.into())?;
+//! b.add_record("q_2", "d_2", 0.1.into())?;
+//! let pred_rels_a = b.build();
+//!
+//! // Prepare predicted relevance scores for system B.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_record("q_1", "d_3", 0.2.into())?;
+//! b.add_record("q_1", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_3", 0.2.into())?;
+//! let pred_rels_b = b.build();
+//!
+//! // Evaluate Precision for both systems.
+//! let metric = Metric::Precision { k: 0 };
+//! let result_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
+//! let result_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
+//!
+//! // Perform two-sided paired Student's t-test.
+//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&result_a, &result_b])?;
+//! let stat = StudentTTest::from_samples(tupled_scores.iter().map(|x| x[0] - x[1]))?;
+//!
+//! // Various statistics can be obtained from the t-test result.
+//! assert!(stat.mean() > 0.0);
+//! assert!(stat.variance() > 0.0);
+//! assert!(stat.effect_size() > 0.0);
+//! assert!(stat.t_stat() > 0.0);
+//! assert!((0.0..=1.0).contains(&stat.p_value()));
+//!
+//! // Margin of error at a 95% confidence level.
+//! let moe95 = stat.margin_of_error(0.05)?;
+//! assert!(moe95 > 0.0);
+//!
+//! // Confidence interval at a 95% confidence level.
+//! let (ci95_btm, ci95_top) = stat.confidence_interval(0.05)?;
+//! assert_relative_eq!(ci95_btm, stat.mean() - moe95);
+//! assert_relative_eq!(ci95_top, stat.mean() + moe95);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Statistical tests for comparing three or more systems
+//!
+//! When comparing three or more systems,
+//! you can use [Tukey HSD test](statistical_tests::TukeyHsdTest) and
+//! [Randomized Tukey HSD test](statistical_tests::RandomizedTukeyHsdTest).
+//!
+//! An example to compare Precision scores among three systems is shown below:
+//!
+//! ```
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+//! use elinor::statistical_tests::{RandomizedTukeyHsdTest, TukeyHsdTest};
+//!
+//! // Prepare gold relevance scores.
+//! let mut b = GoldRelStoreBuilder::new();
+//! b.add_record("q_1", "d_1", 1)?;
+//! b.add_record("q_1", "d_2", 1)?;
+//! b.add_record("q_2", "d_1", 1)?;
+//! b.add_record("q_2", "d_2", 1)?;
+//! let gold_rels = b.build();
+//!
+//! // Prepare predicted relevance scores for system A.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_record("q_1", "d_1", 0.2.into())?;
+//! b.add_record("q_1", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_1", 0.2.into())?;
+//! b.add_record("q_2", "d_2", 0.1.into())?;
+//! let pred_rels_a = b.build();
+//!
+//! // Prepare predicted relevance scores for system B.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_record("q_1", "d_3", 0.2.into())?;
+//! b.add_record("q_1", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_3", 0.2.into())?;
+//! let pred_rels_b = b.build();
+//!
+//! // Prepare predicted relevance scores for system C.
+//! let mut b = PredRelStoreBuilder::new();
+//! b.add_record("q_1", "d_1", 0.2.into())?;
+//! b.add_record("q_2", "d_2", 0.1.into())?;
+//! b.add_record("q_2", "d_4", 0.2.into())?;
+//! let pred_rels_c = b.build();
+//!
+//! // Evaluate Precision for all systems.
+//! let metric = Metric::Precision { k: 0 };
+//! let result_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
+//! let result_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
+//! let result_c = elinor::evaluate(&gold_rels, &pred_rels_c, metric)?;
+//!
+//! // Prepare tupled scores for tests.
+//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&result_a, &result_b, &result_c])?;
+//!
+//! // Perform Tukey HSD test with paired observations.
+//! let hsd_stat = TukeyHsdTest::from_tupled_samples(tupled_scores.iter(), 3)?;
+//! let effect_sizes = hsd_stat.effect_sizes();
+//!
+//! // Perform randomized Tukey HSD test.
+//! let hsd_stat = RandomizedTukeyHsdTest::from_tupled_samples(tupled_scores.iter(), 3)?;
+//! let p_values = hsd_stat.p_values();
+//! # Ok(())
+//! # }
+//! ```
+//!
 //! # Instantiating relevance stores with [Serde](https://serde.rs/)
 //!
 //! [`GoldRelStore`] and [`PredRelStore`] can be instantiated from
@@ -97,18 +224,22 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use elinor::{GoldRelStore, GoldRecord, PredRelStore, PredRecord};
 //!
-//! let gold_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 1}
+//! let gold_data = r#"
+//! {"query_id": "q_1", "doc_id": "d_1", "score": 1}
 //! {"query_id": "q_1", "doc_id": "d_2", "score": 0}
 //! {"query_id": "q_1", "doc_id": "d_3", "score": 2}
 //! {"query_id": "q_2", "doc_id": "d_2", "score": 2}
-//! {"query_id": "q_2", "doc_id": "d_4", "score": 1}"#;
+//! {"query_id": "q_2", "doc_id": "d_4", "score": 1}
+//! "#.trim();
 //!
-//! let pred_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 0.5}
+//! let pred_data = r#"
+//! {"query_id": "q_1", "doc_id": "d_1", "score": 0.5}
 //! {"query_id": "q_1", "doc_id": "d_2", "score": 0.4}
 //! {"query_id": "q_1", "doc_id": "d_3", "score": 0.3}
 //! {"query_id": "q_2", "doc_id": "d_4", "score": 0.1}
 //! {"query_id": "q_2", "doc_id": "d_1", "score": 0.2}
-//! {"query_id": "q_2", "doc_id": "d_3", "score": 0.3}"#;
+//! {"query_id": "q_2", "doc_id": "d_3", "score": 0.3}
+//! "#.trim();
 //!
 //! let gold_records = gold_data
 //!     .lines()
