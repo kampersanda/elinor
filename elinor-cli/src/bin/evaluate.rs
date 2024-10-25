@@ -69,10 +69,22 @@ fn main() -> Result<()> {
 }
 
 fn default_metrics() -> Vec<Metric> {
-    vec![
-        Metric::Precision { k: 10 },
-        Metric::AP { k: 0 },
-        Metric::RR { k: 0 },
-        Metric::NDCG { k: 10 },
-    ]
+    let mut metrics = Vec::new();
+    for k in [1, 5, 10] {
+        metrics.push(Metric::Success { k });
+    }
+    for k in [5, 10, 15, 20] {
+        metrics.push(Metric::Recall { k });
+    }
+    for k in [5, 10, 15, 20] {
+        metrics.push(Metric::Precision { k });
+    }
+    for k in [5, 10, 15, 20] {
+        metrics.push(Metric::AP { k });
+    }
+    for k in [5, 10, 15, 20] {
+        metrics.push(Metric::NDCG { k });
+    }
+    metrics.push(Metric::RR { k: 0 });
+    metrics
 }
