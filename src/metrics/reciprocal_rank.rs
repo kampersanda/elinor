@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
-use crate::TrueScore;
 use crate::PredScore;
 use crate::Relevance;
+use crate::TrueScore;
 
 /// Computes the reciprocal rank at k.
 pub fn compute_reciprocal_rank<K>(

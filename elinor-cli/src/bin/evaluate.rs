@@ -2,11 +2,11 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
-use elinor::TrueRecord;
-use elinor::TrueRelStore;
 use elinor::Metric;
 use elinor::PredRecord;
 use elinor::PredRelStore;
+use elinor::TrueRecord;
+use elinor::TrueRelStore;
 use polars::prelude::*;
 
 #[derive(Parser, Debug)]
