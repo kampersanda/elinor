@@ -63,6 +63,33 @@ jobs:
           cargo run --release --example randomized_tukey_hsd_test
           cargo run --release --example two_way_anova_without_replication
 
+  run-cli:
+    name: Run elinor-cli
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+      - name: Build elinor-cli
+        run: cargo build --release -p elinor-cli
+      - name: Run elinor-convert
+        run: |
+          ./target/release/elinor-convert --help
+          ./target/release/elinor-convert --input-trec test-data/trec-eval/qrels.test --output-jsonl qrels.jsonl --rel-type true
+          ./target/release/elinor-convert --input-trec test-data/trec-eval/results.test --output-jsonl results.jsonl --rel-type pred
+      - name: Run elinor-evaluate
+        run: |
+          ./target/release/elinor-evaluate --help
+          ./target/release/elinor-evaluate --true-jsonl qrels.jsonl --pred-jsonl results.jsonl --output-csv results.csv
+      - name: Run elinor-compare
+        run: |
+          ./target/release/elinor-compare --help
+          ./target/release/elinor-evaluate --input-csvs test-data/sample/pred_1.csv
+          ./target/release/elinor-evaluate --input-csvs test-data/sample/pred_1.csv --input-csvs test-data/sample/pred_2.csv
+          ./target/release/elinor-evaluate --input-csvs test-data/sample/pred_1.csv --input-csvs test-data/sample/pred_2.csv --input-csvs test-data/sample/pred_3.csv
+
   correctness-test:
     name: Correctness test against trec_eval
     runs-on: ubuntu-latest
