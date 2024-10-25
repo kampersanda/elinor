@@ -1,12 +1,8 @@
 # Elinor: Evaluation Library in INfOrmation Retrieval
 
-<p align="left">
-    <a href="https://github.com/kampersanda/elinor/actions/workflows/ci.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/kampersanda/elinor/ci.yml?branch=main&style=flat-square" alt="actions status" /></a>
-    &nbsp;
-    <a href="https://crates.io/crates/elinor"><img src="https://img.shields.io/crates/v/elinor.svg?style=flat-square" alt="Crates.io version" /></a>
-    &nbsp;
-    <a href="https://docs.rs/elinor"><img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square" alt="docs.rs docs" /></a>
-</p>
+[![Crates.io](https://img.shields.io/crates/v/elinor)](https://crates.io/crates/elinor)
+[![Documentation](https://docs.rs/elinor/badge.svg)](https://docs.rs/elinor)
+[![Build Status](https://github.com/kampersanda/elinor/actions/workflows/ci.yml/badge.svg)](https://github.com/kampersanda/elinor/actions)
 
 Elinor is a Rust library for evaluating information retrieval (IR) systems.
 It provides a comprehensive set of metrics and statistical tests for evaluating and comparing IR systems.

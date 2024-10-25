@@ -27,15 +27,18 @@ impl FromStr for RelevanceType {
 }
 
 #[derive(Parser, Debug)]
-#[command(version, about)]
+#[command(version, about = "Convert TREC format to JSONL format.")]
 struct Args {
-    #[arg(short, long, help = "Path to the input TREC file")]
+    /// Path to the input TREC file.
+    #[arg(short, long)]
     input_trec: PathBuf,
 
-    #[arg(short, long, help = "Path to the output JSONL file")]
+    /// Path to the output JSONL file.
+    #[arg(short, long)]
     output_jsonl: PathBuf,
 
-    #[arg(short, long, help = "Relevance type from 'true' or 'pred'")]
+    /// Relevance type from 'true' or 'pred'.
+    #[arg(short, long)]
     rel_type: RelevanceType,
 }
 

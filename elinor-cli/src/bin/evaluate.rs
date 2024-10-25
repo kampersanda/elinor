@@ -10,18 +10,26 @@ use elinor::TrueRelStore;
 use polars::prelude::*;
 
 #[derive(Parser, Debug)]
-#[command(version, about)]
+#[command(version, about = "Evaluate the performance of a ranking model.")]
 struct Args {
-    #[arg(short, long, help = "Path to the input JSONL file")]
+    /// Path to the input JSONL file for true relevance.
+    #[arg(short, long)]
     true_jsonl: PathBuf,
 
-    #[arg(short, long, help = "Path to the input JSONL file")]
+    /// Path to the input JSONL file for predicted relevance.
+    #[arg(short, long)]
     pred_jsonl: PathBuf,
 
-    #[arg(short, long, help = "Path to the output CSV file")]
+    /// Path to the output CSV file.
+    #[arg(short, long)]
     output_csv: Option<PathBuf>,
 
-    #[arg(short, long, num_args = 1.., help = "Metric to evaluate")]
+    /// Use tab separator instead of comma in the output CSV.
+    #[arg(long)]
+    tab_separator: bool,
+
+    /// Metric to evaluate.
+    #[arg(short, long, num_args = 1..)]
     metrics: Vec<Metric>,
 }
 
@@ -62,17 +70,32 @@ fn main() -> Result<()> {
     if let Some(output_csv) = args.output_csv {
         let mut df = DataFrame::new(columns)?;
         let mut file = std::fs::File::create(output_csv)?;
-        CsvWriter::new(&mut file).finish(&mut df)?;
+        let separator = if args.tab_separator { b'\t' } else { b',' };
+        CsvWriter::new(&mut file)
+            .with_separator(separator)
+            .finish(&mut df)?;
     }
 
     Ok(())
 }
 
 fn default_metrics() -> Vec<Metric> {
-    vec![
-        Metric::Precision { k: 10 },
-        Metric::AP { k: 0 },
-        Metric::RR { k: 0 },
-        Metric::NDCG { k: 10 },
-    ]
+    let mut metrics = Vec::new();
+    for k in [1, 5, 10] {
+        metrics.push(Metric::Success { k });
+    }
+    for k in [5, 10, 15, 20] {
+        metrics.push(Metric::Recall { k });
+    }
+    for k in [5, 10, 15, 20] {
+        metrics.push(Metric::Precision { k });
+    }
+    for k in [5, 10, 15, 20] {
+        metrics.push(Metric::AP { k });
+    }
+    for k in [5, 10, 15, 20] {
+        metrics.push(Metric::NDCG { k });
+    }
+    metrics.push(Metric::RR { k: 0 });
+    metrics
 }

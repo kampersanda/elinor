@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use anyhow::Result;
 use clap::Parser;
@@ -10,19 +11,38 @@ use elinor::statistical_tests::TwoWayAnovaWithoutReplication;
 use polars::prelude::*;
 use polars_lazy::prelude::*;
 
+#[derive(Clone, Copy, Debug)]
+enum PrintMode {
+    Pretty,
+    Raw,
+}
+
+impl FromStr for PrintMode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "pretty" => Ok(Self::Pretty),
+            "raw" => Ok(Self::Raw),
+            _ => Err(format!("Invalid PrintMode: {}", s)),
+        }
+    }
+}
+
 #[derive(Parser, Debug)]
-#[command(version, about)]
+#[command(version, about = "Compare the performance of multiple models.")]
 struct Args {
-    #[arg(short, long, num_args = 1.., help = "Path to the input CSV files")]
+    /// Path to the input CSV files.
+    #[arg(short, long, num_args = 1..)]
     input_csvs: Vec<PathBuf>,
 
-    #[arg(
-        short,
-        long,
-        default_value = "query_id",
-        help = "Header name of the topic identifier column"
-    )]
-    topic_header: String,
+    /// Use tab separator instead of comma for the input CSV files.
+    #[arg(long)]
+    tab_separator: bool,
+
+    /// Print mode for the output (pretty or raw).
+    #[arg(short, long, default_value = "pretty")]
+    print_mode: PrintMode,
 }
 
 fn main() -> Result<()> {
@@ -32,26 +52,51 @@ fn main() -> Result<()> {
         return Err(anyhow::anyhow!("Specify at least one input CSV file."));
     }
 
+    let separator = if args.tab_separator { b'\t' } else { b',' };
+    let csv_parse_options = CsvParseOptions {
+        separator,
+        ..Default::default()
+    };
+
     let mut dfs = vec![];
     for input_csv in &args.input_csvs {
         let df = CsvReadOptions::default()
+            .with_parse_options(csv_parse_options.clone())
             .try_into_reader_with_file_path(Some(input_csv.clone()))?
             .finish()?;
         dfs.push(df);
     }
+
+    // Get the header name of the first column.
+    let topic_headers = dfs
+        .iter()
+        .map(|df| df.get_columns()[0].name().to_string())
+        .collect::<Vec<_>>();
+    if topic_headers
+        .iter()
+        .collect::<std::collections::HashSet<_>>()
+        .len()
+        != 1
+    {
+        return Err(anyhow::anyhow!(
+            "The header names of the first columns must be the same, but got: {:?}",
+            topic_headers
+        ));
+    }
+    let topic_header = topic_headers[0].as_str();
 
     // If there is only one input CSV file, just print the means.
     if args.input_csvs.len() == 1 {
         println!("# Means");
         {
             let metrics = extract_metrics(&dfs[0]);
-            let values = get_means(&dfs[0], &metrics, &args.topic_header);
+            let values = get_means(&dfs[0], &metrics, topic_header);
             let columns = vec![
                 Series::new("Metric".into(), metrics),
                 Series::new("Score".into(), values),
             ];
             let df = DataFrame::new(columns)?;
-            df_to_prettytable(&df).printstd();
+            print_dataframe(&df, args.print_mode);
         }
         return Ok(());
     }
@@ -74,14 +119,14 @@ fn main() -> Result<()> {
             ),
         ];
         let df = DataFrame::new(columns)?;
-        df_to_prettytable(&df).printstd();
+        print_dataframe(&df, args.print_mode);
     }
 
     if dfs.len() == 2 {
-        compare_two_systems(&dfs[0], &dfs[1], &args.topic_header)?;
+        compare_two_systems(&dfs[0], &dfs[1], topic_header, args.print_mode)?;
     }
     if dfs.len() > 2 {
-        compare_multiple_systems(&dfs, &args.topic_header)?;
+        compare_multiple_systems(&dfs, topic_header, args.print_mode)?;
     }
 
     Ok(())
@@ -130,7 +175,12 @@ fn get_means(df: &DataFrame, metrics: &[String], topic_header: &str) -> Vec<f64>
     values
 }
 
-fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -> Result<()> {
+fn compare_two_systems(
+    df_1: &DataFrame,
+    df_2: &DataFrame,
+    topic_header: &str,
+    print_mode: PrintMode,
+) -> Result<()> {
     let metrics = extract_common_metrics([df_1, df_2]);
     if metrics.is_empty() {
         return Err(anyhow::anyhow!("No common metrics found."));
@@ -147,7 +197,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
             columns.push(Series::new(format!("System_{}", i + 1).into(), values));
         }
         let df = DataFrame::new(columns)?;
-        df_to_prettytable(&df).printstd();
+        print_dataframe(&df, print_mode);
     }
 
     let mut df_metrics = vec![];
@@ -225,7 +275,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
             ),
         ];
         let df = DataFrame::new(columns)?;
-        df_to_prettytable(&df).printstd();
+        print_dataframe(&df, print_mode);
     }
 
     let n_resamples = 10000;
@@ -253,7 +303,7 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
             ),
         ];
         let df = DataFrame::new(columns)?;
-        df_to_prettytable(&df).printstd();
+        print_dataframe(&df, print_mode);
     }
 
     let n_iters = 10000;
@@ -284,13 +334,17 @@ fn compare_two_systems(df_1: &DataFrame, df_2: &DataFrame, topic_header: &str) -
             ),
         ];
         let df = DataFrame::new(columns)?;
-        df_to_prettytable(&df).printstd();
+        print_dataframe(&df, print_mode);
     }
 
     Ok(())
 }
 
-fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()> {
+fn compare_multiple_systems(
+    dfs: &[DataFrame],
+    topic_header: &str,
+    print_mode: PrintMode,
+) -> Result<()> {
     let metrics = extract_common_metrics(dfs);
     if metrics.is_empty() {
         return Err(anyhow::anyhow!("No common metrics found."));
@@ -366,7 +420,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             Series::new("95% MOE".into(), vec![moe95; dfs.len()]),
         ];
         let df = DataFrame::new(columns)?;
-        df_to_prettytable(&df).printstd();
+        print_dataframe(&df, print_mode);
 
         println!("## Two-way ANOVA without replication");
         let columns = vec![
@@ -416,7 +470,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             ),
         ];
         let df = DataFrame::new(columns)?;
-        df_to_prettytable(&df).printstd();
+        print_dataframe(&df, print_mode);
 
         println!("## Effect sizes for Tukey HSD test");
         let hsd_stat = TukeyHsdTest::from_tupled_samples(tupled_scores.iter(), dfs.len())?;
@@ -434,7 +488,7 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             columns.push(Series::new(format!("System_{}", i).into(), values));
         }
         let df = DataFrame::new(columns)?;
-        df_to_prettytable(&df).printstd();
+        print_dataframe(&df, print_mode);
 
         println!("## p-values for randomized Tukey HSD test (n_iters = {n_iters})");
         let rthsd_stat = rthsd_tester.test(tupled_scores)?;
@@ -452,10 +506,21 @@ fn compare_multiple_systems(dfs: &[DataFrame], topic_header: &str) -> Result<()>
             columns.push(Series::new(format!("System_{}", i).into(), values));
         }
         let df = DataFrame::new(columns)?;
-        df_to_prettytable(&df).printstd();
+        print_dataframe(&df, print_mode);
     }
 
     Ok(())
+}
+
+fn print_dataframe(df: &DataFrame, print_mode: PrintMode) {
+    match print_mode {
+        PrintMode::Pretty => {
+            df_to_prettytable(df).printstd();
+        }
+        PrintMode::Raw => {
+            print_df_in_tsv(df);
+        }
+    }
 }
 
 fn df_to_prettytable(df: &DataFrame) -> prettytable::Table {
@@ -495,4 +560,37 @@ fn df_to_prettytable(df: &DataFrame) -> prettytable::Table {
     }
     table.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
     table
+}
+
+fn print_df_in_tsv(df: &DataFrame) {
+    let columns = df.get_columns();
+    let header = columns
+        .iter()
+        .map(|s| s.name().as_str())
+        .collect::<Vec<_>>()
+        .join("\t");
+    println!("{}", header);
+    for i in 0..df.height() {
+        let row = columns
+            .iter()
+            .map(|column| {
+                let value = column.get(i).unwrap();
+                let value = match value {
+                    AnyValue::String(value) => value,
+                    AnyValue::Float64(value) => {
+                        if value.is_nan() {
+                            ""
+                        } else {
+                            &format!("{value:.4}")
+                        }
+                    }
+                    AnyValue::UInt64(value) => &format!("{value}"),
+                    _ => "N/A",
+                };
+                value.to_string()
+            })
+            .collect::<Vec<_>>()
+            .join("\t");
+        println!("{}", row);
+    }
 }

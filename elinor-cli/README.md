@@ -120,7 +120,7 @@ Precisely, the CSV files should have the following columns:
 
 Sample CSV files are available in the [`test-data/sample`](../test-data/sample/) directory.
 
-### Example usage: comparing two systems
+### Example usage: Comparing two systems
 
 Here is example usage with sample CSV files in the [`test-data/sample`](../test-data/sample/) directory.
 
@@ -184,7 +184,7 @@ The output will be:
 +-------------+---------+
 ```
 
-### Example usage: comparing three systems
+### Example usage: Comparing three systems
 
 If you want to compare the metrics of three (or more) systems, run:
 
@@ -242,6 +242,18 @@ The output will be:
 +----------+----------+----------+----------+
 
 (The statistics for the other metrics will be shown as well.)
+```
+
+### Example usage: Printing the tables in a tab-separated format
+
+If you set `--print-mode raw`, the tables will be printed in a tab-separated format,
+enabling you to copy and paste them into a spreadsheet:
+
+```sh
+cargo run --release -p elinor-cli --bin elinor-compare -- \
+  --input-csvs test-data/sample/pred_1.csv \
+  --input-csvs test-data/sample/pred_2.csv \
+  --print-mode raw
 ```
 
 ## elinor-convert
