@@ -184,6 +184,9 @@ The output will be:
 +-------------+---------+
 ```
 
+If you set `--print-mode raw`, the tables will be printed in a tab-separated format,
+enabling you to copy and paste them into a spreadsheet.
+
 ### Example usage: comparing three systems
 
 If you want to compare the metrics of three (or more) systems, run:
