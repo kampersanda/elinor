@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
-use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
+use crate::TrueScore;
 
 #[derive(Clone, Copy, Debug)]
 pub enum DcgWeighting {
@@ -10,7 +10,7 @@ pub enum DcgWeighting {
     Burges,
 }
 
-fn weighted_score(rel: GoldScore, weighting: DcgWeighting) -> f64 {
+fn weighted_score(rel: TrueScore, weighting: DcgWeighting) -> f64 {
     match weighting {
         DcgWeighting::Jarvelin => rel as f64,
         DcgWeighting::Burges => 2.0_f64.powi(rel as i32) - 1.0,
@@ -19,7 +19,7 @@ fn weighted_score(rel: GoldScore, weighting: DcgWeighting) -> f64 {
 
 /// Computes the DCG at k.
 pub fn compute_dcg<K>(
-    golds: &BTreeMap<K, GoldScore>,
+    trues: &BTreeMap<K, TrueScore>,
     sorted_preds: &[Relevance<K, PredScore>],
     k: usize,
     weighting: DcgWeighting,
@@ -30,7 +30,7 @@ where
     let k = if k == 0 { sorted_preds.len() } else { k };
     let mut dcg = 0.0;
     for (i, pred) in sorted_preds.iter().take(k).enumerate() {
-        if let Some(&rel) = golds.get(&pred.doc_id) {
+        if let Some(&rel) = trues.get(&pred.doc_id) {
             dcg += weighted_score(rel, weighting) / (i as f64 + 2.0).log2();
         }
     }
@@ -39,8 +39,8 @@ where
 
 /// Computes the NDCG at k.
 pub fn compute_ndcg<K>(
-    golds: &BTreeMap<K, GoldScore>,
-    sorted_golds: &[Relevance<K, GoldScore>],
+    trues: &BTreeMap<K, TrueScore>,
+    sorted_trues: &[Relevance<K, TrueScore>],
     sorted_preds: &[Relevance<K, PredScore>],
     k: usize,
     weighting: DcgWeighting,
@@ -48,15 +48,15 @@ pub fn compute_ndcg<K>(
 where
     K: Eq + Ord + Clone,
 {
-    let sorted_golds = sorted_golds
+    let sorted_trues = sorted_trues
         .iter()
         .map(|r| Relevance {
             doc_id: r.doc_id.clone(),
             score: PredScore::from(r.score),
         })
         .collect::<Vec<_>>();
-    let dcg = compute_dcg(golds, sorted_preds, k, weighting);
-    let idcg = compute_dcg(golds, &sorted_golds, k, weighting);
+    let dcg = compute_dcg(trues, sorted_preds, k, weighting);
+    let idcg = compute_dcg(trues, &sorted_trues, k, weighting);
     if idcg == 0.0 {
         1.0
     } else {

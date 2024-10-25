@@ -8,13 +8,13 @@ fn main() -> Result<()> {
 
 #[cfg(feature = "serde")]
 fn main() -> Result<()> {
-    use elinor::GoldRecord;
-    use elinor::GoldRelStore;
     use elinor::Metric;
     use elinor::PredRecord;
     use elinor::PredRelStore;
+    use elinor::TrueRecord;
+    use elinor::TrueRelStore;
 
-    let gold_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 1}
+    let true_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 1}
 {"query_id": "q_1", "doc_id": "d_2", "score": 0}
 {"query_id": "q_1", "doc_id": "d_3", "score": 2}
 {"query_id": "q_2", "doc_id": "d_2", "score": 2}
@@ -27,14 +27,14 @@ fn main() -> Result<()> {
 {"query_id": "q_2", "doc_id": "d_1", "score": 0.2}
 {"query_id": "q_2", "doc_id": "d_4", "score": 0.1}"#;
 
-    let gold_records = gold_data
+    let true_records = true_data
         .lines()
-        .map(|line| serde_json::from_str::<GoldRecord<String>>(line).unwrap());
+        .map(|line| serde_json::from_str::<TrueRecord<String>>(line).unwrap());
     let pred_records = pred_data
         .lines()
         .map(|line| serde_json::from_str::<PredRecord<String>>(line).unwrap());
 
-    let gold_rels = GoldRelStore::from_records(gold_records)?;
+    let true_rels = TrueRelStore::from_records(true_records)?;
     let pred_rels = PredRelStore::from_records(pred_records)?;
 
     let metrics = vec![
@@ -50,7 +50,7 @@ fn main() -> Result<()> {
     ];
 
     for metric in metrics {
-        let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
+        let evaluated = elinor::evaluate(&true_rels, &pred_rels, metric)?;
         println!("{:?}: {:.4}", metric, evaluated.mean());
     }
 

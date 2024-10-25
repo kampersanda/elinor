@@ -1,13 +1,13 @@
 //! TREC format parser.
 use crate::errors::ElinorError;
-use crate::GoldRelStore;
-use crate::GoldRelStoreBuilder;
-use crate::GoldScore;
 use crate::PredRelStore;
 use crate::PredRelStoreBuilder;
 use crate::PredScore;
+use crate::TrueRelStore;
+use crate::TrueRelStoreBuilder;
+use crate::TrueScore;
 
-/// Parses the Qrels data in the TREC format into a [`GoldRelStore`].
+/// Parses the Qrels data in the TREC format into a [`TrueRelStore`].
 ///
 /// # Format
 ///
@@ -23,7 +23,7 @@ use crate::PredScore;
 ///
 /// ```rust
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// use elinor::trec::parse_gold_rels_in_trec;
+/// use elinor::trec::parse_true_rels_in_trec;
 ///
 /// let data = "
 /// q_1 0 d_1 1
@@ -33,19 +33,19 @@ use crate::PredScore;
 /// q_2 0 d_4 1
 /// ".trim();
 ///
-/// let gold_rels = parse_gold_rels_in_trec(data.lines())?;
-/// assert_eq!(gold_rels.n_queries(), 2);
-/// assert_eq!(gold_rels.n_docs(), 5);
-/// assert_eq!(gold_rels.get_score("q_1", "d_3"), Some(&2));
+/// let true_rels = parse_true_rels_in_trec(data.lines())?;
+/// assert_eq!(true_rels.n_queries(), 2);
+/// assert_eq!(true_rels.n_docs(), 5);
+/// assert_eq!(true_rels.get_score("q_1", "d_3"), Some(&2));
 /// # Ok(())
 /// # }
 /// ```
-pub fn parse_gold_rels_in_trec<I, S>(lines: I) -> Result<GoldRelStore<String>, ElinorError>
+pub fn parse_true_rels_in_trec<I, S>(lines: I) -> Result<TrueRelStore<String>, ElinorError>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
-    let mut b = GoldRelStoreBuilder::new();
+    let mut b = TrueRelStoreBuilder::new();
     for line in lines {
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
@@ -57,7 +57,7 @@ where
         let score = rows[3]
             .parse::<i32>()
             .map_err(|_| ElinorError::InvalidFormat(format!("Invalid score: {}", rows[3])))?;
-        let score = GoldScore::try_from(score.max(0)).unwrap();
+        let score = TrueScore::try_from(score.max(0)).unwrap();
         b.add_record(query_id, doc_id, score)?;
     }
     Ok(b.build())

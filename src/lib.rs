@@ -18,9 +18,9 @@
 //!
 //! # Basic usage in evaluating several metrics
 //!
-//! You first need to prepare gold relevance judgments and predicted relevance scores through
-//! [`GoldRelStore`] and [`PredRelStore`], respectively.
-//! You can build these instances using [`GoldRelStoreBuilder`] and [`PredRelStoreBuilder`].
+//! You first need to prepare true and predicted relevance scores through
+//! [`TrueRelStore`] and [`PredRelStore`], respectively.
+//! You can build these instances using [`TrueRelStoreBuilder`] and [`PredRelStoreBuilder`].
 //!
 //! Then, you can evaluate the predicted relevance scores using the [`evaluate`] function and
 //! the specified metric. The available metrics are defined in the [`Metric`] enum.
@@ -30,17 +30,17 @@
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use approx::assert_abs_diff_eq;
-//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+//! use elinor::{TrueRelStoreBuilder, PredRelStoreBuilder, Metric};
 //!
-//! // Prepare gold relevance scores.
+//! // Prepare true relevance scores.
 //! // In binary-relevance metrics, 0 means non-relevant and the others mean relevant.
-//! let mut b = GoldRelStoreBuilder::new();
+//! let mut b = TrueRelStoreBuilder::new();
 //! b.add_record("q_1", "d_1", 1)?;
 //! b.add_record("q_1", "d_2", 0)?;
 //! b.add_record("q_1", "d_3", 2)?;
 //! b.add_record("q_2", "d_2", 2)?;
 //! b.add_record("q_2", "d_4", 1)?;
-//! let gold_rels = b.build();
+//! let true_rels = b.build();
 //!
 //! // Prepare predicted relevance scores.
 //! let mut b = PredRelStoreBuilder::new();
@@ -53,19 +53,19 @@
 //! let pred_rels = b.build();
 //!
 //! // Evaluate Precision@3.
-//! let result = elinor::evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 })?;
+//! let result = elinor::evaluate(&true_rels, &pred_rels, Metric::Precision { k: 3 })?;
 //! assert_abs_diff_eq!(result.mean(), 0.5000, epsilon = 1e-4);
 //!
 //! // Evaluate MAP, where all documents are considered via k=0.
-//! let result = elinor::evaluate(&gold_rels, &pred_rels, Metric::AP { k: 0 })?;
+//! let result = elinor::evaluate(&true_rels, &pred_rels, Metric::AP { k: 0 })?;
 //! assert_abs_diff_eq!(result.mean(), 0.5000, epsilon = 1e-4);
 //!
 //! // Evaluate MRR, where the metric is specified via a string representation.
-//! let result = elinor::evaluate(&gold_rels, &pred_rels, "rr".parse()?)?;
+//! let result = elinor::evaluate(&true_rels, &pred_rels, "rr".parse()?)?;
 //! assert_abs_diff_eq!(result.mean(), 0.6667, epsilon = 1e-4);
 //!
 //! // Evaluate nDCG@3, where the metric is specified via a string representation.
-//! let result = elinor::evaluate(&gold_rels, &pred_rels, "ndcg@3".parse()?)?;
+//! let result = elinor::evaluate(&true_rels, &pred_rels, "ndcg@3".parse()?)?;
 //! assert_abs_diff_eq!(result.mean(), 0.4751, epsilon = 1e-4);
 //! # Ok(())
 //! # }
@@ -81,16 +81,16 @@
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use approx::assert_relative_eq;
-//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+//! use elinor::{TrueRelStoreBuilder, PredRelStoreBuilder, Metric};
 //! use elinor::statistical_tests::StudentTTest;
 //!
-//! // Prepare gold relevance scores.
-//! let mut b = GoldRelStoreBuilder::new();
+//! // Prepare true relevance scores.
+//! let mut b = TrueRelStoreBuilder::new();
 //! b.add_record("q_1", "d_1", 1)?;
 //! b.add_record("q_1", "d_2", 1)?;
 //! b.add_record("q_2", "d_1", 1)?;
 //! b.add_record("q_2", "d_2", 1)?;
-//! let gold_rels = b.build();
+//! let true_rels = b.build();
 //!
 //! // Prepare predicted relevance scores for system A.
 //! let mut b = PredRelStoreBuilder::new();
@@ -109,8 +109,8 @@
 //!
 //! // Evaluate Precision for both systems.
 //! let metric = Metric::Precision { k: 0 };
-//! let result_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
-//! let result_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
+//! let result_a = elinor::evaluate(&true_rels, &pred_rels_a, metric)?;
+//! let result_b = elinor::evaluate(&true_rels, &pred_rels_b, metric)?;
 //!
 //! // Perform two-sided paired Student's t-test.
 //! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&result_a, &result_b])?;
@@ -145,16 +145,16 @@
 //!
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use elinor::{GoldRelStoreBuilder, PredRelStoreBuilder, Metric};
+//! use elinor::{TrueRelStoreBuilder, PredRelStoreBuilder, Metric};
 //! use elinor::statistical_tests::{RandomizedTukeyHsdTest, TukeyHsdTest};
 //!
-//! // Prepare gold relevance scores.
-//! let mut b = GoldRelStoreBuilder::new();
+//! // Prepare true relevance scores.
+//! let mut b = TrueRelStoreBuilder::new();
 //! b.add_record("q_1", "d_1", 1)?;
 //! b.add_record("q_1", "d_2", 1)?;
 //! b.add_record("q_2", "d_1", 1)?;
 //! b.add_record("q_2", "d_2", 1)?;
-//! let gold_rels = b.build();
+//! let true_rels = b.build();
 //!
 //! // Prepare predicted relevance scores for system A.
 //! let mut b = PredRelStoreBuilder::new();
@@ -180,9 +180,9 @@
 //!
 //! // Evaluate Precision for all systems.
 //! let metric = Metric::Precision { k: 0 };
-//! let result_a = elinor::evaluate(&gold_rels, &pred_rels_a, metric)?;
-//! let result_b = elinor::evaluate(&gold_rels, &pred_rels_b, metric)?;
-//! let result_c = elinor::evaluate(&gold_rels, &pred_rels_c, metric)?;
+//! let result_a = elinor::evaluate(&true_rels, &pred_rels_a, metric)?;
+//! let result_b = elinor::evaluate(&true_rels, &pred_rels_b, metric)?;
+//! let result_c = elinor::evaluate(&true_rels, &pred_rels_c, metric)?;
 //!
 //! // Prepare tupled scores for tests.
 //! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&result_a, &result_b, &result_c])?;
@@ -200,11 +200,11 @@
 //!
 //! # Instantiating relevance stores with [Serde](https://serde.rs/)
 //!
-//! [`GoldRelStore`] and [`PredRelStore`] can be instantiated from
-//! [`GoldRecord`] and [`PredRecord`] instances, respectively,
+//! [`TrueRelStore`] and [`PredRelStore`] can be instantiated from
+//! [`TrueRecord`] and [`PredRecord`] instances, respectively,
 //! where each record consists of three fields: `query_id`, `document_id`, and `score`.
 //!
-//! Both [`GoldRecord`] and [`PredRecord`] support serialization and deserialization via Serde,
+//! Both [`TrueRecord`] and [`PredRecord`] support serialization and deserialization via Serde,
 //! allowing you to easily instantiate relevance stores from JSON or other formats.
 //!
 //! If you use Serde, enable the `serde` feature in the `Cargo.toml`:
@@ -222,9 +222,9 @@
 //! #
 //! # #[cfg(feature = "serde")]
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use elinor::{GoldRelStore, GoldRecord, PredRelStore, PredRecord};
+//! use elinor::{TrueRelStore, TrueRecord, PredRelStore, PredRecord};
 //!
-//! let gold_data = r#"
+//! let true_data = r#"
 //! {"query_id": "q_1", "doc_id": "d_1", "score": 1}
 //! {"query_id": "q_1", "doc_id": "d_2", "score": 0}
 //! {"query_id": "q_1", "doc_id": "d_3", "score": 2}
@@ -241,18 +241,18 @@
 //! {"query_id": "q_2", "doc_id": "d_3", "score": 0.3}
 //! "#.trim();
 //!
-//! let gold_records = gold_data
+//! let true_records = true_data
 //!     .lines()
-//!     .map(|line| serde_json::from_str::<GoldRecord<String>>(line).unwrap());
+//!     .map(|line| serde_json::from_str::<TrueRecord<String>>(line).unwrap());
 //! let pred_records = pred_data
 //!     .lines()
 //!     .map(|line| serde_json::from_str::<PredRecord<String>>(line).unwrap());
 //!
-//! let gold_rels = GoldRelStore::from_records(gold_records)?;
+//! let true_rels = TrueRelStore::from_records(true_records)?;
 //! let pred_rels = PredRelStore::from_records(pred_records)?;
 //!
-//! assert_eq!(gold_rels.n_queries(), 2);
-//! assert_eq!(gold_rels.n_docs(), 5);
+//! assert_eq!(true_rels.n_queries(), 2);
+//! assert_eq!(true_rels.n_docs(), 5);
 //! assert_eq!(pred_rels.n_queries(), 2);
 //! assert_eq!(pred_rels.n_docs(), 6);
 //! # Ok(())
@@ -261,7 +261,7 @@
 //!
 //! # Crate features
 //!
-//! * `serde` - Enables Serde for [`GoldRecord`] and [`PredRecord`].
+//! * `serde` - Enables Serde for [`TrueRecord`] and [`PredRecord`].
 #![deny(missing_docs)]
 
 pub mod errors;
@@ -280,25 +280,25 @@ pub use metrics::Metric;
 pub use relevance::Record;
 pub use relevance::Relevance;
 
-/// Data type to store a gold relevance score.
+/// Data type to store a true relevance score.
 /// In binary relevance, 0 means non-relevant and the others mean relevant.
-pub type GoldScore = u32;
+pub type TrueScore = u32;
 
 /// Data type to store a predicted relevance score.
 /// A higher score means more relevant.
 pub type PredScore = OrderedFloat<f64>;
 
-/// Record type to store a gold relevance score.
-pub type GoldRecord<K> = Record<K, GoldScore>;
+/// Record type to store a true relevance score.
+pub type TrueRecord<K> = Record<K, TrueScore>;
 
 /// Record type to store a predicted relevance score.
 pub type PredRecord<K> = Record<K, PredScore>;
 
-/// Data structure to store gold relevance scores.
-pub type GoldRelStore<K> = relevance::RelevanceStore<K, GoldScore>;
+/// Data structure to store true relevance scores.
+pub type TrueRelStore<K> = relevance::RelevanceStore<K, TrueScore>;
 
-/// Builder for [`GoldRelStore`].
-pub type GoldRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, GoldScore>;
+/// Builder for [`TrueRelStore`].
+pub type TrueRelStoreBuilder<K> = relevance::RelevanceStoreBuilder<K, TrueScore>;
 
 /// Data structure to store predicted relevance scores.
 pub type PredRelStore<K> = relevance::RelevanceStore<K, PredScore>;
@@ -341,16 +341,16 @@ impl<K> Evaluation<K> {
     }
 }
 
-/// Evaluates the given predicted relevance scores against the gold relevance scores.
+/// Evaluates the given predicted relevance scores against the true relevance scores.
 pub fn evaluate<K>(
-    gold_rels: &GoldRelStore<K>,
+    true_rels: &TrueRelStore<K>,
     pred_rels: &PredRelStore<K>,
     metric: Metric,
 ) -> Result<Evaluation<K>>
 where
     K: Clone + Eq + Ord + std::fmt::Display,
 {
-    let scores = metrics::compute_metric(gold_rels, pred_rels, metric)?;
+    let scores = metrics::compute_metric(true_rels, pred_rels, metric)?;
     let mean = scores.values().sum::<f64>() / scores.len() as f64;
     let variance = scores
         .values()
@@ -418,13 +418,13 @@ mod tests {
 
     #[test]
     fn test_evaluate() {
-        let mut b = GoldRelStoreBuilder::new();
+        let mut b = TrueRelStoreBuilder::new();
         b.add_record("q_1", "d_1", 1).unwrap();
         b.add_record("q_1", "d_2", 0).unwrap();
         b.add_record("q_1", "d_3", 2).unwrap();
         b.add_record("q_2", "d_2", 2).unwrap();
         b.add_record("q_2", "d_4", 1).unwrap();
-        let gold_rels = b.build();
+        let true_rels = b.build();
 
         let mut b = PredRelStoreBuilder::new();
         b.add_record("q_1", "d_1", 0.5.into()).unwrap();
@@ -435,7 +435,7 @@ mod tests {
         b.add_record("q_2", "d_3", 0.3.into()).unwrap();
         let pred_rels = b.build();
 
-        let evaluated = evaluate(&gold_rels, &pred_rels, Metric::Precision { k: 3 }).unwrap();
+        let evaluated = evaluate(&true_rels, &pred_rels, Metric::Precision { k: 3 }).unwrap();
         assert_eq!(evaluated.metric(), Metric::Precision { k: 3 });
 
         let mean: f64 = (2. / 3. + 1. / 3.) / 2.;

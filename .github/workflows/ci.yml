@@ -22,6 +22,7 @@ jobs:
         rust:
           - 1.65.0 # MSRV
           - stable
+          - nightly
     steps:
       - uses: actions/checkout@v4
       - name: Install ${{ matrix.rust }}
@@ -39,6 +40,8 @@ jobs:
         continue-on-error: ${{ matrix.rust != 'stable' }}
         run: cargo check --all --features serde
       - name: Run cargo fmt
+        # imports_granularity is not stable yet.
+        continue-on-error: ${{ matrix.rust != 'nightly' }}
         run: cargo fmt --all -- --check
       - name: Run cargo clippy (all, serde)
         # Run clippy only on stable to ignore unreasonable old warnings.

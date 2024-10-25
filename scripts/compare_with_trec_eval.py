@@ -10,7 +10,7 @@ def run_elinor_evaluate(
     target_dir: str, qrels_jsonl: str, results_jsonl: str, metrics: list[str]
 ) -> dict[str, str]:
     metric_args = " ".join([f"-m {metric}" for metric in metrics])
-    command = f"./{target_dir}/elinor-evaluate -g {qrels_jsonl} -p {results_jsonl} {metric_args}"
+    command = f"./{target_dir}/elinor-evaluate -t {qrels_jsonl} -p {results_jsonl} {metric_args}"
     result = subprocess.run(command, capture_output=True, shell=True)
     if result.returncode != 0:
         print(result.stderr.decode("utf-8"), file=sys.stderr)

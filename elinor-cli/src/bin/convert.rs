@@ -10,7 +10,7 @@ use elinor::trec;
 
 #[derive(Clone, Debug)]
 enum RelevanceType {
-    Gold,
+    True,
     Pred,
 }
 
@@ -19,7 +19,7 @@ impl FromStr for RelevanceType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "gold" => Ok(Self::Gold),
+            "true" => Ok(Self::True),
             "pred" => Ok(Self::Pred),
             _ => Err(format!("Invalid relevance type: {}", s)),
         }
@@ -35,7 +35,7 @@ struct Args {
     #[arg(short, long, help = "Path to the output JSONL file")]
     output_jsonl: PathBuf,
 
-    #[arg(short, long, help = "Relevance type from 'gold' or 'pred'")]
+    #[arg(short, long, help = "Relevance type from 'true' or 'pred'")]
     rel_type: RelevanceType,
 }
 
@@ -46,10 +46,10 @@ fn main() -> Result<()> {
     let mut writer = BufWriter::new(File::create(&args.output_jsonl)?);
 
     match args.rel_type {
-        RelevanceType::Gold => {
-            let gold_rels = trec::parse_gold_rels_in_trec(lines)?;
-            let gold_records = gold_rels.into_records();
-            for record in gold_records {
+        RelevanceType::True => {
+            let true_rels = trec::parse_true_rels_in_trec(lines)?;
+            let true_records = true_rels.into_records();
+            for record in true_records {
                 serde_json::to_writer(&mut writer, &record)?;
                 writer.write_all(b"\n")?;
             }

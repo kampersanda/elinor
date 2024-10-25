@@ -1,16 +1,16 @@
 use std::collections::BTreeMap;
 
 use crate::metrics::hits::compute_hits;
-use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
+use crate::TrueScore;
 
 /// Computes the recall at k.
 pub fn compute_recall<K>(
-    golds: &BTreeMap<K, GoldScore>,
+    trues: &BTreeMap<K, TrueScore>,
     sorted_preds: &[Relevance<K, PredScore>],
     k: usize,
-    rel_lvl: GoldScore,
+    rel_lvl: TrueScore,
 ) -> f64
 where
     K: Eq + Ord,
@@ -19,10 +19,10 @@ where
     if k == 0 {
         return 0.0;
     }
-    let n_rels = golds.values().filter(|&&rel| rel >= rel_lvl).count();
+    let n_rels = trues.values().filter(|&&rel| rel >= rel_lvl).count();
     if n_rels == 0 {
         0.0
     } else {
-        compute_hits(golds, sorted_preds, k, rel_lvl) / n_rels as f64
+        compute_hits(trues, sorted_preds, k, rel_lvl) / n_rels as f64
     }
 }

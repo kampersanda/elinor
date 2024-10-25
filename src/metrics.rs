@@ -17,11 +17,11 @@ use std::str::FromStr;
 use regex::Regex;
 
 use crate::errors::ElinorError;
-use crate::GoldRelStore;
-use crate::GoldScore;
 use crate::PredRelStore;
+use crate::TrueRelStore;
+use crate::TrueScore;
 
-pub(crate) const RELEVANT_LEVEL: GoldScore = 1;
+pub(crate) const RELEVANT_LEVEL: TrueScore = 1;
 
 /// Metrics for evaluating information retrieval systems.
 ///
@@ -167,7 +167,7 @@ pub enum Metric {
         k: usize,
     },
 
-    /// Bpref, an evaluation metric for incomplete gold relevances proposed in
+    /// Bpref, an evaluation metric for incomplete true relevances proposed in
     /// [Buckley and Voorhees, SIGIR 2004](https://doi.org/10.1145/1008992.1009000).
     ///
     /// ```math
@@ -317,9 +317,9 @@ impl FromStr for Metric {
     }
 }
 
-/// Computes the metric scores for the given gold and predicted relevance scores.
+/// Computes the metric scores for the given true and predicted relevance scores.
 pub fn compute_metric<K>(
-    gold_rels: &GoldRelStore<K>,
+    true_rels: &TrueRelStore<K>,
     pred_rels: &PredRelStore<K>,
     metric: Metric,
 ) -> Result<BTreeMap<K, f64>, ElinorError>
@@ -327,55 +327,55 @@ where
     K: Clone + Eq + Ord + std::fmt::Display,
 {
     for query_id in pred_rels.query_ids() {
-        if gold_rels.get_map(query_id).is_none() {
+        if true_rels.get_map(query_id).is_none() {
             return Err(ElinorError::MissingEntry(format!("Query ID: {query_id}")));
         }
     }
     let mut results = BTreeMap::new();
     for query_id in pred_rels.query_ids() {
         let sorted_preds = pred_rels.get_sorted(query_id).unwrap();
-        let golds = gold_rels.get_map(query_id).unwrap();
+        let trues = true_rels.get_map(query_id).unwrap();
         let score = match metric {
-            Metric::Hits { k } => hits::compute_hits(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::Hits { k } => hits::compute_hits(trues, sorted_preds, k, RELEVANT_LEVEL),
             Metric::Success { k } => {
-                success::compute_success(golds, sorted_preds, k, RELEVANT_LEVEL)
+                success::compute_success(trues, sorted_preds, k, RELEVANT_LEVEL)
             }
             Metric::Precision { k } => {
-                precision::compute_precision(golds, sorted_preds, k, RELEVANT_LEVEL)
+                precision::compute_precision(trues, sorted_preds, k, RELEVANT_LEVEL)
             }
-            Metric::Recall { k } => recall::compute_recall(golds, sorted_preds, k, RELEVANT_LEVEL),
-            Metric::F1 { k } => f1::compute_f1(golds, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::Recall { k } => recall::compute_recall(trues, sorted_preds, k, RELEVANT_LEVEL),
+            Metric::F1 { k } => f1::compute_f1(trues, sorted_preds, k, RELEVANT_LEVEL),
             Metric::RPrecision => {
-                r_precision::compute_r_precision(golds, sorted_preds, RELEVANT_LEVEL)
+                r_precision::compute_r_precision(trues, sorted_preds, RELEVANT_LEVEL)
             }
             Metric::AP { k } => {
-                average_precision::compute_average_precision(golds, sorted_preds, k, RELEVANT_LEVEL)
+                average_precision::compute_average_precision(trues, sorted_preds, k, RELEVANT_LEVEL)
             }
             Metric::RR { k } => {
-                reciprocal_rank::compute_reciprocal_rank(golds, sorted_preds, k, RELEVANT_LEVEL)
+                reciprocal_rank::compute_reciprocal_rank(trues, sorted_preds, k, RELEVANT_LEVEL)
             }
-            Metric::Bpref => bpref::compute_bpref(golds, sorted_preds, RELEVANT_LEVEL),
+            Metric::Bpref => bpref::compute_bpref(trues, sorted_preds, RELEVANT_LEVEL),
             Metric::DCG { k } => {
-                ndcg::compute_dcg(golds, sorted_preds, k, ndcg::DcgWeighting::Jarvelin)
+                ndcg::compute_dcg(trues, sorted_preds, k, ndcg::DcgWeighting::Jarvelin)
             }
             Metric::NDCG { k } => {
-                let sorted_golds = gold_rels.get_sorted(query_id).unwrap();
+                let sorted_trues = true_rels.get_sorted(query_id).unwrap();
                 ndcg::compute_ndcg(
-                    golds,
-                    sorted_golds,
+                    trues,
+                    sorted_trues,
                     sorted_preds,
                     k,
                     ndcg::DcgWeighting::Jarvelin,
                 )
             }
             Metric::DCGBurges { k } => {
-                ndcg::compute_dcg(golds, sorted_preds, k, ndcg::DcgWeighting::Burges)
+                ndcg::compute_dcg(trues, sorted_preds, k, ndcg::DcgWeighting::Burges)
             }
             Metric::NDCGBurges { k } => {
-                let sorted_golds = gold_rels.get_sorted(query_id).unwrap();
+                let sorted_trues = true_rels.get_sorted(query_id).unwrap();
                 ndcg::compute_ndcg(
-                    golds,
-                    sorted_golds,
+                    trues,
+                    sorted_trues,
                     sorted_preds,
                     k,
                     ndcg::DcgWeighting::Burges,
@@ -489,7 +489,7 @@ mod tests {
     #[case::ndcg_k_4_burges(Metric::NDCGBurges { k: 4 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     #[case::ndcg_k_5_burges(Metric::NDCGBurges { k: 5 }, btreemap! { 'A' => (1.0 / LOG_2_2 + 3.0 / LOG_2_4) / (3.0 / LOG_2_2 + 1.0 / LOG_2_3) })]
     fn test_compute_metric(#[case] metric: Metric, #[case] expected: BTreeMap<char, f64>) {
-        let gold_rels = GoldRelStore::from_records([
+        let true_rels = TrueRelStore::from_records([
             Record {
                 query_id: 'A',
                 doc_id: 'X',
@@ -530,7 +530,7 @@ mod tests {
             },
         ])
         .unwrap();
-        let results = compute_metric(&gold_rels, &pred_rels, metric).unwrap();
+        let results = compute_metric(&true_rels, &pred_rels, metric).unwrap();
         compare_hashmaps(&results, &expected);
     }
 

@@ -2,18 +2,18 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
-use elinor::GoldRecord;
-use elinor::GoldRelStore;
 use elinor::Metric;
 use elinor::PredRecord;
 use elinor::PredRelStore;
+use elinor::TrueRecord;
+use elinor::TrueRelStore;
 use polars::prelude::*;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
 struct Args {
     #[arg(short, long, help = "Path to the input JSONL file")]
-    gold_jsonl: PathBuf,
+    true_jsonl: PathBuf,
 
     #[arg(short, long, help = "Path to the input JSONL file")]
     pred_jsonl: PathBuf,
@@ -28,11 +28,11 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    let gold_lines = elinor_cli::load_lines(&args.gold_jsonl)?;
-    let gold_records = gold_lines
+    let true_lines = elinor_cli::load_lines(&args.true_jsonl)?;
+    let true_records = true_lines
         .into_iter()
-        .map(|line| serde_json::from_str::<GoldRecord<String>>(&line).unwrap());
-    let gold_rels = GoldRelStore::from_records(gold_records)?;
+        .map(|line| serde_json::from_str::<TrueRecord<String>>(&line).unwrap());
+    let true_rels = TrueRelStore::from_records(true_records)?;
 
     let pred_lines = elinor_cli::load_lines(&args.pred_jsonl)?;
     let pred_records = pred_lines
@@ -48,7 +48,7 @@ fn main() -> Result<()> {
 
     let mut columns = vec![];
     for metric in metrics {
-        let result = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
+        let result = elinor::evaluate(&true_rels, &pred_rels, metric)?;
         println!("{:#}\t{:.4}", metric, result.mean());
         let scores = result.scores();
         if columns.is_empty() {

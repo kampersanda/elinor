@@ -1,16 +1,16 @@
 use std::collections::BTreeMap;
 
 use crate::metrics::hits::compute_hits;
-use crate::GoldScore;
 use crate::PredScore;
 use crate::Relevance;
+use crate::TrueScore;
 
 /// Computes the F1 score at k.
 pub fn compute_f1<K>(
-    golds: &BTreeMap<K, GoldScore>,
+    trues: &BTreeMap<K, TrueScore>,
     sorted_preds: &[Relevance<K, PredScore>],
     k: usize,
-    rel_lvl: GoldScore,
+    rel_lvl: TrueScore,
 ) -> f64
 where
     K: Eq + Ord,
@@ -19,9 +19,9 @@ where
     if k == 0 {
         return 0.0;
     }
-    let hits = compute_hits(golds, sorted_preds, k, rel_lvl);
+    let hits = compute_hits(trues, sorted_preds, k, rel_lvl);
     let precision = hits / k as f64;
-    let recall = hits / golds.values().filter(|&&rel| rel >= rel_lvl).count() as f64;
+    let recall = hits / trues.values().filter(|&&rel| rel >= rel_lvl).count() as f64;
     if precision + recall == 0.0 {
         0.0
     } else {
