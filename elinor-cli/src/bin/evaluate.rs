@@ -24,9 +24,9 @@ struct Args {
     #[arg(short, long)]
     output_csv: Option<PathBuf>,
 
-    /// Delimiter for the output CSV file.
-    #[arg(short = 'd', long, default_value_t = ',')]
-    output_delimiter: char,
+    /// Use tab as the delimiter for the output CSV file.
+    #[arg(long)]
+    use_tab: bool,
 
     /// Metric to evaluate.
     #[arg(short, long, num_args = 1..)]
@@ -35,11 +35,6 @@ struct Args {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-
-    if !args.output_delimiter.is_ascii() {
-        anyhow::bail!("output_delimiter must be an ASCII character.");
-    }
-    let output_delimiter = args.output_delimiter as u8;
 
     let true_lines = elinor_cli::load_lines(&args.true_jsonl)?;
     let true_records = true_lines
@@ -75,8 +70,9 @@ fn main() -> Result<()> {
     if let Some(output_csv) = args.output_csv {
         let mut df = DataFrame::new(columns)?;
         let mut file = std::fs::File::create(output_csv)?;
+        let separator = if args.use_tab { b'\t' } else { b',' };
         CsvWriter::new(&mut file)
-            .with_separator(output_delimiter)
+            .with_separator(separator)
             .finish(&mut df)?;
     }
 
