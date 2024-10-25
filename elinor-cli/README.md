@@ -12,16 +12,16 @@ elinor-evaluate evaluates the ranking metrics of the system.
 
 ### Input format
 
-elinor-evaluate requires two JSONL files: the gold-standard and predicted relevance scores.
+elinor-evaluate requires two JSONL files: the true and predicted relevance scores.
 Each line in the JSONL file should be a JSON object with the following fields:
 
 - `query_id`: The ID of the query.
 - `doc_id`: The ID of the document.
 - `score`: The relevance score of the query-document pair.
-  - If it is gold-standard, the score should be a non-negative integer (e.g., 0, 1, 2).
+  - If it is true, the score should be a non-negative integer (e.g., 0, 1, 2).
   - If it is predicted, the score can be a float (e.g., 0.1, 0.5, 1.0).
 
-An example of the gold-standard JSONL file is:
+An example of the true JSONL file is:
 
 ```jsonl
 {"query_id":"q_1","doc_id":"d_1","score":2}
@@ -41,7 +41,7 @@ The specifications are:
 
 - There is no need to sort the lines in the JSONL files.
 - The query-document pairs should be unique in each file.
-- The query IDs in the gold-standard and predicted files should be the same.
+- The query IDs in the true and predicted files should be the same.
 
 Sample JSONL files are available in the [`test-data/sample`](../test-data/sample/) directory.
 
@@ -53,7 +53,7 @@ If you want to evaluate the Precision@3, Average Precision (AP), Reciprocal Rank
 
 ```sh
 cargo run --release -p elinor-cli --bin elinor-evaluate -- \
-  --gold-jsonl test-data/sample/gold.jsonl \
+  --true-jsonl test-data/sample/true.jsonl \
   --pred-jsonl test-data/sample/pred_1.jsonl \
   --metrics precision@3 ap rr ndcg@3
 ```
@@ -73,7 +73,7 @@ The detailed results can be saved to a CSV file by specifying the `--output-csv`
 
 ```sh
 cargo run --release -p elinor-cli --bin elinor-evaluate -- \
-  --gold-jsonl test-data/sample/gold.jsonl \
+  --true-jsonl test-data/sample/true.jsonl \
   --pred-jsonl test-data/sample/pred_1.jsonl \
   --output-csv test-data/sample/pred_1.csv \  # Specify output CSV path
   --metrics precision@3 ap rr ndcg@3
@@ -254,7 +254,7 @@ For [Qrels](https://trec.nist.gov/data/qrels_eng/) files:
 cargo run --release -p elinor-cli --bin elinor-convert -- \
   --input-trec qrels.trec \
   --output-jsonl qrels.jsonl \
-  --rel-type gold
+  --rel-type true
 ```
 
 For [Run](https://faculty.washington.edu/levow/courses/ling573_SPR2011/hw/trec_eval_desc.htm) files:

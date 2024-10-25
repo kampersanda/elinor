@@ -3,7 +3,7 @@ use elinor::Metric;
 
 fn main() -> Result<()> {
     // <QueryID> <Dummy> <DocID> <Relevance>
-    let gold_rels_data = "
+    let true_rels_data = "
 q_1 0 d_1 1
 q_1 0 d_2 0
 q_1 0 d_3 2
@@ -23,7 +23,7 @@ q_2 0 d_4 3 0.1 SAMPLE
     "
     .trim();
 
-    let gold_rels = elinor::trec::parse_gold_rels_in_trec(gold_rels_data.lines())?;
+    let true_rels = elinor::trec::parse_true_rels_in_trec(true_rels_data.lines())?;
     let pred_rels = elinor::trec::parse_pred_rels_in_trec(pred_rels_data.lines())?;
 
     let metrics = vec![
@@ -39,7 +39,7 @@ q_2 0 d_4 3 0.1 SAMPLE
     ];
 
     for metric in metrics {
-        let evaluated = elinor::evaluate(&gold_rels, &pred_rels, metric)?;
+        let evaluated = elinor::evaluate(&true_rels, &pred_rels, metric)?;
         println!("{:?}: {:.4}", metric, evaluated.mean());
     }
 
