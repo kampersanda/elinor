@@ -10,23 +10,36 @@ use elinor::TrueRelStore;
 use polars::prelude::*;
 
 #[derive(Parser, Debug)]
-#[command(version, about)]
+#[command(version, about = "Evaluate the performance of a ranking model.")]
 struct Args {
-    #[arg(short, long, help = "Path to the input JSONL file")]
+    /// Path to the input JSONL file for true relevance.
+    #[arg(short, long)]
     true_jsonl: PathBuf,
 
-    #[arg(short, long, help = "Path to the input JSONL file")]
+    /// Path to the input JSONL file for predicted relevance.
+    #[arg(short, long)]
     pred_jsonl: PathBuf,
 
-    #[arg(short, long, help = "Path to the output CSV file")]
+    /// Path to the output CSV file.
+    #[arg(short, long)]
     output_csv: Option<PathBuf>,
 
-    #[arg(short, long, num_args = 1.., help = "Metric to evaluate")]
+    /// Delimiter for the output CSV file.
+    #[arg(short = 'd', long, default_value_t = ',')]
+    output_delimiter: char,
+
+    /// Metric to evaluate.
+    #[arg(short, long, num_args = 1..)]
     metrics: Vec<Metric>,
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
+
+    if !args.output_delimiter.is_ascii() {
+        anyhow::bail!("output_delimiter must be an ASCII character.");
+    }
+    let output_delimiter = args.output_delimiter as u8;
 
     let true_lines = elinor_cli::load_lines(&args.true_jsonl)?;
     let true_records = true_lines
@@ -62,7 +75,9 @@ fn main() -> Result<()> {
     if let Some(output_csv) = args.output_csv {
         let mut df = DataFrame::new(columns)?;
         let mut file = std::fs::File::create(output_csv)?;
-        CsvWriter::new(&mut file).finish(&mut df)?;
+        CsvWriter::new(&mut file)
+            .with_separator(output_delimiter)
+            .finish(&mut df)?;
     }
 
     Ok(())
