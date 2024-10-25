@@ -167,7 +167,7 @@ impl<K, T> RelevanceStoreBuilder<K, T> {
         let rels = self.map.entry(query_id.clone()).or_default();
         if rels.contains_key(&doc_id) {
             return Err(ElinorError::DuplicateEntry(format!(
-                "Query: {query_id}, Doc: {doc_id}"
+                "Input query-doc pair must be unique, but got query_id={query_id}, doc_id={doc_id}"
             )));
         }
         rels.insert(doc_id, score);
@@ -393,7 +393,9 @@ mod tests {
         b.add_record('a', 'x', 1).unwrap();
         assert_eq!(
             b.add_record('a', 'x', 2),
-            Err(ElinorError::DuplicateEntry("Query: a, Doc: x".to_string()))
+            Err(ElinorError::DuplicateEntry(
+                "Input query-doc pair must be unique, but got query_id=a, doc_id=x".to_string()
+            ))
         );
     }
 }
