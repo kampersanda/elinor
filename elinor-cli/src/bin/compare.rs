@@ -11,18 +11,11 @@ use polars::prelude::*;
 use polars_lazy::prelude::*;
 
 #[derive(Parser, Debug)]
-#[command(version, about)]
+#[command(version, about = "Compare the performance of multiple models.")]
 struct Args {
-    #[arg(short, long, num_args = 1.., help = "Path to the input CSV files")]
+    /// Path to the input CSV files.
+    #[arg(short, long, num_args = 1..)]
     input_csvs: Vec<PathBuf>,
-
-    #[arg(
-        short,
-        long,
-        default_value = "query_id",
-        help = "Header name of the topic identifier column"
-    )]
-    topic_header: String,
 }
 
 fn main() -> Result<()> {
@@ -40,12 +33,30 @@ fn main() -> Result<()> {
         dfs.push(df);
     }
 
+    // Get the header name of the first column.
+    let topic_headers = dfs
+        .iter()
+        .map(|df| df.get_columns()[0].name().to_string())
+        .collect::<Vec<_>>();
+    if topic_headers
+        .iter()
+        .collect::<std::collections::HashSet<_>>()
+        .len()
+        != 1
+    {
+        return Err(anyhow::anyhow!(
+            "The header names of the first columns must be the same, but got: {:?}",
+            topic_headers
+        ));
+    }
+    let topic_header = topic_headers[0].as_str();
+
     // If there is only one input CSV file, just print the means.
     if args.input_csvs.len() == 1 {
         println!("# Means");
         {
             let metrics = extract_metrics(&dfs[0]);
-            let values = get_means(&dfs[0], &metrics, &args.topic_header);
+            let values = get_means(&dfs[0], &metrics, topic_header);
             let columns = vec![
                 Series::new("Metric".into(), metrics),
                 Series::new("Score".into(), values),
@@ -78,10 +89,10 @@ fn main() -> Result<()> {
     }
 
     if dfs.len() == 2 {
-        compare_two_systems(&dfs[0], &dfs[1], &args.topic_header)?;
+        compare_two_systems(&dfs[0], &dfs[1], topic_header)?;
     }
     if dfs.len() > 2 {
-        compare_multiple_systems(&dfs, &args.topic_header)?;
+        compare_multiple_systems(&dfs, topic_header)?;
     }
 
     Ok(())
