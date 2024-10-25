@@ -290,7 +290,7 @@ impl FromStr for Metric {
         let re = Regex::new(r"^(?<metric>[a-z1-9_]+)(@(?<k>\d+))?$").unwrap();
         let caps = re
             .captures(s)
-            .ok_or_else(|| ElinorError::InvalidFormat(s.to_string()))?;
+            .ok_or_else(|| ElinorError::InvalidFormat(format!("Unsupported metric: {s}")))?;
         let name = caps.name("metric").unwrap().as_str();
         let k = caps
             .name("k")
@@ -328,7 +328,7 @@ where
 {
     for query_id in pred_rels.query_ids() {
         if true_rels.get_map(query_id).is_none() {
-            return Err(ElinorError::MissingEntry(format!("Query ID: {query_id}")));
+            return Err(ElinorError::MissingEntry(format!("true_rels[{query_id}]")));
         }
     }
     let mut results = BTreeMap::new();

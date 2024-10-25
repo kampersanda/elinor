@@ -50,13 +50,18 @@ where
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
         if rows.len() < 4 {
-            return Err(ElinorError::InvalidFormat(line.to_string()));
+            return Err(ElinorError::InvalidFormat(format!(
+                "Qrels line must have four columns at least, but got {line}"
+            )));
         }
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
-        let score = rows[3]
-            .parse::<i32>()
-            .map_err(|_| ElinorError::InvalidFormat(format!("Invalid score: {}", rows[3])))?;
+        let score = rows[3].parse::<i32>().map_err(|_| {
+            ElinorError::InvalidFormat(format!(
+                "The fourth column must be i32, but got {}",
+                rows[3]
+            ))
+        })?;
         let score = TrueScore::try_from(score.max(0)).unwrap();
         b.add_record(query_id, doc_id, score)?;
     }
@@ -106,13 +111,15 @@ where
         let line = line.as_ref();
         let rows = line.split_whitespace().collect::<Vec<_>>();
         if rows.len() < 5 {
-            return Err(ElinorError::InvalidFormat(line.to_string()));
+            return Err(ElinorError::InvalidFormat(format!(
+                "Run line must have five columns at least, but got {line}"
+            )));
         }
         let query_id = rows[0].to_string();
         let doc_id = rows[2].to_string();
-        let score = rows[4]
-            .parse::<PredScore>()
-            .map_err(|_| ElinorError::InvalidFormat(format!("Invalid score: {}", rows[4])))?;
+        let score = rows[4].parse::<PredScore>().map_err(|_| {
+            ElinorError::InvalidFormat(format!("The fifth column must be f32, but got {}", rows[4]))
+        })?;
         b.add_record(query_id, doc_id, score)?;
     }
     Ok(b.build())
