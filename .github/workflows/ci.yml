@@ -86,9 +86,9 @@ jobs:
       - name: Run elinor-compare
         run: |
           ./target/release/elinor-compare --help
-          ./target/release/elinor-evaluate --input-csvs test-data/sample/pred_1.csv
-          ./target/release/elinor-evaluate --input-csvs test-data/sample/pred_1.csv --input-csvs test-data/sample/pred_2.csv
-          ./target/release/elinor-evaluate --input-csvs test-data/sample/pred_1.csv --input-csvs test-data/sample/pred_2.csv --input-csvs test-data/sample/pred_3.csv
+          ./target/release/elinor-compare --input-csvs test-data/sample/pred_1.csv
+          ./target/release/elinor-compare --input-csvs test-data/sample/pred_1.csv --input-csvs test-data/sample/pred_2.csv
+          ./target/release/elinor-compare --input-csvs test-data/sample/pred_1.csv --input-csvs test-data/sample/pred_2.csv --input-csvs test-data/sample/pred_3.csv
 
   correctness-test:
     name: Correctness test against trec_eval
