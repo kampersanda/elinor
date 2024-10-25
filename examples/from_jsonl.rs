@@ -8,11 +8,11 @@ fn main() -> Result<()> {
 
 #[cfg(feature = "serde")]
 fn main() -> Result<()> {
-    use elinor::TrueRecord;
-    use elinor::TrueRelStore;
     use elinor::Metric;
     use elinor::PredRecord;
     use elinor::PredRelStore;
+    use elinor::TrueRecord;
+    use elinor::TrueRelStore;
 
     let true_data = r#"{"query_id": "q_1", "doc_id": "d_1", "score": 1}
 {"query_id": "q_1", "doc_id": "d_2", "score": 0}
