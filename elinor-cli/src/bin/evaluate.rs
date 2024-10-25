@@ -24,9 +24,9 @@ struct Args {
     #[arg(short, long)]
     output_csv: Option<PathBuf>,
 
-    /// Use tab as the delimiter for the output CSV file.
+    /// Use tab separator instead of comma in the output CSV.
     #[arg(long)]
-    use_tab: bool,
+    tab_separator: bool,
 
     /// Metric to evaluate.
     #[arg(short, long, num_args = 1..)]
@@ -70,7 +70,7 @@ fn main() -> Result<()> {
     if let Some(output_csv) = args.output_csv {
         let mut df = DataFrame::new(columns)?;
         let mut file = std::fs::File::create(output_csv)?;
-        let separator = if args.use_tab { b'\t' } else { b',' };
+        let separator = if args.tab_separator { b'\t' } else { b',' };
         CsvWriter::new(&mut file)
             .with_separator(separator)
             .finish(&mut df)?;

@@ -16,6 +16,10 @@ struct Args {
     /// Path to the input CSV files.
     #[arg(short, long, num_args = 1..)]
     input_csvs: Vec<PathBuf>,
+
+    /// Use tab separator instead of comma for the input CSV files.
+    #[arg(long)]
+    tab_separator: bool,
 }
 
 fn main() -> Result<()> {
@@ -25,9 +29,16 @@ fn main() -> Result<()> {
         return Err(anyhow::anyhow!("Specify at least one input CSV file."));
     }
 
+    let separator = if args.tab_separator { b'\t' } else { b',' };
+    let csv_parse_options = CsvParseOptions {
+        separator,
+        ..Default::default()
+    };
+
     let mut dfs = vec![];
     for input_csv in &args.input_csvs {
         let df = CsvReadOptions::default()
+            .with_parse_options(csv_parse_options.clone())
             .try_into_reader_with_file_path(Some(input_csv.clone()))?
             .finish()?;
         dfs.push(df);
