@@ -43,6 +43,14 @@ struct Args {
     /// Print mode for the output (pretty or raw).
     #[arg(short, long, default_value = "pretty")]
     print_mode: PrintMode,
+
+    /// Number of resamples for the bootstrap test.
+    #[arg(long, default_value = "10000")]
+    n_resamples: usize,
+
+    /// Number of iterations for the randomized test.
+    #[arg(long, default_value = "10000")]
+    n_iters: usize,
 }
 
 fn main() -> Result<()> {
@@ -85,9 +93,33 @@ fn main() -> Result<()> {
     }
     let topic_header = topic_headers[0].as_str();
 
+    println!("# Basic statistics");
+    {
+        let columns = vec![
+            Series::new(
+                "Key".into(),
+                vec![
+                    "n_systems".to_string(),
+                    "n_topics".to_string(),
+                    "n_metrics".to_string(),
+                ],
+            ),
+            Series::new(
+                "Value".into(),
+                vec![
+                    dfs.len() as u64,
+                    dfs[0].get_columns()[0].len() as u64,
+                    dfs[0].get_columns().len() as u64 - 1,
+                ],
+            ),
+        ];
+        let df = DataFrame::new(columns)?;
+        print_dataframe(&df, args.print_mode);
+    }
+
     // If there is only one input CSV file, just print the means.
     if args.input_csvs.len() == 1 {
-        println!("# Means");
+        println!("\n# Means");
         {
             let metrics = extract_metrics(&dfs[0]);
             let values = get_means(&dfs[0], &metrics, topic_header);
@@ -101,7 +133,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    println!("# Alias");
+    println!("\n# Alias");
     {
         let columns = vec![
             Series::new(
@@ -123,10 +155,17 @@ fn main() -> Result<()> {
     }
 
     if dfs.len() == 2 {
-        compare_two_systems(&dfs[0], &dfs[1], topic_header, args.print_mode)?;
+        compare_two_systems(
+            &dfs[0],
+            &dfs[1],
+            topic_header,
+            args.print_mode,
+            args.n_resamples,
+            args.n_iters,
+        )?;
     }
     if dfs.len() > 2 {
-        compare_multiple_systems(&dfs, topic_header, args.print_mode)?;
+        compare_multiple_systems(&dfs, topic_header, args.print_mode, args.n_iters)?;
     }
 
     Ok(())
@@ -180,6 +219,8 @@ fn compare_two_systems(
     df_2: &DataFrame,
     topic_header: &str,
     print_mode: PrintMode,
+    n_resamples: usize,
+    n_iters: usize,
 ) -> Result<()> {
     let metrics = extract_common_metrics([df_1, df_2]);
     if metrics.is_empty() {
@@ -278,7 +319,6 @@ fn compare_two_systems(
         print_dataframe(&df, print_mode);
     }
 
-    let n_resamples = 10000;
     println!("\n# Two-sided paired Bootstrap test (n_resamples = {n_resamples})");
     {
         let mut stats = vec![];
@@ -306,7 +346,6 @@ fn compare_two_systems(
         print_dataframe(&df, print_mode);
     }
 
-    let n_iters = 10000;
     println!("\n# Fisher's randomized test (n_iters = {n_iters})");
     {
         let mut stats = vec![];
@@ -344,6 +383,7 @@ fn compare_multiple_systems(
     dfs: &[DataFrame],
     topic_header: &str,
     print_mode: PrintMode,
+    n_iters: usize,
 ) -> Result<()> {
     let metrics = extract_common_metrics(dfs);
     if metrics.is_empty() {
@@ -382,7 +422,6 @@ fn compare_multiple_systems(
         df_metrics.push(joined);
     }
 
-    let n_iters = 10000;
     let rthsd_tester = RandomizedTukeyHsdTester::new(dfs.len()).with_n_iters(n_iters);
 
     for (metric, df_metric) in metrics.iter().zip(df_metrics.iter()) {

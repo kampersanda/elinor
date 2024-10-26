@@ -54,6 +54,12 @@ fn main() -> Result<()> {
         args.metrics
     };
 
+    println!("n_queries_in_true\t{}", true_rels.n_queries());
+    println!("n_queries_in_pred\t{}", pred_rels.n_queries());
+    println!("n_docs_in_true\t{}", true_rels.n_docs());
+    println!("n_docs_in_pred\t{}", pred_rels.n_docs());
+    println!("n_true_relevant_docs\t{}", n_relevant_docs(&true_rels));
+
     let mut columns = vec![];
     for metric in metrics {
         let result = elinor::evaluate(&true_rels, &pred_rels, metric)?;
@@ -77,6 +83,11 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn n_relevant_docs(true_rels: &TrueRelStore<String>) -> usize {
+    let records = true_rels.records();
+    records.into_iter().filter(|r| r.score > 0).count()
 }
 
 fn default_metrics() -> Vec<Metric> {
