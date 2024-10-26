@@ -1,10 +1,21 @@
 # elinor-cli
 
+[![Crates.io](https://img.shields.io/crates/v/elinor-cli)](https://crates.io/crates/elinor-cli)
+[![Build Status](https://github.com/kampersanda/elinor/actions/workflows/ci.yml/badge.svg)](https://github.com/kampersanda/elinor/actions)
+
 elinor-cli is a set of command-line tools for evaluating IR systems:
 
 - [elinor-evaluate](#elinor-evaluate) evaluates the ranking metrics of the system.
 - [elinor-compare](#elinor-compare) compares the metrics of multiple systems with statistical tests.
 - [elinor-convert](#elinor-convert) converts the TREC format into the JSONL format for elinor-evaluate.
+
+## Installation
+
+Simply use cargo to install from crates.io.
+
+```sh
+cargo install elinor-cli
+```
 
 ## elinor-evaluate
 
@@ -52,7 +63,7 @@ Here is example usage with sample JSONL files in the [`test-data/sample`](../tes
 If you want to evaluate the Precision@3, Average Precision (AP), Reciprocal Rank (RR), and nDCG@3 metrics, run:
 
 ```sh
-cargo run --release -p elinor-cli --bin elinor-evaluate -- \
+elinor-evaluate \
   --true-jsonl test-data/sample/true.jsonl \
   --pred-jsonl test-data/sample/pred_1.jsonl \
   --metrics precision@3 ap rr ndcg@3
@@ -77,7 +88,7 @@ ndcg@3  0.8286
 The detailed results can be saved to a CSV file by specifying the `--output-csv` option:
 
 ```sh
-cargo run --release -p elinor-cli --bin elinor-evaluate -- \
+elinor-evaluate \
   --true-jsonl test-data/sample/true.jsonl \
   --pred-jsonl test-data/sample/pred_1.jsonl \
   --output-csv test-data/sample/pred_1.csv \  # Specify output CSV path
@@ -132,7 +143,7 @@ Here is example usage with sample CSV files in the [`test-data/sample`](../test-
 If you want to compare the metrics of two systems, run:
 
 ```sh
-cargo run --release -p elinor-cli --bin elinor-compare -- \
+elinor-compare \
   --input-csvs test-data/sample/pred_1.csv \
   --input-csvs test-data/sample/pred_2.csv
 ```
@@ -209,7 +220,7 @@ See the following documentation for more details about the statistical tests:
 If you want to compare the metrics of three (or more) systems, run:
 
 ```sh
-cargo run --release -p elinor-cli --bin elinor-compare -- \
+elinor-compare \
   --input-csvs test-data/sample/pred_1.csv \
   --input-csvs test-data/sample/pred_2.csv \
   --input-csvs test-data/sample/pred_3.csv
@@ -285,7 +296,7 @@ If you set `--print-mode raw`, the tables will be printed in a tab-separated for
 enabling you to copy and paste them into a spreadsheet:
 
 ```sh
-cargo run --release -p elinor-cli --bin elinor-compare -- \
+elinor-compare \
   --input-csvs test-data/sample/pred_1.csv \
   --input-csvs test-data/sample/pred_2.csv \
   --print-mode raw
@@ -298,7 +309,7 @@ elinor-convert converts the TREC format into the JSONL format for elinor-evaluat
 For [Qrels](https://trec.nist.gov/data/qrels_eng/) files:
 
 ```sh
-cargo run --release -p elinor-cli --bin elinor-convert -- \
+elinor-convert \
   --input-trec qrels.trec \
   --output-jsonl qrels.jsonl \
   --rel-type true
@@ -307,7 +318,7 @@ cargo run --release -p elinor-cli --bin elinor-convert -- \
 For [Run](https://faculty.washington.edu/levow/courses/ling573_SPR2011/hw/trec_eval_desc.htm) files:
 
 ```sh
-cargo run --release -p elinor-cli --bin elinor-convert -- \
+elinor-convert \
   --input-trec run.trec \
   --output-jsonl run.jsonl \
   --rel-type pred

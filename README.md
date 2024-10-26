@@ -4,6 +4,8 @@
 [![Documentation](https://docs.rs/elinor/badge.svg)](https://docs.rs/elinor)
 [![Build Status](https://github.com/kampersanda/elinor/actions/workflows/ci.yml/badge.svg)](https://github.com/kampersanda/elinor/actions)
 
+**News: The CLI tools are now available in the [elinor-cli](./elinor-cli) directory!**
+
 Elinor is a Rust library for evaluating information retrieval (IR) systems.
 It provides a comprehensive set of metrics and statistical tests for evaluating and comparing IR systems.
 

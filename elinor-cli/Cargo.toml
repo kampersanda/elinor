@@ -1,6 +1,6 @@
 [package]
 name = "elinor-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Shunsuke Kanda (kampersanda) <shnsk.knd@gmail.com>"]
 description = "Command line tools for elinor."
