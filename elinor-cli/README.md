@@ -198,6 +198,12 @@ The output will be:
 +-------------+---------+
 ```
 
+See the following documentation for more details about the statistical tests:
+
+- [Student's t-test](https://docs.rs/elinor/latest/elinor/statistical_tests/student_t_test/struct.StudentTTest.html)
+- [Bootstrap test](https://docs.rs/elinor/latest/elinor/statistical_tests/bootstrap_test/struct.BootstrapTest.html)
+- [Fisher's randomized test](https://docs.rs/elinor/latest/elinor/statistical_tests/randomized_tukey_hsd_test/struct.RandomizedTukeyHsdTest.html)
+
 ### Example usage: Comparing three systems
 
 If you want to compare the metrics of three (or more) systems, run:
@@ -266,6 +272,12 @@ The output will be:
 
 (The statistics for the other metrics will be shown as well.)
 ```
+
+See the following documentation for more details about the statistical tests:
+
+- [Two-way ANOVA without replication](https://docs.rs/elinor/latest/elinor/statistical_tests/two_way_anova_without_replication/struct.TwoWayAnovaWithoutReplication.html)
+- [Tukey HSD test](https://docs.rs/elinor/latest/elinor/statistical_tests/tukey_hsd_test/struct.TukeyHsdTest.html)
+- [Randomized Tukey HSD test](https://docs.rs/elinor/latest/elinor/statistical_tests/randomized_tukey_hsd_test/struct.RandomizedTukeyHsdTest.html)
 
 ### Example usage: Printing the tables in a tab-separated format
 
