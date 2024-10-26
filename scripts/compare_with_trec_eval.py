@@ -80,7 +80,7 @@ if __name__ == "__main__":
             ("num_q", "n_queries_in_true"),
             ("num_q", "n_queries_in_pred"),
             ("num_ret", "n_docs_in_pred"),
-            ("num_rel", "n_true_relevant_docs"),
+            ("num_rel", "n_relevant_docs"),
         ]
     )
 
