@@ -17,23 +17,27 @@ Simply use cargo to install from crates.io.
 cargo install elinor-cli
 ```
 
+## Ubiquitous language
+
+Elinor uses the following terms for convenience:
+
+- *True relevance score* means the relevance judgment provided by human assessors.
+- *Predicted relevance score* means the similarity score predicted by the system.
+
 ## elinor-evaluate
 
 elinor-evaluate evaluates the ranking metrics of the system.
 
 ### Input format
 
-elinor-evaluate requires two JSONL files of relevance judgments and similarity scores predicted by the system.
-In elinor, the relevance judgments are called *true relevance scores*,
-and the predicted scores are called *predicted relevance scores*.
-
+elinor-evaluate requires two JSONL files of true and predicted relevance scores.
 Each line in the JSONL file should be a JSON object with the following fields:
 
 - `query_id`: The ID of the query.
 - `doc_id`: The ID of the document.
 - `score`: The relevance score of the query-document pair.
   - If it is a true one, the score should be a non-negative integer (e.g., 0, 1, 2).
-    0 means non-relevant, and 1 or more means relevant in the binary case.
+    0 means non-relevant, and the others mean relevant in binary metrics.
   - If it is a predicted one, the score can be a float (e.g., 0.1, 0.5, 1.0).
 
 An example of the JSONL file for the true relevance scores is:
