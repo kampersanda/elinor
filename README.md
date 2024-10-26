@@ -7,6 +7,8 @@
 Elinor is a Rust library for evaluating information retrieval (IR) systems.
 It provides a comprehensive set of metrics and statistical tests for evaluating and comparing IR systems.
 
+**News: The CLI tools are now available in the [elinor-cli](./elinor-cli) directory!**
+
 ## Key features
 
 - **IR-specific design:**
