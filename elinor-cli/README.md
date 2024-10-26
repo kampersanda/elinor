@@ -17,22 +17,29 @@ Simply use cargo to install from crates.io.
 cargo install elinor-cli
 ```
 
+## Ubiquitous language
+
+Elinor uses the following terms for convenience:
+
+- *True relevance score* means the relevance judgment provided by human assessors.
+- *Predicted relevance score* means the similarity score predicted by the system.
+
 ## elinor-evaluate
 
 elinor-evaluate evaluates the ranking metrics of the system.
 
 ### Input format
 
-elinor-evaluate requires two JSONL files: the true and predicted relevance scores.
+elinor-evaluate requires two JSONL files of true and predicted relevance scores.
 Each line in the JSONL file should be a JSON object with the following fields:
 
 - `query_id`: The ID of the query.
 - `doc_id`: The ID of the document.
 - `score`: The relevance score of the query-document pair.
-  - If it is true, the score should be a non-negative integer (e.g., 0, 1, 2).
-  - If it is predicted, the score can be a float (e.g., 0.1, 0.5, 1.0).
+  - If it is a true one, the score should be a non-negative integer (e.g., 0, 1, 2).
+  - If it is a predicted one, the score can be a float (e.g., 0.1, 0.5, 1.0).
 
-An example of the true JSONL file is:
+An example of the JSONL file for the true relevance scores is:
 
 ```jsonl
 {"query_id":"q_1","doc_id":"d_1","score":2}
@@ -40,7 +47,7 @@ An example of the true JSONL file is:
 {"query_id":"q_2","doc_id":"d_3","score":2}
 ```
 
-An example of the predicted JSONL file is:
+An example of the JSONL file for the predicted relevance scores is:
 
 ```jsonl
 {"query_id":"q_1","doc_id":"d_1","score":0.65}
@@ -53,6 +60,8 @@ The specifications are:
 - There is no need to sort the lines in the JSONL files.
 - The query-document pairs should be unique in each file.
 - The query IDs in the true and predicted files should be the same.
+- In binary metrics (e.g., Precision, Recall, F1),
+  true relevance scores more than 0 are considered relevant.
 
 Sample JSONL files are available in the [`test-data/sample`](../test-data/sample/) directory.
 

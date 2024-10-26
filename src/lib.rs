@@ -16,10 +16,17 @@
 //!     Not only p-values but also other important statistics, such as effect sizes and confidence intervals, are provided for thorough reporting.
 //!     See the [`statistical_tests`] module for more details.
 //!
+//! # Ubiquitous language
+//!
+//! Elinor uses the following terms for convenience:
+//!
+//! * *True relevance score* means the relevance judgment provided by human assessors.
+//! * *Predicted relevance score* means the similarity score predicted by the system.
+//!
 //! # Basic usage in evaluating several metrics
 //!
-//! You first need to prepare true and predicted relevance scores through
-//! [`TrueRelStore`] and [`PredRelStore`], respectively.
+//! You first need to prepare true and predicted relevance scores for evaluation.
+//! These scores are stored in instances of [`TrueRelStore`] and [`PredRelStore`], respectively.
 //! You can build these instances using [`TrueRelStoreBuilder`] and [`PredRelStoreBuilder`].
 //!
 //! Then, you can evaluate the predicted relevance scores using the [`evaluate`] function and
