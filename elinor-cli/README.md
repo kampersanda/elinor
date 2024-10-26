@@ -13,7 +13,7 @@ elinor-cli is a set of command-line tools for evaluating IR systems:
 
 Simply use cargo to install from crates.io.
 
-```
+```sh
 cargo install elinor-cli
 ```
 
