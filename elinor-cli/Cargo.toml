@@ -6,10 +6,8 @@ authors = ["Shunsuke Kanda (kampersanda) <shnsk.knd@gmail.com>"]
 description = "Command line tools for elinor."
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-documentation = "https://docs.rs/elinor"
-repository = "https://github.com/kampersanda/elinor"
-homepage = "https://github.com/kampersanda/elinor"
-keywords = ["information", "retrieval", "evaluation"]
+repository = "https://github.com/kampersanda/elinor/tree/main/elinor-cli"
+keywords = ["information", "retrieval", "evaluation", "cli"]
 categories = ["science"]
 rust-version = "1.65.0"
 
@@ -22,6 +20,7 @@ prettytable-rs = "0.10.0"
 serde_json = "1.0.128"
 
 [dependencies.elinor]
+version = "0.3.1"
 path = ".."
 features = ["serde"]
 default-features = false
