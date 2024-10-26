@@ -262,6 +262,19 @@
 //! # Crate features
 //!
 //! * `serde` - Enables Serde for [`TrueRecord`] and [`PredRecord`].
+//!
+//! # Acknowledgments
+//!
+//! This library is inspired by Sakai's books on IR evaluation and statistical testing:
+//!
+//! - 酒井 哲也.
+//!   [情報アクセス評価方法論](https://www.coronasha.co.jp/np/isbn/9784339024968/).
+//!   コロナ社, 2015.
+//! - Tetsuya Sakai.
+//!   [Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power](https://doi.org/10.1007/978-981-13-1199-4).
+//!   Springer, 2018.
+//!
+//! I recommend reading these books before using this library.
 #![deny(missing_docs)]
 
 pub mod errors;
