@@ -28,7 +28,7 @@ struct Args {
     #[arg(long)]
     tab_separator: bool,
 
-    /// Metric to evaluate.
+    /// Metric to evaluate. If not specified, some default metrics are used.
     #[arg(short, long, num_args = 1..)]
     metrics: Vec<Metric>,
 }
@@ -58,7 +58,7 @@ fn main() -> Result<()> {
     println!("n_queries_in_pred\t{}", pred_rels.n_queries());
     println!("n_docs_in_true\t{}", true_rels.n_docs());
     println!("n_docs_in_pred\t{}", pred_rels.n_docs());
-    println!("n_true_relevant_docs\t{}", n_relevant_docs(&true_rels));
+    println!("n_relevant_docs\t{}", n_relevant_docs(&true_rels));
 
     let mut columns = vec![];
     for metric in metrics {
@@ -101,12 +101,12 @@ fn default_metrics() -> Vec<Metric> {
     for k in [5, 10, 15, 20] {
         metrics.push(Metric::Precision { k });
     }
-    for k in [5, 10, 15, 20] {
+    for k in [5, 10, 15, 20, 0] {
         metrics.push(Metric::AP { k });
     }
+    metrics.push(Metric::RR { k: 0 });
     for k in [5, 10, 15, 20] {
         metrics.push(Metric::NDCG { k });
     }
-    metrics.push(Metric::RR { k: 0 });
     metrics
 }
