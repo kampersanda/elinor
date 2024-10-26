@@ -84,6 +84,20 @@ where
             .collect()
     }
 
+    /// Returns the relevance store as records.
+    pub fn records(&self) -> Vec<Record<K, T>> {
+        self.map
+            .iter()
+            .flat_map(|(query_id, data)| {
+                data.sorted.iter().map(move |rel| Record {
+                    query_id: query_id.clone(),
+                    doc_id: rel.doc_id.clone(),
+                    score: rel.score.clone(),
+                })
+            })
+            .collect()
+    }
+
     /// Returns the score for a given query-document pair.
     pub fn get_score<Q>(&self, query_id: &Q, doc_id: &Q) -> Option<&T>
     where
