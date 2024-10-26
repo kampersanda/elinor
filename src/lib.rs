@@ -357,6 +357,10 @@ impl<K> Evaluation<K> {
 }
 
 /// Evaluates the given predicted relevance scores against the true relevance scores.
+///
+/// # Errors
+///
+/// See [`metrics::compute_metric`] for the list of possible errors.
 pub fn evaluate<K>(
     true_rels: &TrueRelStore<K>,
     pred_rels: &PredRelStore<K>,
@@ -381,6 +385,8 @@ where
 }
 
 /// Converts maps of scores into a vector of tupled scores, where each tuple contains the scores for each key.
+///
+/// This function is expected to be used to prepare data for statistical tests.
 ///
 /// # Errors
 ///
