@@ -74,6 +74,16 @@ if __name__ == "__main__":
         [metric for _, metric in metric_pairs],
     )
 
+    # Add some additional basic metrics
+    metric_pairs.extend(
+        [
+            ("num_q", "n_queries_in_true"),
+            ("num_q", "n_queries_in_pred"),
+            ("num_ret", "n_docs_in_pred"),
+            ("num_rel", "n_true_relevant_docs"),
+        ]
+    )
+
     failed_rows: list[str] = []
     for trec_metric, elinor_metric in metric_pairs:
         trec_score = trec_results["trec_eval_output"][trec_metric]
