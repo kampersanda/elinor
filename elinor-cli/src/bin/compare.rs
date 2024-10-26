@@ -85,9 +85,33 @@ fn main() -> Result<()> {
     }
     let topic_header = topic_headers[0].as_str();
 
+    println!("# Basic statistics");
+    {
+        let columns = vec![
+            Series::new(
+                "Key".into(),
+                vec![
+                    "n_systems".to_string(),
+                    "n_topics".to_string(),
+                    "n_metrics".to_string(),
+                ],
+            ),
+            Series::new(
+                "Value".into(),
+                vec![
+                    dfs.len() as u64,
+                    dfs[0].get_columns()[0].len() as u64,
+                    dfs[0].get_columns().len() as u64 - 1,
+                ],
+            ),
+        ];
+        let df = DataFrame::new(columns)?;
+        print_dataframe(&df, args.print_mode);
+    }
+
     // If there is only one input CSV file, just print the means.
     if args.input_csvs.len() == 1 {
-        println!("# Means");
+        println!("\n# Means");
         {
             let metrics = extract_metrics(&dfs[0]);
             let values = get_means(&dfs[0], &metrics, topic_header);
@@ -101,7 +125,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    println!("# Alias");
+    println!("\n# Alias");
     {
         let columns = vec![
             Series::new(
