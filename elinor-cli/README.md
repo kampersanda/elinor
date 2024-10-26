@@ -71,14 +71,14 @@ elinor-evaluate \
 
 The available metrics are shown in [Metric](https://docs.rs/elinor/latest/elinor/metrics/enum.Metric.html).
 
-The output will show the basic statistics and the macro-averaged scores for each metric:
+The output will show several basic statistics and the macro-averaged scores for each metric:
 
 ```
 n_queries_in_true       8
 n_queries_in_pred       8
 n_docs_in_true  20
 n_docs_in_pred  24
-n_true_relevant_docs    14
+n_relevant_docs    14
 precision@3     0.5833
 ap      0.8229
 rr      0.8125
