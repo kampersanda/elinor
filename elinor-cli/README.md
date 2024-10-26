@@ -37,7 +37,6 @@ Each line in the JSONL file should be a JSON object with the following fields:
 - `doc_id`: The ID of the document.
 - `score`: The relevance score of the query-document pair.
   - If it is a true one, the score should be a non-negative integer (e.g., 0, 1, 2).
-    0 means non-relevant, and the others mean relevant in binary metrics.
   - If it is a predicted one, the score can be a float (e.g., 0.1, 0.5, 1.0).
 
 An example of the JSONL file for the true relevance scores is:
@@ -61,6 +60,8 @@ The specifications are:
 - There is no need to sort the lines in the JSONL files.
 - The query-document pairs should be unique in each file.
 - The query IDs in the true and predicted files should be the same.
+- In binary metrics (e.g., Precision, Recall, F1),
+  true relevance scores more than 0 are considered relevant.
 
 Sample JSONL files are available in the [`test-data/sample`](../test-data/sample/) directory.
 
