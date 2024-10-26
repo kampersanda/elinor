@@ -113,7 +113,7 @@ For example, you can obtain various statistics from several statistical tests, a
 
 ## Correctness verification
 
-In addition to the unit tests,
+In addition to simple unit tests,
 Elinor's evaluation results are validated to ensure accuracy and reliability:
 
 - The metrics are validated against [trec_eval](https://github.com/usnistgov/trec_eval)

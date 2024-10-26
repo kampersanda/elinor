@@ -318,6 +318,10 @@ impl FromStr for Metric {
 }
 
 /// Computes the metric scores for the given true and predicted relevance scores.
+///
+/// # Errors
+///
+/// * [`ElinorError::MissingEntry`] if the set of queries in `true_rels` is not a subset of that in `pred_rels`.
 pub fn compute_metric<K>(
     true_rels: &TrueRelStore<K>,
     pred_rels: &PredRelStore<K>,
@@ -328,7 +332,10 @@ where
 {
     for query_id in pred_rels.query_ids() {
         if true_rels.get_map(query_id).is_none() {
-            return Err(ElinorError::MissingEntry(format!("true_rels[{query_id}]")));
+            return Err(ElinorError::MissingEntry(format!(
+                "The set of queries in true_rels must be a subset of that in pred_rels, but {} is missing",
+                query_id
+            )));
         }
     }
     let mut results = BTreeMap::new();

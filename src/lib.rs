@@ -113,7 +113,7 @@
 //! let result_b = elinor::evaluate(&true_rels, &pred_rels_b, metric)?;
 //!
 //! // Perform two-sided paired Student's t-test.
-//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&result_a, &result_b])?;
+//! let tupled_scores = elinor::tupled_scores_from_score_maps([result_a.scores(), result_b.scores()])?;
 //! let stat = StudentTTest::from_samples(tupled_scores.iter().map(|x| x[0] - x[1]))?;
 //!
 //! // Various statistics can be obtained from the t-test result.
@@ -185,7 +185,9 @@
 //! let result_c = elinor::evaluate(&true_rels, &pred_rels_c, metric)?;
 //!
 //! // Prepare tupled scores for tests.
-//! let tupled_scores = elinor::tupled_scores_from_evaluations(&[&result_a, &result_b, &result_c])?;
+//! let tupled_scores = elinor::tupled_scores_from_score_maps(
+//!     [result_a.scores(), result_b.scores(), result_c.scores()]
+//! )?;
 //!
 //! // Perform Tukey HSD test with paired observations.
 //! let hsd_stat = TukeyHsdTest::from_tupled_samples(tupled_scores.iter(), 3)?;
@@ -262,6 +264,19 @@
 //! # Crate features
 //!
 //! * `serde` - Enables Serde for [`TrueRecord`] and [`PredRecord`].
+//!
+//! # Acknowledgments
+//!
+//! This library is inspired by Sakai's books on IR evaluation and statistical testing:
+//!
+//! - 酒井 哲也.
+//!   [情報アクセス評価方法論](https://www.coronasha.co.jp/np/isbn/9784339024968/).
+//!   コロナ社, 2015.
+//! - Tetsuya Sakai.
+//!   [Laboratory Experiments in Information Retrieval: Sample Sizes, Effect Sizes, and Statistical Power](https://doi.org/10.1007/978-981-13-1199-4).
+//!   Springer, 2018.
+//!
+//! I recommend reading these books before using this library.
 #![deny(missing_docs)]
 
 pub mod errors;
@@ -342,6 +357,10 @@ impl<K> Evaluation<K> {
 }
 
 /// Evaluates the given predicted relevance scores against the true relevance scores.
+///
+/// # Errors
+///
+/// See [`metrics::compute_metric`] for the list of possible errors.
 pub fn evaluate<K>(
     true_rels: &TrueRelStore<K>,
     pred_rels: &PredRelStore<K>,
@@ -365,45 +384,45 @@ where
     })
 }
 
-/// Extracts tupled scores from multiple [`Evaluation`] results.
+/// Converts maps of scores into a vector of tupled scores, where each tuple contains the scores for each key.
+///
+/// This function is expected to be used to prepare data for statistical tests.
 ///
 /// # Errors
 ///
-/// * [`ElinorError::InvalidArgument`] if the evaluation results have different sets of queries.
-pub fn tupled_scores_from_evaluations<K>(evaluations: &[&Evaluation<K>]) -> Result<Vec<Vec<f64>>>
+/// * [`ElinorError::InvalidArgument`] if score_maps have different sets of keys.
+pub fn tupled_scores_from_score_maps<'a, I, K>(score_maps: I) -> Result<Vec<Vec<f64>>>
 where
-    K: Clone + Eq + Ord + std::hash::Hash + std::fmt::Display,
+    I: IntoIterator<Item = &'a BTreeMap<K, f64>>,
+    K: Clone + Eq + Ord + std::fmt::Display + 'a,
 {
-    if evaluations.len() < 2 {
-        return Err(ElinorError::InvalidArgument(
-            "The number of evaluation results must be at least 2.".to_string(),
-        ));
+    let score_maps = score_maps.into_iter().collect::<Vec<_>>();
+    if score_maps.len() < 2 {
+        return Err(ElinorError::InvalidArgument(format!(
+            "The number of score maps must be at least 2, but got {}.",
+            score_maps.len()
+        )));
     }
-
-    let score_maps = evaluations.iter().map(|e| e.scores()).collect::<Vec<_>>();
     for i in 1..score_maps.len() {
-        if score_maps[i].len() != score_maps[0].len() {
+        if score_maps[0].len() != score_maps[i].len() {
+            return Err(ElinorError::InvalidArgument(format!(
+                "The number of keys in score maps must be the same, but got score_maps[0].len()={} and score_maps[{}].len()={}.",
+                score_maps[0].len(),
+                i,
+                score_maps[i].len()
+            )));
+        }
+        if score_maps[0].keys().ne(score_maps[i].keys()) {
             return Err(ElinorError::InvalidArgument(
-                "The evaluation results must have the same number of queries.".to_string(),
+                "The keys in the score maps must be the same.".to_string(),
             ));
         }
     }
-
-    let mut query_ids = score_maps[0].keys().cloned().collect::<Vec<_>>();
-    query_ids.sort_unstable();
-
     let mut tupled_scores = vec![];
-    for query_id in query_ids {
+    for query_id in score_maps[0].keys() {
         let mut scores = vec![];
         for score_map in &score_maps {
-            if let Some(score) = score_map.get(&query_id) {
-                scores.push(*score);
-            } else {
-                return Err(ElinorError::InvalidArgument(format!(
-                    "The query id {} is not found in the evaluation results.",
-                    query_id
-                )));
-            }
+            scores.push(*score_map.get(query_id).unwrap());
         }
         tupled_scores.push(scores);
     }
@@ -451,39 +470,45 @@ mod tests {
     }
 
     #[test]
-    fn test_tupled_scores_from_evaluated() {
-        let evaluated_a = Evaluation {
-            scores: btreemap! {
-                "q_1" => 2.,
-                "q_2" => 5.,
-            },
-            // The following values are not used in this test.
-            metric: Metric::Precision { k: 0 },
-            mean: 0.0,
-            variance: 0.0,
+    fn test_tupled_scores_from_score_maps() {
+        let scores_a = btreemap! {
+            "q_1" => 2.,
+            "q_2" => 5.,
         };
-        let evaluated_b = Evaluation {
-            scores: btreemap! {
-                "q_1" => 1.,
-                "q_2" => 0.,
-            },
-            // The following values are not used in this test.
-            metric: Metric::Precision { k: 0 },
-            mean: 0.0,
-            variance: 0.0,
+        let scores_b = btreemap! {
+            "q_1" => 1.,
+            "q_2" => 0.,
         };
-        let evaluated_c = Evaluation {
-            scores: btreemap! {
-                "q_1" => 2.,
-                "q_2" => 1.,
-            },
-            // The following values are not used in this test.
-            metric: Metric::Precision { k: 0 },
-            mean: 0.0,
-            variance: 0.0,
+        let scores_c = btreemap! {
+            "q_1" => 2.,
+            "q_2" => 1.,
         };
         let tupled_scores =
-            tupled_scores_from_evaluations(&[&evaluated_a, &evaluated_b, &evaluated_c]).unwrap();
+            tupled_scores_from_score_maps([&scores_a, &scores_b, &scores_c]).unwrap();
         assert_eq!(tupled_scores, vec![vec![2., 1., 2.], vec![5., 0., 1.]]);
+    }
+
+    #[test]
+    fn test_tupled_scores_from_score_maps_different_keys() {
+        let scores_a = btreemap! {
+            "q_1" => 2.,
+            "q_2" => 5.,
+        };
+        let scores_b = btreemap! {
+            "q_1" => 1.,
+            "q_3" => 0.,
+        };
+        let tupled_scores = tupled_scores_from_score_maps([&scores_a, &scores_b]);
+        assert!(tupled_scores.is_err());
+    }
+
+    #[test]
+    fn test_tupled_scores_from_score_maps_single_map() {
+        let scores_a = btreemap! {
+            "q_1" => 2.,
+            "q_2" => 5.,
+        };
+        let tupled_scores = tupled_scores_from_score_maps([&scores_a]);
+        assert!(tupled_scores.is_err());
     }
 }
