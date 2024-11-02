@@ -391,56 +391,10 @@ where
     })
 }
 
-/// Converts maps of scores into a vector of tupled scores, where each tuple contains the scores for each key.
-///
-/// This function is expected to be used to prepare data for statistical tests.
-///
-/// # Errors
-///
-/// * [`ElinorError::InvalidArgument`] if score_maps have different sets of keys.
-pub fn tupled_scores_from_score_maps<'a, I, K>(score_maps: I) -> Result<Vec<Vec<f64>>>
-where
-    I: IntoIterator<Item = &'a BTreeMap<K, f64>>,
-    K: Clone + Eq + Ord + std::fmt::Display + 'a,
-{
-    let score_maps = score_maps.into_iter().collect::<Vec<_>>();
-    if score_maps.len() < 2 {
-        return Err(ElinorError::InvalidArgument(format!(
-            "The number of score maps must be at least 2, but got {}.",
-            score_maps.len()
-        )));
-    }
-    for i in 1..score_maps.len() {
-        if score_maps[0].len() != score_maps[i].len() {
-            return Err(ElinorError::InvalidArgument(format!(
-                "The number of keys in score maps must be the same, but got score_maps[0].len()={} and score_maps[{}].len()={}.",
-                score_maps[0].len(),
-                i,
-                score_maps[i].len()
-            )));
-        }
-        if score_maps[0].keys().ne(score_maps[i].keys()) {
-            return Err(ElinorError::InvalidArgument(
-                "The keys in the score maps must be the same.".to_string(),
-            ));
-        }
-    }
-    let mut tupled_scores = vec![];
-    for query_id in score_maps[0].keys() {
-        let mut scores = vec![];
-        for score_map in &score_maps {
-            scores.push(*score_map.get(query_id).unwrap());
-        }
-        tupled_scores.push(scores);
-    }
-    Ok(tupled_scores)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use maplit::btreemap;
 
     #[test]
     fn test_evaluate() {
@@ -474,48 +428,5 @@ mod tests {
         assert_eq!(scores.len(), 2);
         assert_relative_eq!(scores["q_1"], 2. / 3.);
         assert_relative_eq!(scores["q_2"], 1. / 3.);
-    }
-
-    #[test]
-    fn test_tupled_scores_from_score_maps() {
-        let scores_a = btreemap! {
-            "q_1" => 2.,
-            "q_2" => 5.,
-        };
-        let scores_b = btreemap! {
-            "q_1" => 1.,
-            "q_2" => 0.,
-        };
-        let scores_c = btreemap! {
-            "q_1" => 2.,
-            "q_2" => 1.,
-        };
-        let tupled_scores =
-            tupled_scores_from_score_maps([&scores_a, &scores_b, &scores_c]).unwrap();
-        assert_eq!(tupled_scores, vec![vec![2., 1., 2.], vec![5., 0., 1.]]);
-    }
-
-    #[test]
-    fn test_tupled_scores_from_score_maps_different_keys() {
-        let scores_a = btreemap! {
-            "q_1" => 2.,
-            "q_2" => 5.,
-        };
-        let scores_b = btreemap! {
-            "q_1" => 1.,
-            "q_3" => 0.,
-        };
-        let tupled_scores = tupled_scores_from_score_maps([&scores_a, &scores_b]);
-        assert!(tupled_scores.is_err());
-    }
-
-    #[test]
-    fn test_tupled_scores_from_score_maps_single_map() {
-        let scores_a = btreemap! {
-            "q_1" => 2.,
-            "q_2" => 5.,
-        };
-        let tupled_scores = tupled_scores_from_score_maps([&scores_a]);
-        assert!(tupled_scores.is_err());
     }
 }
