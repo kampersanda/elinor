@@ -3,7 +3,7 @@ requires = ["maturin>=1.7,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "elinor-py"
+name = "elinor"
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Rust",
@@ -13,3 +13,6 @@ classifiers = [
 dynamic = ["version"]
 [tool.maturin]
 features = ["pyo3/extension-module"]
+
+[project.optional-dependencies]
+test = ["pytest>=8.3.3", "pytest-cov[all]"]
