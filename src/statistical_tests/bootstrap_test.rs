@@ -45,8 +45,7 @@ pub struct BootstrapTest {
 
 impl BootstrapTest {
     /// Computes a bootstrap test for $`n`$ samples $`x_{1},x_{2},\dots,x_{n}`$,
-    /// where $`x_{i}`$ is the difference $`a_{i} - b_{i}`$
-    /// for given paired samples $`(a_{1},b_{1}),(a_{2},b_{2}),\dots,(a_{n},b_{n})`$.
+    /// where $`x_{i} = a_{i} - b_{i}`$ for given paired samples $`(a_{1},b_{1}),(a_{2},b_{2}),\dots,(a_{n},b_{n})`$.
     ///
     /// It uses the default parameters defined in [`BootstrapTester`].
     /// To customize the parameters, use [`BootstrapTester`].
