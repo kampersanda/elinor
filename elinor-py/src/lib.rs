@@ -12,7 +12,7 @@ fn evaluate<'py>(
     metric: &str,
 ) -> PyResult<Py<PyDict>> {
     let metric = Metric::from_str(metric)
-        .map_err(|e| PyValueError::new_err(format!("Invalid metric: {}", metric)))?;
+        .map_err(|e| PyValueError::new_err(format!("Invalid metric: {}", e)))?;
 
     let mut b = TrueRelStoreBuilder::new();
     for (i, rel) in true_rels.iter().enumerate() {
