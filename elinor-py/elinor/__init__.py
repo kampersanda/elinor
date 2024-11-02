@@ -5,19 +5,19 @@ from pydantic import BaseModel
 from elinor import elinor
 
 
-class TrueRecord(BaseModel):
+class TrueRecord(BaseModel, frozen=True):
     query_id: str
     doc_id: str
     score: int
 
 
-class PredRecord(BaseModel):
+class PredRecord(BaseModel, frozen=True):
     query_id: str
     doc_id: str
     score: float
 
 
-class Evaluation(BaseModel):
+class Evaluation(BaseModel, frozen=True):
     metric: str
     scores: dict[str, float]
 

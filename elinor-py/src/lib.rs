@@ -1,11 +1,9 @@
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
-use elinor::statistical_tests::StudentTTest;
-use elinor::{self, Metric, PredRelStoreBuilder, PredScore, TrueRelStoreBuilder, TrueScore};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyDict, PyList, PyTuple};
 
 #[pyfunction]
 fn _evaluate<'py>(
@@ -14,10 +12,10 @@ fn _evaluate<'py>(
     pred_rels: &Bound<'py, PyList>,
     metric: &str,
 ) -> PyResult<Py<PyDict>> {
-    let metric = Metric::from_str(metric)
+    let metric = elinor::Metric::from_str(metric)
         .map_err(|e| PyValueError::new_err(format!("Invalid metric: {}", e)))?;
 
-    let mut b = TrueRelStoreBuilder::new();
+    let mut b = elinor::TrueRelStoreBuilder::new();
     for (i, rel) in true_rels.iter().enumerate() {
         let rel = rel.downcast::<PyDict>()?;
         let query_id = rel
@@ -33,14 +31,14 @@ fn _evaluate<'py>(
         let score = rel
             .get_item("score")?
             .ok_or_else(|| PyValueError::new_err(format!("Missing 'score' in true_rels[{}]", i)))?
-            .extract::<TrueScore>()?;
+            .extract::<elinor::TrueScore>()?;
         b.add_record(query_id, doc_id, score).map_err(|e| {
             PyValueError::new_err(format!("Error adding record to TrueRelStore: {}", e))
         })?;
     }
     let true_rels = b.build();
 
-    let mut b = PredRelStoreBuilder::new();
+    let mut b = elinor::PredRelStoreBuilder::new();
     for (i, rel) in pred_rels.iter().enumerate() {
         let rel = rel.downcast::<PyDict>()?;
         let query_id = rel
@@ -57,7 +55,7 @@ fn _evaluate<'py>(
             .get_item("score")?
             .ok_or_else(|| PyValueError::new_err(format!("Missing 'score' in pred_rels[{}]", i)))?
             .extract::<f64>()?;
-        let score = PredScore::from(score);
+        let score = elinor::PredScore::from(score);
         b.add_record(query_id, doc_id, score).map_err(|e| {
             PyValueError::new_err(format!("Error adding record to PredRelStore: {}", e))
         })?;
@@ -74,26 +72,75 @@ fn _evaluate<'py>(
     Ok(scores.into())
 }
 
-#[pyfunction]
-fn _tupled_scores_from_score_maps<'py>(
-    py: Python<'py>,
-    score_maps: &Bound<'py, PyList>,
-) -> PyResult<Py<PyList>> {
-    let mut extracted = Vec::new();
-    for score_map in score_maps.iter() {
-        let score_map = score_map.downcast::<PyDict>()?;
-        let score_map: BTreeMap<String, f64> = score_map.extract()?;
-        extracted.push(score_map);
+#[pyclass(frozen)]
+struct StudentTTest(elinor::statistical_tests::StudentTTest);
+
+#[pymethods]
+impl StudentTTest {
+    #[new]
+    fn new(paired_samples: &Bound<'_, PyList>) -> PyResult<Self> {
+        let mut pairs = Vec::new();
+        for sample in paired_samples.iter() {
+            let sample = sample.downcast::<PyTuple>()?;
+            pairs.push(sample.extract::<(f64, f64)>()?);
+        }
+        let result = elinor::statistical_tests::StudentTTest::from_paired_samples(pairs)
+            .map_err(|e| PyValueError::new_err(format!("Error creating StudentTTest: {}", e)))?;
+        Ok(StudentTTest(result))
     }
-    let tupled = elinor::tupled_scores_from_score_maps(&extracted)
-        .map_err(|e| PyValueError::new_err(format!("Error tupling scores: {}", e)))?;
-    Ok(PyList::new_bound(py, tupled).into())
+
+    #[staticmethod]
+    fn from_maps(a: &Bound<'_, PyDict>, b: &Bound<'_, PyDict>) -> PyResult<Self> {
+        let a: BTreeMap<String, f64> = a.extract()?;
+        let b: BTreeMap<String, f64> = b.extract()?;
+        let pairs = elinor::statistical_tests::pairs_from_maps(&a, &b)
+            .map_err(|e| PyValueError::new_err(format!("Error pairing scores: {}", e)))?;
+        let result = elinor::statistical_tests::StudentTTest::from_paired_samples(pairs)
+            .map_err(|e| PyValueError::new_err(format!("Error creating StudentTTest: {}", e)))?;
+        Ok(StudentTTest(result))
+    }
+
+    fn n_samples(&self) -> usize {
+        self.0.n_samples()
+    }
+
+    fn mean(&self) -> f64 {
+        self.0.mean()
+    }
+
+    fn variance(&self) -> f64 {
+        self.0.variance()
+    }
+
+    fn effect_size(&self) -> f64 {
+        self.0.effect_size()
+    }
+
+    fn t_stat(&self) -> f64 {
+        self.0.t_stat()
+    }
+
+    fn p_value(&self) -> f64 {
+        self.0.p_value()
+    }
+
+    fn margin_of_error(&self, significance_level: f64) -> PyResult<f64> {
+        self.0
+            .margin_of_error(significance_level)
+            .map_err(|e| PyValueError::new_err(format!("Error calculating margin of error: {}", e)))
+    }
+
+    fn confidence_interval(&self, significance_level: f64) -> PyResult<(f64, f64)> {
+        self.0.confidence_interval(significance_level).map_err(|e| {
+            PyValueError::new_err(format!("Error calculating confidence interval: {}", e))
+        })
+    }
 }
 
 /// A Python module implemented in Rust.
 #[pymodule(name = "elinor")]
 fn elinor_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(_evaluate, m)?)?;
-    m.add_function(wrap_pyfunction!(_tupled_scores_from_score_maps, m)?)?;
+    m.add_class::<StudentTTest>()?;
     Ok(())
 }
