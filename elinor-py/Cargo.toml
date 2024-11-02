@@ -10,3 +10,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = "0.22.0"
+
+[dependencies.elinor]
+version = "0.3.1"
+path = ".."
+features = ["serde"]
+default-features = false
