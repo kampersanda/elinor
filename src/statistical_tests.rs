@@ -120,3 +120,33 @@ where
     }
     Ok(tuples)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pairs_from_maps_different_keys() {
+        let map_a = [("a", 0.70), ("b", 0.30), ("c", 0.20)].into();
+        let map_b = [("a", 0.50), ("b", 0.10), ("d", 0.00)].into();
+        assert_eq!(
+            pairs_from_maps(&map_a, &map_b),
+            Err(ElinorError::InvalidArgument(
+                "The keys in the maps must be the same.".to_string()
+            ))
+        );
+    }
+
+    #[test]
+    fn test_tuples_from_maps_different_keys() {
+        let map_a = [("a", 0.70), ("b", 0.30), ("c", 0.20)].into();
+        let map_b = [("a", 0.50), ("b", 0.10), ("d", 0.00)].into();
+        let map_c = [("a", 0.60), ("b", 0.20), ("c", 0.10)].into();
+        assert_eq!(
+            tuples_from_maps([&map_a, &map_b, &map_c]),
+            Err(ElinorError::InvalidArgument(
+                "The keys in the maps must be the same.".to_string()
+            ))
+        );
+    }
+}
