@@ -1,4 +1,4 @@
-//! Two-sided Student's t-test
+//! Two-sided paired Student's t-test
 
 use statrs::distribution::ContinuousCDF;
 use statrs::distribution::StudentsT;
@@ -7,7 +7,7 @@ use statrs::statistics::Statistics;
 use crate::errors::ElinorError;
 use crate::errors::Result;
 
-/// Two-sided Student's t-test.
+/// Two-sided paired Student's t-test.
 ///
 /// # Examples
 ///
@@ -21,9 +21,9 @@ use crate::errors::Result;
 /// let a = vec![0.60, 0.10, 0.20];
 /// let b = vec![0.50, 0.10, 0.00];
 ///
-/// // [0.10, 0.00, 0.20]
-/// let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
-/// let result = StudentTTest::from_samples(samples)?;
+/// // a - b = [0.10, 0.00, 0.20]
+/// let samples = a.into_iter().zip(b.into_iter());
+/// let result = StudentTTest::from_paired_samples(samples)?;
 /// assert_eq!(result.n_samples(), 3);
 ///
 /// // Various statistics.
@@ -55,17 +55,18 @@ pub struct StudentTTest {
 }
 
 impl StudentTTest {
-    /// Computes a Student's t-test for $`n`$ samples $`x_{1},x_{2},\dots,x_{n}`$.
+    /// Computes a Student's t-test for $`n`$ samples $`x_{1},x_{2},\dots,x_{n}`$,
+    /// where $`x_{i} = a_{i} - b_{i}`$ for given paired samples $`(a_{1},b_{1}),(a_{2},b_{2}),\dots,(a_{n},b_{n})`$.
     ///
     /// # Errors
     ///
     /// * [`ElinorError::InvalidArgument`] if the input does not have at least two samples.
     /// * [`ElinorError::Uncomputable`] if the variance is zero.
-    pub fn from_samples<I>(samples: I) -> Result<Self>
+    pub fn from_paired_samples<I>(samples: I) -> Result<Self>
     where
-        I: IntoIterator<Item = f64>,
+        I: IntoIterator<Item = (f64, f64)>,
     {
-        let samples: Vec<f64> = samples.into_iter().collect();
+        let samples: Vec<f64> = samples.into_iter().map(|(x, y)| x - y).collect();
         if samples.len() <= 1 {
             return Err(ElinorError::InvalidArgument(
                 "The input must have at least two samples.".to_string(),
@@ -217,7 +218,7 @@ mod tests {
 
     #[test]
     fn test_student_t_test_compute_empty() {
-        let result = StudentTTest::from_samples(Vec::<f64>::new());
+        let result = StudentTTest::from_paired_samples(Vec::<(f64, f64)>::new());
         assert_eq!(
             result.unwrap_err(),
             ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
@@ -226,7 +227,7 @@ mod tests {
 
     #[test]
     fn test_student_t_test_compute_one_sample() {
-        let result = StudentTTest::from_samples(vec![1.0]);
+        let result = StudentTTest::from_paired_samples(vec![(0.0, 1.0)]);
         assert_eq!(
             result.unwrap_err(),
             ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
@@ -235,14 +236,14 @@ mod tests {
 
     #[test]
     fn test_student_t_test_compute_two_samples() {
-        let result = StudentTTest::from_samples(vec![1.0, 3.0]);
+        let result = StudentTTest::from_paired_samples(vec![(2.0, 1.0), (4.0, 1.0)]).unwrap();
         let expected = (1.0 + 3.0) / 2.0;
-        assert_abs_diff_eq!(result.unwrap().mean(), expected, epsilon = 1e-4);
+        assert_abs_diff_eq!(result.mean(), expected, epsilon = 1e-4);
     }
 
     #[test]
     fn test_student_t_test_compute_zero_variance() {
-        let result = StudentTTest::from_samples(vec![1.0, 1.0]);
+        let result = StudentTTest::from_paired_samples(vec![(2.0, 1.0), (2.0, 1.0)]);
         assert_eq!(
             result.unwrap_err(),
             ElinorError::Uncomputable("The variance is zero.".to_string())
@@ -251,8 +252,7 @@ mod tests {
 
     #[test]
     fn test_student_t_test_margin_of_error_invalid_argument() {
-        let result = StudentTTest::from_samples(vec![1.0, 1.5]);
-        let result = result.unwrap();
+        let result = StudentTTest::from_paired_samples(vec![(2.0, 1.0), (2.0, 0.5)]).unwrap();
         let moe = result.margin_of_error(0.0);
         assert_eq!(
             moe.unwrap_err(),
@@ -266,8 +266,7 @@ mod tests {
 
     #[test]
     fn test_student_t_test_confidence_interval_invalid_argument() {
-        let result = StudentTTest::from_samples(vec![1.0, 1.5]);
-        let result = result.unwrap();
+        let result = StudentTTest::from_paired_samples(vec![(2.0, 1.0), (2.0, 0.5)]).unwrap();
         let ci = result.confidence_interval(0.0);
         assert_eq!(
             ci.unwrap_err(),
@@ -292,8 +291,8 @@ mod tests {
             0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
         ];
 
-        let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
-        let result = StudentTTest::from_samples(samples).unwrap();
+        let samples = a.into_iter().zip(b.into_iter());
+        let result = StudentTTest::from_paired_samples(samples).unwrap();
 
         assert_abs_diff_eq!(result.mean(), 0.0750, epsilon = 1e-4);
         assert_abs_diff_eq!(result.variance(), 0.0251, epsilon = 1e-4);
