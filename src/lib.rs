@@ -120,8 +120,7 @@
 //! let result_b = elinor::evaluate(&true_rels, &pred_rels_b, metric)?;
 //!
 //! // Perform two-sided paired Student's t-test.
-//! let tupled_scores = elinor::tupled_scores_from_score_maps([result_a.scores(), result_b.scores()])?;
-//! let stat = StudentTTest::from_samples(tupled_scores.iter().map(|x| x[0] - x[1]))?;
+//! let stat = StudentTTest::from_maps(result_a.scores(), result_b.scores())?;
 //!
 //! // Various statistics can be obtained from the t-test result.
 //! assert!(stat.mean() > 0.0);

@@ -273,11 +273,12 @@ fn compare_two_systems(
         for df in df_metrics.iter() {
             let values_1 = df.column("system_1")?.f64()?;
             let values_2 = df.column("system_2")?.f64()?;
-            let diff_scores = values_1
-                .into_iter()
-                .zip(values_2.into_iter())
-                .map(|(x, y)| x.unwrap() - y.unwrap());
-            stats.push(StudentTTest::from_samples(diff_scores)?);
+            stats.push(StudentTTest::from_paired_samples(
+                values_1
+                    .into_iter()
+                    .zip(values_2.into_iter())
+                    .map(|(a, b)| (a.unwrap(), b.unwrap())),
+            )?);
         }
         let columns = vec![
             Series::new(
