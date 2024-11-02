@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
+use elinor::statistical_tests::StudentTTest;
 use elinor::{self, Metric, PredRelStoreBuilder, PredScore, TrueRelStoreBuilder, TrueScore};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -66,11 +67,11 @@ fn _evaluate<'py>(
     let result = elinor::evaluate(&true_rels, &pred_rels, metric)
         .map_err(|e| PyValueError::new_err(format!("Error evaluating: {}", e)))?;
 
-    let dict = PyDict::new_bound(py);
+    let scores = PyDict::new_bound(py);
     for (query_id, score) in result.scores() {
-        dict.set_item(query_id, score)?;
+        scores.set_item(query_id, score)?;
     }
-    Ok(dict.into())
+    Ok(scores.into())
 }
 
 #[pyfunction]
