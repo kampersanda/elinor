@@ -73,10 +73,10 @@ fn _evaluate<'py>(
 }
 
 #[pyclass(frozen)]
-struct StudentTTest(elinor::statistical_tests::StudentTTest);
+struct _StudentTTest(elinor::statistical_tests::StudentTTest);
 
 #[pymethods]
-impl StudentTTest {
+impl _StudentTTest {
     #[new]
     fn new(paired_samples: &Bound<'_, PyList>) -> PyResult<Self> {
         let mut pairs = Vec::new();
@@ -86,7 +86,7 @@ impl StudentTTest {
         }
         let result = elinor::statistical_tests::StudentTTest::from_paired_samples(pairs)
             .map_err(|e| PyValueError::new_err(format!("Error creating StudentTTest: {}", e)))?;
-        Ok(StudentTTest(result))
+        Ok(Self(result))
     }
 
     #[staticmethod]
@@ -97,7 +97,7 @@ impl StudentTTest {
             .map_err(|e| PyValueError::new_err(format!("Error pairing scores: {}", e)))?;
         let result = elinor::statistical_tests::StudentTTest::from_paired_samples(pairs)
             .map_err(|e| PyValueError::new_err(format!("Error creating StudentTTest: {}", e)))?;
-        Ok(StudentTTest(result))
+        Ok(Self(result))
     }
 
     fn n_samples(&self) -> usize {
@@ -141,6 +141,6 @@ impl StudentTTest {
 #[pymodule(name = "elinor")]
 fn elinor_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(_evaluate, m)?)?;
-    m.add_class::<StudentTTest>()?;
+    m.add_class::<_StudentTTest>()?;
     Ok(())
 }
