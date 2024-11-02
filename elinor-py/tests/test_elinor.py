@@ -1,4 +1,4 @@
-import elinor
+from elinor import elinor
 
 
 def test_evaluate() -> None:
@@ -17,6 +17,6 @@ def test_evaluate() -> None:
         {"query_id": "q_2", "doc_id": "d_1", "score": 0.2},
         {"query_id": "q_2", "doc_id": "d_3", "score": 0.3},
     ]
-    scores = elinor.evaluate(true_rels, pred_rels, "ndcg@3")
+    scores = elinor._evaluate(true_rels, pred_rels, "ndcg@3")
     print(scores)
     assert scores["ndcg@3"] == 0.5

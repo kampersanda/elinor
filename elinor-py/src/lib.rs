@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 
 #[pyfunction]
-fn evaluate<'py>(
+fn _evaluate<'py>(
     py: Python<'py>,
     true_rels: &Bound<'py, PyList>,
     pred_rels: &Bound<'py, PyList>,
@@ -74,7 +74,7 @@ fn evaluate<'py>(
 }
 
 #[pyfunction]
-fn tupled_scores_from_score_maps<'py>(
+fn _tupled_scores_from_score_maps<'py>(
     py: Python<'py>,
     score_maps: &Bound<'py, PyList>,
 ) -> PyResult<Py<PyList>> {
@@ -92,7 +92,7 @@ fn tupled_scores_from_score_maps<'py>(
 /// A Python module implemented in Rust.
 #[pymodule(name = "elinor")]
 fn elinor_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(evaluate, m)?)?;
-    m.add_function(wrap_pyfunction!(tupled_scores_from_score_maps, m)?)?;
+    m.add_function(wrap_pyfunction!(_evaluate, m)?)?;
+    m.add_function(wrap_pyfunction!(_tupled_scores_from_score_maps, m)?)?;
     Ok(())
 }

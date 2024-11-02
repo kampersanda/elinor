@@ -1,6 +1,6 @@
 from typing import Any
 
-def evaluate(
+def _evaluate(
     true_rels: list[dict[str, Any]],
     pred_rels: list[dict[str, Any]],
     metric: str,
