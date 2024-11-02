@@ -153,7 +153,7 @@
 //! ```
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use elinor::{TrueRelStoreBuilder, PredRelStoreBuilder, Metric};
-//! use elinor::statistical_tests::{RandomizedTukeyHsdTest, TukeyHsdTest};
+//! use elinor::statistical_tests::{RandomizedTukeyHsdTest, TukeyHsdTest, tuples_from_maps};
 //!
 //! // Prepare true relevance scores.
 //! let mut b = TrueRelStoreBuilder::new();
@@ -192,9 +192,7 @@
 //! let result_c = elinor::evaluate(&true_rels, &pred_rels_c, metric)?;
 //!
 //! // Prepare tupled scores for tests.
-//! let tupled_scores = elinor::tupled_scores_from_score_maps(
-//!     [result_a.scores(), result_b.scores(), result_c.scores()]
-//! )?;
+//! let tupled_scores = tuples_from_maps([result_a.scores(), result_b.scores(), result_c.scores()])?;
 //!
 //! // Perform Tukey HSD test with paired observations.
 //! let hsd_stat = TukeyHsdTest::from_tupled_samples(tupled_scores.iter(), 3)?;
