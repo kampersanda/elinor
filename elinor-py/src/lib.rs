@@ -1,8 +1,10 @@
-use elinor::{Metric, PredRelStoreBuilder, PredScore, TrueRelStoreBuilder, TrueScore};
+use std::collections::BTreeMap;
+use std::str::FromStr;
+
+use elinor::{self, Metric, PredRelStoreBuilder, PredScore, TrueRelStoreBuilder, TrueScore};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
-use std::str::FromStr;
 
 #[pyfunction]
 fn evaluate<'py>(
@@ -71,16 +73,26 @@ fn evaluate<'py>(
     Ok(dict.into())
 }
 
-/// Formats the sum of two numbers as string.
 #[pyfunction]
-fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-    Ok((a + b).to_string())
+fn tupled_scores_from_score_maps<'py>(
+    py: Python<'py>,
+    score_maps: &Bound<'py, PyList>,
+) -> PyResult<Py<PyList>> {
+    let mut extracted = Vec::new();
+    for score_map in score_maps.iter() {
+        let score_map = score_map.downcast::<PyDict>()?;
+        let score_map: BTreeMap<String, f64> = score_map.extract()?;
+        extracted.push(score_map);
+    }
+    let tupled = elinor::tupled_scores_from_score_maps(&extracted)
+        .map_err(|e| PyValueError::new_err(format!("Error tupling scores: {}", e)))?;
+    Ok(PyList::new_bound(py, tupled).into())
 }
 
 /// A Python module implemented in Rust.
 #[pymodule(name = "elinor")]
 fn elinor_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     m.add_function(wrap_pyfunction!(evaluate, m)?)?;
+    m.add_function(wrap_pyfunction!(tupled_scores_from_score_maps, m)?)?;
     Ok(())
 }
