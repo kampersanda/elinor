@@ -89,12 +89,6 @@ where
     K: Clone + Eq + Ord + std::fmt::Display + 'a,
 {
     let maps = maps.into_iter().collect::<Vec<_>>();
-    if maps.len() < 2 {
-        return Err(ElinorError::InvalidArgument(format!(
-            "The number of maps maps must be at least 2, but got {}.",
-            maps.len()
-        )));
-    }
     for i in 1..maps.len() {
         if maps[0].len() != maps[i].len() {
             return Err(ElinorError::InvalidArgument(format!(
@@ -147,6 +141,15 @@ mod tests {
             Err(ElinorError::InvalidArgument(
                 "The keys in the maps must be the same.".to_string()
             ))
+        );
+    }
+
+    #[test]
+    fn test_tuples_from_maps_single_map() {
+        let map_a = [("a", 0.70), ("b", 0.30), ("c", 0.20)].into();
+        assert_eq!(
+            tuples_from_maps([&map_a]),
+            Ok(vec![vec![0.70], vec![0.30], vec![0.20]])
         );
     }
 }
