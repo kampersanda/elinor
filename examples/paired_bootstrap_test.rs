@@ -12,8 +12,8 @@ fn main() -> Result<()> {
         0.40, 0.40, 0.10, 0.40, 0.20, 0.10, 0.10, 0.60, 0.30, 0.20,
     ];
 
-    let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
-    let result = BootstrapTest::from_samples(samples)?;
+    let samples = a.into_iter().zip(b.into_iter());
+    let result = BootstrapTest::from_paired_samples(samples)?;
     println!("p-value: {:.4}", result.p_value());
 
     Ok(())

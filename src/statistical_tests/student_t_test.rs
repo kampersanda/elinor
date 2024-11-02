@@ -1,14 +1,11 @@
 //! Two-sided paired Student's t-test
 
-use std::collections::BTreeMap;
-
 use statrs::distribution::ContinuousCDF;
 use statrs::distribution::StudentsT;
 use statrs::statistics::Statistics;
 
 use crate::errors::ElinorError;
 use crate::errors::Result;
-use crate::statistical_tests::tuples_from_maps;
 
 /// Two-sided paired Student's t-test.
 ///
@@ -24,7 +21,7 @@ use crate::statistical_tests::tuples_from_maps;
 /// let a = vec![0.60, 0.10, 0.20];
 /// let b = vec![0.50, 0.10, 0.00];
 ///
-/// // [0.10, 0.00, 0.20]
+/// // a - b = [0.10, 0.00, 0.20]
 /// let samples = a.into_iter().zip(b.into_iter());
 /// let result = StudentTTest::from_paired_samples(samples)?;
 /// assert_eq!(result.n_samples(), 3);
@@ -89,15 +86,6 @@ impl StudentTTest {
             p_value,
             scaled_t_dist,
         })
-    }
-
-    ///
-    pub fn from_maps<K>(a: &BTreeMap<K, f64>, b: &BTreeMap<K, f64>) -> Result<Self>
-    where
-        K: Clone + Eq + Ord + std::fmt::Display,
-    {
-        let tuples = tuples_from_maps([a, b])?;
-        Self::from_paired_samples(tuples.into_iter().map(|x| (x[0], x[1])))
     }
 
     /// Number of samples, $`n`$.

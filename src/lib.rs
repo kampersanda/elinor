@@ -89,7 +89,7 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use approx::assert_relative_eq;
 //! use elinor::{TrueRelStoreBuilder, PredRelStoreBuilder, Metric};
-//! use elinor::statistical_tests::StudentTTest;
+//! use elinor::statistical_tests::{StudentTTest, pairs_from_maps};
 //!
 //! // Prepare true relevance scores.
 //! let mut b = TrueRelStoreBuilder::new();
@@ -120,7 +120,8 @@
 //! let result_b = elinor::evaluate(&true_rels, &pred_rels_b, metric)?;
 //!
 //! // Perform two-sided paired Student's t-test.
-//! let stat = StudentTTest::from_maps(result_a.scores(), result_b.scores())?;
+//! let pairs = pairs_from_maps(result_a.scores(), result_b.scores())?;
+//! let stat = StudentTTest::from_paired_samples(pairs)?;
 //!
 //! // Various statistics can be obtained from the t-test result.
 //! assert!(stat.mean() > 0.0);

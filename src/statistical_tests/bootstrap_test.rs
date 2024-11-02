@@ -4,6 +4,7 @@ use rand::Rng;
 use rand::SeedableRng;
 
 use crate::errors::ElinorError;
+use crate::errors::Result;
 use crate::statistical_tests::student_t_test::compute_t_stat;
 
 /// Two-sided Bootstrap test.
@@ -20,8 +21,8 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 /// let a = vec![0.70, 0.30, 0.20, 0.60, 0.40];
 /// let b = vec![0.50, 0.10, 0.00, 0.20, 0.40];
 ///
-/// let samples = a.into_iter().zip(b.into_iter()).map(|(x, y)| x - y);
-/// let result = BootstrapTest::from_samples(samples)?;
+/// let samples = a.into_iter().zip(b.into_iter());
+/// let result = BootstrapTest::from_paired_samples(samples)?;
 /// assert!((0.0..=1.0).contains(&result.p_value()));
 /// # Ok(())
 /// # }
@@ -43,7 +44,9 @@ pub struct BootstrapTest {
 }
 
 impl BootstrapTest {
-    /// Computes a bootstrap test for the samples.
+    /// Computes a bootstrap test for $`n`$ samples $`x_{1},x_{2},\dots,x_{n}`$,
+    /// where $`x_{i}`$ is the difference $`a_{i} - b_{i}`$
+    /// for given paired samples $`(a_{1},b_{1}),(a_{2},b_{2}),\dots,(a_{n},b_{n})`$.
     ///
     /// It uses the default parameters defined in [`BootstrapTester`].
     /// To customize the parameters, use [`BootstrapTester`].
@@ -51,9 +54,9 @@ impl BootstrapTest {
     /// # Errors
     ///
     /// See [`BootstrapTester::test`].
-    pub fn from_samples<I>(samples: I) -> Result<Self, ElinorError>
+    pub fn from_paired_samples<I>(samples: I) -> Result<Self>
     where
-        I: IntoIterator<Item = f64>,
+        I: IntoIterator<Item = (f64, f64)>,
     {
         BootstrapTester::new().test(samples)
     }
@@ -121,11 +124,11 @@ impl BootstrapTester {
     ///
     /// * [`ElinorError::InvalidArgument`] if the input does not have at least two samples.
     /// * [`ElinorError::Uncomputable`] if the variance is zero.
-    pub fn test<I>(&self, samples: I) -> Result<BootstrapTest, ElinorError>
+    pub fn test<I>(&self, samples: I) -> Result<BootstrapTest>
     where
-        I: IntoIterator<Item = f64>,
+        I: IntoIterator<Item = (f64, f64)>,
     {
-        let samples: Vec<f64> = samples.into_iter().collect();
+        let samples: Vec<f64> = samples.into_iter().map(|(x, y)| x - y).collect();
         if samples.len() <= 1 {
             return Err(ElinorError::InvalidArgument(
                 "The input must have at least two samples.".to_string(),
@@ -169,13 +172,15 @@ impl BootstrapTester {
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use super::*;
     use approx::relative_eq;
 
     #[test]
     fn test_bootstrap_test_from_samples_empty() {
         let samples = vec![];
-        let result = BootstrapTest::from_samples(samples);
+        let result = BootstrapTest::from_paired_samples(samples);
         assert_eq!(
             result.unwrap_err(),
             ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
@@ -184,8 +189,8 @@ mod tests {
 
     #[test]
     fn test_bootstrap_test_from_samples_single() {
-        let samples = vec![1.0];
-        let result = BootstrapTest::from_samples(samples);
+        let samples = vec![(1.0, 1.0)];
+        let result = BootstrapTest::from_paired_samples(samples);
         assert_eq!(
             result.unwrap_err(),
             ElinorError::InvalidArgument("The input must have at least two samples.".to_string())
@@ -194,8 +199,8 @@ mod tests {
 
     #[test]
     fn test_bootstrap_test_from_samples_zero_variance() {
-        let samples = vec![1.0, 1.0];
-        let result = BootstrapTest::from_samples(samples);
+        let samples = vec![(1.0, 0.0), (1.0, 0.0)];
+        let result = BootstrapTest::from_paired_samples(samples);
         assert_eq!(
             result.unwrap_err(),
             ElinorError::Uncomputable("The variance is zero.".to_string())
@@ -207,7 +212,7 @@ mod tests {
         let tester = BootstrapTester::new()
             .with_n_resamples(334)
             .with_random_state(42);
-        let samples = (0..10).map(|x| x as f64).collect::<Vec<f64>>();
+        let samples = vec![(1.0, 0.0), (0.0, 1.0), (1.0, 3.0)];
         let result = tester.test(samples).unwrap();
         assert_eq!(result.n_resamples(), 334);
         assert_eq!(result.random_state(), 42);
@@ -215,7 +220,7 @@ mod tests {
 
     #[test]
     fn test_bootstrap_tester_with_random_state_consistency() {
-        let samples = (0..10).map(|x| x as f64).collect::<Vec<f64>>();
+        let samples = vec![(1.0, 0.0), (0.0, 1.0), (1.0, 3.0)];
         let p_values: Vec<f64> = (0..10)
             .map(|_| {
                 let tester = BootstrapTester::new().with_random_state(42);

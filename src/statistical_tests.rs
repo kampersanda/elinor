@@ -24,6 +24,22 @@ use std::collections::BTreeMap;
 use crate::errors::ElinorError;
 use crate::errors::Result;
 
+///
+pub fn pairs_from_maps<K>(
+    map_a: &BTreeMap<K, f64>,
+    map_b: &BTreeMap<K, f64>,
+) -> Result<Vec<(f64, f64)>>
+where
+    K: Clone + Eq + Ord + std::fmt::Display,
+{
+    tuples_from_maps([map_a, map_b]).map(|tuples| {
+        tuples
+            .into_iter()
+            .map(|tuple| (tuple[0], tuple[1]))
+            .collect()
+    })
+}
+
 /// Converts maps of scores into a vector of tupled scores, where each tuple contains the scores for each key.
 ///
 /// This function is expected to be used to prepare data for statistical tests.
