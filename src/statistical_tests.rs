@@ -32,6 +32,17 @@ use crate::errors::Result;
 ///
 /// where $`k^A_i = k^B_i`$ for all $`i`$.
 ///
+/// # Examples
+///
+/// ```
+/// use elinor::statistical_tests::pairs_from_maps;
+///
+/// let map_a = [("a", 0.70), ("b", 0.30), ("c", 0.20)].into();
+/// let map_b = [("a", 0.50), ("b", 0.10), ("c", 0.00)].into();
+/// let pairs = pairs_from_maps(&map_a, &map_b).unwrap();
+/// assert_eq!(pairs, vec![(0.70, 0.50), (0.30, 0.10), (0.20, 0.00)]);
+/// ```
+///
 /// # Errors
 ///
 /// * [`ElinorError::InvalidArgument`] if maps have different sets of keys.
@@ -56,6 +67,18 @@ where
 /// - $`X = [(v^1_1, v^2_1, \dots, v^m_1), (v^1_2, v^2_2, \dots, v^m_2), \dots, (v^1_n, v^2_n, \dots, v^m_n)]`$,
 ///
 /// where $`k^1_i = k^2_i = \dots = k^m_i`$ for all $`i`$.
+///
+/// # Examples
+///
+/// ```
+/// use elinor::statistical_tests::tuples_from_maps;
+///
+/// let map_a = [("a", 0.70), ("b", 0.30), ("c", 0.20)].into();
+/// let map_b = [("a", 0.50), ("b", 0.10), ("c", 0.00)].into();
+/// let map_c = [("a", 0.60), ("b", 0.20), ("c", 0.10)].into();
+/// let tuples = tuples_from_maps([&map_a, &map_b, &map_c]).unwrap();
+/// assert_eq!(tuples, vec![vec![0.70, 0.50, 0.60], vec![0.30, 0.10, 0.20], vec![0.20, 0.00, 0.10]]);
+/// ```
 ///
 /// # Errors
 ///

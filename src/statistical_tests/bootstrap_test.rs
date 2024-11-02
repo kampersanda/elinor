@@ -1,4 +1,4 @@
-//! Bootstrap test.
+//! Two-sided paired Bootstrap test.
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
@@ -7,7 +7,7 @@ use crate::errors::ElinorError;
 use crate::errors::Result;
 use crate::statistical_tests::student_t_test::compute_t_stat;
 
-/// Two-sided Bootstrap test.
+/// Two-sided paired Bootstrap test.
 ///
 /// # Examples
 ///
