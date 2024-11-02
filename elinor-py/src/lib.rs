@@ -137,6 +137,64 @@ impl _StudentTTest {
     }
 }
 
+#[pyclass(frozen)]
+struct _BootstrapTest(elinor::statistical_tests::BootstrapTest);
+
+#[pymethods]
+impl _BootstrapTest {
+    #[new]
+    fn new(paired_samples: &Bound<'_, PyList>) -> PyResult<Self> {
+        let mut pairs = Vec::new();
+        for sample in paired_samples.iter() {
+            let sample = sample.downcast::<PyTuple>()?;
+            pairs.push(sample.extract::<(f64, f64)>()?);
+        }
+        let result = elinor::statistical_tests::BootstrapTest::from_paired_samples(pairs)
+            .map_err(|e| PyValueError::new_err(format!("Error creating BootstrapTest: {}", e)))?;
+        Ok(Self(result))
+    }
+
+    #[staticmethod]
+    fn from_maps(a: &Bound<'_, PyDict>, b: &Bound<'_, PyDict>) -> PyResult<Self> {
+        let a: BTreeMap<String, f64> = a.extract()?;
+        let b: BTreeMap<String, f64> = b.extract()?;
+        let pairs = elinor::statistical_tests::pairs_from_maps(&a, &b)
+            .map_err(|e| PyValueError::new_err(format!("Error pairing scores: {}", e)))?;
+        let result = elinor::statistical_tests::BootstrapTest::from_paired_samples(pairs)
+            .map_err(|e| PyValueError::new_err(format!("Error creating BootstrapTest: {}", e)))?;
+        Ok(Self(result))
+    }
+
+    fn p_value(&self) -> f64 {
+        self.0.p_value()
+    }
+}
+
+#[pyclass(frozen)]
+struct _TwoWayAnovaWithoutReplication(elinor::statistical_tests::TwoWayAnovaWithoutReplication);
+
+#[pymethods]
+impl _TwoWayAnovaWithoutReplication {
+    #[new]
+    fn new(tupled_samples: &Bound<'_, PyList>, n_systems: usize) -> PyResult<Self> {
+        let mut tuples = Vec::new();
+        for sample in tupled_samples.iter() {
+            let sample = sample.downcast::<PyList>()?;
+            tuples.push(sample.extract::<Vec<f64>>()?);
+        }
+        let result = elinor::statistical_tests::TwoWayAnovaWithoutReplication::from_tupled_samples(
+            tuples, n_systems,
+        )
+        .map_err(|e| {
+            PyValueError::new_err(format!(
+                "Error creating TwoWayAnovaWithoutReplication: {}",
+                e
+            ))
+        })?;
+        Ok(Self(result))
+    }
+}
+
 /// A Python module implemented in Rust.
 #[pymodule(name = "elinor")]
 fn elinor_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
