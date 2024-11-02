@@ -24,7 +24,17 @@ use std::collections::BTreeMap;
 use crate::errors::ElinorError;
 use crate::errors::Result;
 
+/// Converts two maps of scores, $`A`$ and $`B`$, into a vector of paired scores $`X`$:
 ///
+/// - $`A = \{ (k^A_1 \mapsto v^A_1), (k^A_2 \mapsto v^A_2), \dots, (k^A_n \mapsto v^A_n) \}`$,
+/// - $`B = \{ (k^B_1 \mapsto v^B_1), (k^B_2 \mapsto v^B_2), \dots, (k^B_n \mapsto v^B_n) \}`$, and
+/// - $`X = [(v^A_1, v^B_1), (v^A_2, v^B_2), \dots, (v^A_n, v^B_n)]`$,
+///
+/// where $`k^A_i = k^B_i`$ for all $`i`$.
+///
+/// # Errors
+///
+/// * [`ElinorError::InvalidArgument`] if maps have different sets of keys.
 pub fn pairs_from_maps<K>(
     map_a: &BTreeMap<K, f64>,
     map_b: &BTreeMap<K, f64>,
@@ -40,9 +50,12 @@ where
     })
 }
 
-/// Converts maps of scores into a vector of tupled scores, where each tuple contains the scores for each key.
+/// Converts maps of scores, $`A_1, A_2, \dots, A_m`$, into a vector of tupled scores $`X`$:
 ///
-/// This function is expected to be used to prepare data for statistical tests.
+/// - $`A_j = \{ (k^j_1 \mapsto v^j_1), (k^j_2 \mapsto v^j_2), \dots, (k^j_n \mapsto v^j_n) \}`$ for all $`j`$,
+/// - $`X = [(v^1_1, v^2_1, \dots, v^m_1), (v^1_2, v^2_2, \dots, v^m_2), \dots, (v^1_n, v^2_n, \dots, v^m_n)]`$,
+///
+/// where $`k^1_i = k^2_i = \dots = k^m_i`$ for all $`i`$.
 ///
 /// # Errors
 ///
