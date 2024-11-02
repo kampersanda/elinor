@@ -2,7 +2,7 @@ import statistics
 
 from pydantic import BaseModel
 
-from elinor import elinor
+from .elinor import _evaluate
 
 
 class TrueRecord(BaseModel, frozen=True):
@@ -30,7 +30,14 @@ def evaluate(
     pred_records: list[PredRecord],
     metric: str,
 ) -> Evaluation:
+    """Evaluate the ranking performance.
+
+    :param true_records: The true relevance scores.
+    :param pred_records: The predicted relevance scores.
+    :param metric: The evaluation metric to use.
+    :return: The evaluation scores.
+    """
     true_rels = [record.model_dump() for record in true_records]
     pred_rels = [record.model_dump() for record in pred_records]
-    scores = elinor._evaluate(true_rels, pred_rels, metric)
+    scores = _evaluate(true_rels, pred_rels, metric)
     return Evaluation(metric=metric, scores=scores)

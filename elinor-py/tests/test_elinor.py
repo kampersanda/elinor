@@ -1,4 +1,5 @@
 from elinor import PredRecord, TrueRecord, evaluate
+from elinor.statistical_tests import StudentTTest
 
 
 def test_evaluate() -> None:
@@ -19,3 +20,5 @@ def test_evaluate() -> None:
     ]
     result = evaluate(true_records, pred_records, "ndcg@3")
     assert result.metric == "ndcg@3"
+
+    StudentTTest.from_maps({"a": 1.0}, {"b": 2.0})
