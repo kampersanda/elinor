@@ -172,17 +172,40 @@ struct _BootstrapTest(elinor::statistical_tests::BootstrapTest);
 #[pymethods]
 impl _BootstrapTest {
     #[new]
-    fn new(paired_samples: &Bound<'_, PyList>) -> PyResult<Self> {
+    #[pyo3(signature = (paired_samples, n_resamples=10000, random_state=None))]
+    fn new(
+        paired_samples: &Bound<'_, PyList>,
+        n_resamples: usize,
+        random_state: Option<u64>,
+    ) -> PyResult<Self> {
         let pairs = pylist_to_pairs(paired_samples)?;
-        let result = elinor::statistical_tests::BootstrapTest::from_paired_samples(pairs)
+        let mut tester = elinor::statistical_tests::bootstrap_test::BootstrapTester::new()
+            .with_n_resamples(n_resamples);
+        if let Some(random_state) = random_state {
+            tester = tester.with_random_state(random_state);
+        }
+        let result = tester
+            .test(pairs)
             .map_err(|e| PyValueError::new_err(format!("Error creating BootstrapTest: {}", e)))?;
         Ok(Self(result))
     }
 
     #[staticmethod]
-    fn from_maps(a: &Bound<'_, PyDict>, b: &Bound<'_, PyDict>) -> PyResult<Self> {
-        let pairs = maps_to_pairs(a, b)?;
-        let result = elinor::statistical_tests::BootstrapTest::from_paired_samples(pairs)
+    #[pyo3(signature = (a, b, n_resamples=10000, random_state=None))]
+    fn from_maps(
+        a: &Bound<'_, PyDict>,
+        b: &Bound<'_, PyDict>,
+        n_resamples: usize,
+        random_state: Option<u64>,
+    ) -> PyResult<Self> {
+        let paired_samples = maps_to_pairs(a, b)?;
+        let mut tester = elinor::statistical_tests::bootstrap_test::BootstrapTester::new()
+            .with_n_resamples(n_resamples);
+        if let Some(random_state) = random_state {
+            tester = tester.with_random_state(random_state);
+        }
+        let result = tester
+            .test(paired_samples)
             .map_err(|e| PyValueError::new_err(format!("Error creating BootstrapTest: {}", e)))?;
         Ok(Self(result))
     }
