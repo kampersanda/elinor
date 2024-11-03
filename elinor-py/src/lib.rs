@@ -442,5 +442,9 @@ impl _RandomizedTukeyHsdTest {
 fn elinor_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(_evaluate, m)?)?;
     m.add_class::<_StudentTTest>()?;
+    m.add_class::<_BootstrapTest>()?;
+    m.add_class::<_TwoWayAnovaWithoutReplication>()?;
+    m.add_class::<_TukeyHsdTest>()?;
+    m.add_class::<_RandomizedTukeyHsdTest>()?;
     Ok(())
 }
