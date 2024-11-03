@@ -193,6 +193,93 @@ impl _TwoWayAnovaWithoutReplication {
         })?;
         Ok(Self(result))
     }
+
+    #[staticmethod]
+    fn from_maps(maps: &Bound<'_, PyList>) -> PyResult<Self> {
+        let mut btree_maps = Vec::new();
+        for map in maps.iter() {
+            let map = map.downcast::<PyDict>()?;
+            let map: BTreeMap<String, f64> = map.extract()?;
+            btree_maps.push(map);
+        }
+        let tupled_samples =
+            elinor::statistical_tests::tuples_from_maps(&btree_maps).map_err(|e| {
+                PyValueError::new_err(format!("Error converting maps to tuples: {}", e))
+            })?;
+        let result = elinor::statistical_tests::TwoWayAnovaWithoutReplication::from_tupled_samples(
+            tupled_samples,
+            btree_maps.len(),
+        )
+        .map_err(|e| {
+            PyValueError::new_err(format!(
+                "Error creating TwoWayAnovaWithoutReplication: {}",
+                e
+            ))
+        })?;
+        Ok(Self(result))
+    }
+
+    fn n_systems(&self) -> usize {
+        self.0.n_systems()
+    }
+
+    fn n_topics(&self) -> usize {
+        self.0.n_topics()
+    }
+
+    fn system_means(&self) -> Vec<f64> {
+        self.0.system_means()
+    }
+
+    fn topic_means(&self) -> Vec<f64> {
+        self.0.topic_means()
+    }
+
+    fn between_system_variation(&self) -> f64 {
+        self.0.between_system_variation()
+    }
+
+    fn between_topic_variation(&self) -> f64 {
+        self.0.between_topic_variation()
+    }
+
+    fn residual_variation(&self) -> f64 {
+        self.0.residual_variation()
+    }
+
+    fn between_system_variance(&self) -> f64 {
+        self.0.between_system_variance()
+    }
+
+    fn between_topic_variance(&self) -> f64 {
+        self.0.between_topic_variance()
+    }
+
+    fn residual_variance(&self) -> f64 {
+        self.0.residual_variance()
+    }
+
+    fn between_system_f_stat(&self) -> f64 {
+        self.0.between_system_f_stat()
+    }
+
+    fn between_topic_f_stat(&self) -> f64 {
+        self.0.between_topic_f_stat()
+    }
+
+    fn between_system_p_value(&self) -> f64 {
+        self.0.between_system_p_value()
+    }
+
+    fn between_topic_p_value(&self) -> f64 {
+        self.0.between_topic_p_value()
+    }
+
+    fn margin_of_error(&self, significance_level: f64) -> PyResult<f64> {
+        self.0
+            .margin_of_error(significance_level)
+            .map_err(|e| PyValueError::new_err(format!("Error calculating margin of error: {}", e)))
+    }
 }
 
 /// A Python module implemented in Rust.
