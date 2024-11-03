@@ -129,8 +129,8 @@ impl _StudentTTest {
         Ok(Self(result))
     }
 
-    fn n_samples(&self) -> usize {
-        self.0.n_samples()
+    fn n_topics(&self) -> usize {
+        self.0.n_topics()
     }
 
     fn mean(&self) -> f64 {
@@ -185,6 +185,18 @@ impl _BootstrapTest {
         let result = elinor::statistical_tests::BootstrapTest::from_paired_samples(pairs)
             .map_err(|e| PyValueError::new_err(format!("Error creating BootstrapTest: {}", e)))?;
         Ok(Self(result))
+    }
+
+    fn n_topics(&self) -> usize {
+        self.0.n_topics()
+    }
+
+    fn n_resamples(&self) -> usize {
+        self.0.n_resamples()
+    }
+
+    fn random_state(&self) -> u64 {
+        self.0.random_state()
     }
 
     fn p_value(&self) -> f64 {
