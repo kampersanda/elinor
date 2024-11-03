@@ -15,6 +15,7 @@ dependencies = ["pydantic>=2.9.2"]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
+module-name = "elinor._elinor"
 
 [project.optional-dependencies]
 test = ["pytest>=8.3.3", "pytest-cov[all]"]

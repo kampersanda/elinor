@@ -2,7 +2,7 @@ import statistics
 
 from pydantic import BaseModel
 
-from .elinor import _evaluate
+from elinor import _elinor
 
 
 class TrueRecord(BaseModel, frozen=True):
@@ -39,5 +39,5 @@ def evaluate(
     """
     true_rels = [record.model_dump() for record in true_records]
     pred_rels = [record.model_dump() for record in pred_records]
-    scores = _evaluate(true_rels, pred_rels, metric)
+    scores = _elinor._evaluate(true_rels, pred_rels, metric)
     return Evaluation(metric=metric, scores=scores)
