@@ -38,6 +38,7 @@ use crate::statistical_tests::student_t_test::compute_t_stat;
 ///   SIGIR 2006.
 #[derive(Debug, Clone, Copy)]
 pub struct BootstrapTest {
+    n_topics: usize,
     n_resamples: usize,
     random_state: u64,
     p_value: f64,
@@ -58,6 +59,11 @@ impl BootstrapTest {
         I: IntoIterator<Item = (f64, f64)>,
     {
         BootstrapTester::new().test(samples)
+    }
+
+    /// Number of topics, $`n`$.
+    pub const fn n_topics(&self) -> usize {
+        self.n_topics
     }
 
     /// Number of resamples.
@@ -162,6 +168,7 @@ impl BootstrapTester {
         let p_value = count as f64 / self.n_resamples as f64;
 
         Ok(BootstrapTest {
+            n_topics: samples.len(),
             n_resamples: self.n_resamples,
             random_state,
             p_value,
