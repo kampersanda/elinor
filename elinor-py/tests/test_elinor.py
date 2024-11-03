@@ -28,7 +28,7 @@ def test_student_t_test() -> None:
         {"a": 0.60, "b": 0.10, "c": 0.20},
         {"a": 0.50, "b": 0.10, "c": 0.00},
     )
-    assert stat.n_samples() == 3
+    assert stat.n_topics() == 3
     assert stat.mean() == pytest.approx((0.10 + 0.00 + 0.20) / 3.0)
     assert stat.variance() == pytest.approx(
         (

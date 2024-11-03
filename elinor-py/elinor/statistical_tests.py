@@ -1,5 +1,6 @@
-from typing import TypeAlias
+from elinor import _elinor
 
-from ._elinor import _StudentTTest
+StudentTTest = _elinor._StudentTTest
 
-StudentTTest: TypeAlias = _StudentTTest
+# class StudentTTest(_elinor._StudentTTest):
+#     pass

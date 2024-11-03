@@ -438,7 +438,7 @@ impl _RandomizedTukeyHsdTest {
 }
 
 /// A Python module implemented in Rust.
-#[pymodule(name = "elinor")]
+#[pymodule(name = "_elinor")]
 fn elinor_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(_evaluate, m)?)?;
     m.add_class::<_StudentTTest>()?;
