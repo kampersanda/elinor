@@ -26,6 +26,5 @@ pytest==8.3.3
 tomli==2.0.2
     # via pytest
 typing-extensions==4.12.2
-    # via annotated-types
     # via pydantic
     # via pydantic-core
