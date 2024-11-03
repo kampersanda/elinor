@@ -46,7 +46,7 @@ use crate::errors::Result;
 /// ```
 #[derive(Debug, Clone)]
 pub struct StudentTTest {
-    n_samples: usize,
+    n_topics: usize,
     mean: f64,
     variance: f64,
     t_stat: f64,
@@ -78,7 +78,7 @@ impl StudentTTest {
         let p_value = t_dist.sf(t_stat.abs()) * 2.0; // two-tailed
         let scaled_t_dist = StudentsT::new(0.0, (variance / n).sqrt(), n - 1.0).unwrap();
         Ok(Self {
-            n_samples: samples.len(),
+            n_topics: samples.len(),
             mean,
             variance,
             t_stat,
@@ -87,9 +87,15 @@ impl StudentTTest {
         })
     }
 
+    /// Number of topics, $`n`$.
+    pub const fn n_topics(&self) -> usize {
+        self.n_topics
+    }
+
     /// Number of samples, $`n`$.
+    #[deprecated(since = "0.5.0", note = "Use `n_topics` instead.")]
     pub const fn n_samples(&self) -> usize {
-        self.n_samples
+        self.n_topics
     }
 
     /// Mean of the samples.
