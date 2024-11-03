@@ -1,0 +1,29 @@
+[project]
+name = "elinor-py"
+version = "0.1.0"
+description = "Add your description here"
+authors = [{ name = "kampersanda", email = "shnsk.knd@gmail.com" }]
+readme = "README.md"
+requires-python = ">= 3.8"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = ["pydantic>=2.9.2"]
+
+[build-system]
+requires = ["maturin>=1.2,<2.0"]
+build-backend = "maturin"
+
+[tool.rye]
+managed = true
+dev-dependencies = ["pytest>=8.3.3"]
+
+[tool.maturin]
+python-source = "python"
+module-name = "elinor._lowlevel"
+features = ["pyo3/extension-module"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["elinor"]
