@@ -17,8 +17,9 @@ dependencies = ["pydantic>=2.9.2"]
 features = ["pyo3/extension-module"]
 module-name = "elinor._elinor"
 
-[project.optional-dependencies]
-test = ["pytest>=8.3.3", "pytest-cov[all]"]
+[tool.rye]
+managed = true
+dev-dependencies = ["pytest>=8.3.3", "sphinx>=7.1.2"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["elinor"]
