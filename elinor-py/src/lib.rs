@@ -5,24 +5,6 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyTuple};
 
-fn maps_to_pairs(a: &Bound<'_, PyDict>, b: &Bound<'_, PyDict>) -> PyResult<Vec<(f64, f64)>> {
-    let a: BTreeMap<String, f64> = a.extract()?;
-    let b: BTreeMap<String, f64> = b.extract()?;
-    elinor::statistical_tests::pairs_from_maps(&a, &b)
-        .map_err(|e| PyValueError::new_err(format!("Error pairing scores: {}", e)))
-}
-
-fn maps_to_tuples(maps: &Bound<'_, PyList>) -> PyResult<Vec<Vec<f64>>> {
-    let mut btrees = Vec::new();
-    for map in maps.iter() {
-        let map = map.downcast::<PyDict>()?;
-        let map: BTreeMap<String, f64> = map.extract()?;
-        btrees.push(map);
-    }
-    elinor::statistical_tests::tuples_from_maps(&btrees)
-        .map_err(|e| PyValueError::new_err(format!("Error converting maps to tuples: {}", e)))
-}
-
 #[pyfunction]
 fn _evaluate<'py>(
     py: Python<'py>,
@@ -90,6 +72,42 @@ fn _evaluate<'py>(
     Ok(scores.into())
 }
 
+fn pylist_to_pairs(pairs: &Bound<'_, PyList>) -> PyResult<Vec<(f64, f64)>> {
+    let mut result = Vec::new();
+    for pair in pairs.iter() {
+        let pair = pair.downcast::<PyTuple>()?;
+        result.push(pair.extract::<(f64, f64)>()?);
+    }
+    Ok(result)
+}
+
+fn pylist_to_tuples(tuples: &Bound<'_, PyList>) -> PyResult<Vec<Vec<f64>>> {
+    let mut result = Vec::new();
+    for tuple in tuples.iter() {
+        let tuple = tuple.downcast::<PyList>()?;
+        result.push(tuple.extract::<Vec<f64>>()?);
+    }
+    Ok(result)
+}
+
+fn maps_to_pairs(a: &Bound<'_, PyDict>, b: &Bound<'_, PyDict>) -> PyResult<Vec<(f64, f64)>> {
+    let a: BTreeMap<String, f64> = a.extract()?;
+    let b: BTreeMap<String, f64> = b.extract()?;
+    elinor::statistical_tests::pairs_from_maps(&a, &b)
+        .map_err(|e| PyValueError::new_err(format!("Error pairing scores: {}", e)))
+}
+
+fn maps_to_tuples(maps: &Bound<'_, PyList>) -> PyResult<Vec<Vec<f64>>> {
+    let mut btrees = Vec::new();
+    for map in maps.iter() {
+        let map = map.downcast::<PyDict>()?;
+        let map: BTreeMap<String, f64> = map.extract()?;
+        btrees.push(map);
+    }
+    elinor::statistical_tests::tuples_from_maps(&btrees)
+        .map_err(|e| PyValueError::new_err(format!("Error converting maps to tuples: {}", e)))
+}
+
 #[pyclass(frozen)]
 struct _StudentTTest(elinor::statistical_tests::StudentTTest);
 
@@ -97,11 +115,7 @@ struct _StudentTTest(elinor::statistical_tests::StudentTTest);
 impl _StudentTTest {
     #[new]
     fn new(paired_samples: &Bound<'_, PyList>) -> PyResult<Self> {
-        let mut pairs = Vec::new();
-        for sample in paired_samples.iter() {
-            let sample = sample.downcast::<PyTuple>()?;
-            pairs.push(sample.extract::<(f64, f64)>()?);
-        }
+        let pairs = pylist_to_pairs(paired_samples)?;
         let result = elinor::statistical_tests::StudentTTest::from_paired_samples(pairs)
             .map_err(|e| PyValueError::new_err(format!("Error creating StudentTTest: {}", e)))?;
         Ok(Self(result))
@@ -159,11 +173,7 @@ struct _BootstrapTest(elinor::statistical_tests::BootstrapTest);
 impl _BootstrapTest {
     #[new]
     fn new(paired_samples: &Bound<'_, PyList>) -> PyResult<Self> {
-        let mut pairs = Vec::new();
-        for sample in paired_samples.iter() {
-            let sample = sample.downcast::<PyTuple>()?;
-            pairs.push(sample.extract::<(f64, f64)>()?);
-        }
+        let pairs = pylist_to_pairs(paired_samples)?;
         let result = elinor::statistical_tests::BootstrapTest::from_paired_samples(pairs)
             .map_err(|e| PyValueError::new_err(format!("Error creating BootstrapTest: {}", e)))?;
         Ok(Self(result))
@@ -189,11 +199,7 @@ struct _TwoWayAnovaWithoutReplication(elinor::statistical_tests::TwoWayAnovaWith
 impl _TwoWayAnovaWithoutReplication {
     #[new]
     fn new(tupled_samples: &Bound<'_, PyList>, n_systems: usize) -> PyResult<Self> {
-        let mut tuples = Vec::new();
-        for sample in tupled_samples.iter() {
-            let sample = sample.downcast::<PyList>()?;
-            tuples.push(sample.extract::<Vec<f64>>()?);
-        }
+        let tuples = pylist_to_tuples(tupled_samples)?;
         let result = elinor::statistical_tests::TwoWayAnovaWithoutReplication::from_tupled_samples(
             tuples, n_systems,
         )
@@ -292,11 +298,7 @@ struct _TukeyHsdTest(elinor::statistical_tests::TukeyHsdTest);
 impl _TukeyHsdTest {
     #[new]
     fn new(tupled_samples: &Bound<'_, PyList>, n_systems: usize) -> PyResult<Self> {
-        let mut tuples = Vec::new();
-        for sample in tupled_samples.iter() {
-            let sample = sample.downcast::<PyList>()?;
-            tuples.push(sample.extract::<Vec<f64>>()?);
-        }
+        let tuples = pylist_to_tuples(tupled_samples)?;
         let result =
             elinor::statistical_tests::TukeyHsdTest::from_tupled_samples(tuples, n_systems)
                 .map_err(|e| {
@@ -326,6 +328,53 @@ impl _TukeyHsdTest {
 
     fn effect_sizes(&self) -> Vec<Vec<f64>> {
         self.0.effect_sizes()
+    }
+}
+
+#[pyclass(frozen)]
+struct _RandomizedTukeyHsdTest(elinor::statistical_tests::RandomizedTukeyHsdTest);
+
+#[pymethods]
+impl _RandomizedTukeyHsdTest {
+    #[new]
+    fn new(tupled_samples: &Bound<'_, PyList>, n_systems: usize) -> PyResult<Self> {
+        let tuples = pylist_to_tuples(tupled_samples)?;
+        let result = elinor::statistical_tests::RandomizedTukeyHsdTest::from_tupled_samples(
+            tuples, n_systems,
+        )
+        .map_err(|e| {
+            PyValueError::new_err(format!("Error creating RandomizedTukeyHsdTest: {}", e))
+        })?;
+        Ok(Self(result))
+    }
+
+    #[staticmethod]
+    fn from_maps(maps: &Bound<'_, PyList>) -> PyResult<Self> {
+        let tupled_samples = maps_to_tuples(maps)?;
+        let result = elinor::statistical_tests::RandomizedTukeyHsdTest::from_tupled_samples(
+            tupled_samples,
+            maps.len(),
+        )
+        .map_err(|e| {
+            PyValueError::new_err(format!("Error creating RandomizedTukeyHsdTest: {}", e))
+        })?;
+        Ok(Self(result))
+    }
+
+    fn n_systems(&self) -> usize {
+        self.0.n_systems()
+    }
+
+    fn n_topics(&self) -> usize {
+        self.0.n_topics()
+    }
+
+    fn n_iters(&self) -> usize {
+        self.0.n_iters()
+    }
+
+    fn p_values(&self) -> Vec<Vec<f64>> {
+        self.0.p_values()
     }
 }
 
