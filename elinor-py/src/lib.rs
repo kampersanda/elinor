@@ -108,7 +108,7 @@ fn pydicts_to_tuples(maps: &Bound<'_, PyList>) -> PyResult<Vec<Vec<f64>>> {
         .map_err(|e| PyValueError::new_err(format!("Error converting maps to tuples: {}", e)))
 }
 
-#[pyclass(frozen)]
+#[pyclass(subclass, frozen)]
 struct _StudentTTest(elinor::statistical_tests::StudentTTest);
 
 #[pymethods]
@@ -166,7 +166,7 @@ impl _StudentTTest {
     }
 }
 
-#[pyclass(frozen)]
+#[pyclass(subclass, frozen)]
 struct _BootstrapTest(elinor::statistical_tests::BootstrapTest);
 
 #[pymethods]
@@ -227,7 +227,7 @@ impl _BootstrapTest {
     }
 }
 
-#[pyclass(frozen)]
+#[pyclass(subclass, frozen)]
 struct _TwoWayAnovaWithoutReplication(elinor::statistical_tests::TwoWayAnovaWithoutReplication);
 
 #[pymethods]
@@ -326,7 +326,7 @@ impl _TwoWayAnovaWithoutReplication {
     }
 }
 
-#[pyclass(frozen)]
+#[pyclass(subclass, frozen)]
 struct _TukeyHsdTest(elinor::statistical_tests::TukeyHsdTest);
 
 #[pymethods]
@@ -366,7 +366,7 @@ impl _TukeyHsdTest {
     }
 }
 
-#[pyclass(frozen)]
+#[pyclass(subclass, frozen)]
 struct _RandomizedTukeyHsdTest(elinor::statistical_tests::RandomizedTukeyHsdTest);
 
 #[pymethods]
