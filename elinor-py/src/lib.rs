@@ -90,14 +90,14 @@ fn pylist_to_tuples(tuples: &Bound<'_, PyList>) -> PyResult<Vec<Vec<f64>>> {
     Ok(result)
 }
 
-fn maps_to_pairs(a: &Bound<'_, PyDict>, b: &Bound<'_, PyDict>) -> PyResult<Vec<(f64, f64)>> {
+fn pydicts_to_pairs(a: &Bound<'_, PyDict>, b: &Bound<'_, PyDict>) -> PyResult<Vec<(f64, f64)>> {
     let a: BTreeMap<String, f64> = a.extract()?;
     let b: BTreeMap<String, f64> = b.extract()?;
     elinor::statistical_tests::pairs_from_maps(&a, &b)
         .map_err(|e| PyValueError::new_err(format!("Error pairing scores: {}", e)))
 }
 
-fn maps_to_tuples(maps: &Bound<'_, PyList>) -> PyResult<Vec<Vec<f64>>> {
+fn pydicts_to_tuples(maps: &Bound<'_, PyList>) -> PyResult<Vec<Vec<f64>>> {
     let mut btrees = Vec::new();
     for map in maps.iter() {
         let map = map.downcast::<PyDict>()?;
@@ -123,7 +123,7 @@ impl _StudentTTest {
 
     #[staticmethod]
     fn from_maps(a: &Bound<'_, PyDict>, b: &Bound<'_, PyDict>) -> PyResult<Self> {
-        let pairs = maps_to_pairs(a, b)?;
+        let pairs = pydicts_to_pairs(a, b)?;
         let result = elinor::statistical_tests::StudentTTest::from_paired_samples(pairs)
             .map_err(|e| PyValueError::new_err(format!("Error creating StudentTTest: {}", e)))?;
         Ok(Self(result))
@@ -198,7 +198,7 @@ impl _BootstrapTest {
         n_resamples: usize,
         random_state: Option<u64>,
     ) -> PyResult<Self> {
-        let paired_samples = maps_to_pairs(a, b)?;
+        let paired_samples = pydicts_to_pairs(a, b)?;
         let mut tester = elinor::statistical_tests::bootstrap_test::BootstrapTester::new()
             .with_n_resamples(n_resamples);
         if let Some(random_state) = random_state {
@@ -249,7 +249,7 @@ impl _TwoWayAnovaWithoutReplication {
 
     #[staticmethod]
     fn from_maps(maps: &Bound<'_, PyList>) -> PyResult<Self> {
-        let tupled_samples = maps_to_tuples(maps)?;
+        let tupled_samples = pydicts_to_tuples(maps)?;
         let result = elinor::statistical_tests::TwoWayAnovaWithoutReplication::from_tupled_samples(
             tupled_samples,
             maps.len(),
@@ -344,7 +344,7 @@ impl _TukeyHsdTest {
 
     #[staticmethod]
     fn from_maps(maps: &Bound<'_, PyList>) -> PyResult<Self> {
-        let tupled_samples = maps_to_tuples(maps)?;
+        let tupled_samples = pydicts_to_tuples(maps)?;
         let result = elinor::statistical_tests::TukeyHsdTest::from_tupled_samples(
             tupled_samples,
             maps.len(),
@@ -401,7 +401,7 @@ impl _RandomizedTukeyHsdTest {
         n_iters: usize,
         random_state: Option<u64>,
     ) -> PyResult<Self> {
-        let tupled_samples = maps_to_tuples(maps)?;
+        let tupled_samples = pydicts_to_tuples(maps)?;
         let mut tester =
             elinor::statistical_tests::randomized_tukey_hsd_test::RandomizedTukeyHsdTester::new(
                 maps.len(),
