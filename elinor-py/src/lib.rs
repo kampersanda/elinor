@@ -428,6 +428,10 @@ impl _RandomizedTukeyHsdTest {
         self.0.n_iters()
     }
 
+    fn random_state(&self) -> u64 {
+        self.0.random_state()
+    }
+
     fn p_values(&self) -> Vec<Vec<f64>> {
         self.0.p_values()
     }
