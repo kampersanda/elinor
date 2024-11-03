@@ -372,25 +372,45 @@ struct _RandomizedTukeyHsdTest(elinor::statistical_tests::RandomizedTukeyHsdTest
 #[pymethods]
 impl _RandomizedTukeyHsdTest {
     #[new]
-    fn new(tupled_samples: &Bound<'_, PyList>, n_systems: usize) -> PyResult<Self> {
+    #[pyo3(signature = (tupled_samples, n_systems, n_iters=10000, random_state=None))]
+    fn new(
+        tupled_samples: &Bound<'_, PyList>,
+        n_systems: usize,
+        n_iters: usize,
+        random_state: Option<u64>,
+    ) -> PyResult<Self> {
         let tuples = pylist_to_tuples(tupled_samples)?;
-        let result = elinor::statistical_tests::RandomizedTukeyHsdTest::from_tupled_samples(
-            tuples, n_systems,
-        )
-        .map_err(|e| {
+        let mut tester =
+            elinor::statistical_tests::randomized_tukey_hsd_test::RandomizedTukeyHsdTester::new(
+                n_systems,
+            )
+            .with_n_iters(n_iters);
+        if let Some(random_state) = random_state {
+            tester = tester.with_random_state(random_state);
+        }
+        let result = tester.test(tuples).map_err(|e| {
             PyValueError::new_err(format!("Error creating RandomizedTukeyHsdTest: {}", e))
         })?;
         Ok(Self(result))
     }
 
     #[staticmethod]
-    fn from_maps(maps: &Bound<'_, PyList>) -> PyResult<Self> {
+    #[pyo3(signature = (maps, n_iters=10000, random_state=None))]
+    fn from_maps(
+        maps: &Bound<'_, PyList>,
+        n_iters: usize,
+        random_state: Option<u64>,
+    ) -> PyResult<Self> {
         let tupled_samples = maps_to_tuples(maps)?;
-        let result = elinor::statistical_tests::RandomizedTukeyHsdTest::from_tupled_samples(
-            tupled_samples,
-            maps.len(),
-        )
-        .map_err(|e| {
+        let mut tester =
+            elinor::statistical_tests::randomized_tukey_hsd_test::RandomizedTukeyHsdTester::new(
+                maps.len(),
+            )
+            .with_n_iters(n_iters);
+        if let Some(random_state) = random_state {
+            tester = tester.with_random_state(random_state);
+        }
+        let result = tester.test(tupled_samples).map_err(|e| {
             PyValueError::new_err(format!("Error creating RandomizedTukeyHsdTest: {}", e))
         })?;
         Ok(Self(result))
