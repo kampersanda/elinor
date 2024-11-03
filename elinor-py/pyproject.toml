@@ -21,7 +21,6 @@ managed = true
 dev-dependencies = ["pytest>=8.3.3"]
 
 [tool.maturin]
-python-source = "python"
 module-name = "elinor._lowlevel"
 features = ["pyo3/extension-module"]
 

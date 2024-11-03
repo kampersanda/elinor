@@ -39,5 +39,5 @@ def evaluate(
     """
     true_rels = [record.model_dump() for record in true_records]
     pred_rels = [record.model_dump() for record in pred_records]
-    scores = _lowlevel._evaluate(true_rels, pred_rels, metric)
+    scores = _lowlevel.evaluate(true_rels, pred_rels, metric)
     return Evaluation(metric=metric, scores=scores)

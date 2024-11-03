@@ -6,7 +6,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyTuple};
 
 #[pyfunction]
-fn _evaluate<'py>(
+fn evaluate<'py>(
     py: Python<'py>,
     true_rels: &Bound<'py, PyList>,
     pred_rels: &Bound<'py, PyList>,
@@ -109,10 +109,10 @@ fn pydicts_to_tuples(maps: &Bound<'_, PyList>) -> PyResult<Vec<Vec<f64>>> {
 }
 
 #[pyclass(subclass, frozen)]
-struct _StudentTTest(elinor::statistical_tests::StudentTTest);
+struct StudentTTest(elinor::statistical_tests::StudentTTest);
 
 #[pymethods]
-impl _StudentTTest {
+impl StudentTTest {
     #[new]
     fn new(paired_samples: &Bound<'_, PyList>) -> PyResult<Self> {
         let pairs = pylist_to_pairs(paired_samples)?;
@@ -167,10 +167,10 @@ impl _StudentTTest {
 }
 
 #[pyclass(subclass, frozen)]
-struct _BootstrapTest(elinor::statistical_tests::BootstrapTest);
+struct BootstrapTest(elinor::statistical_tests::BootstrapTest);
 
 #[pymethods]
-impl _BootstrapTest {
+impl BootstrapTest {
     #[new]
     #[pyo3(signature = (paired_samples, n_resamples=10000, random_state=None))]
     fn new(
@@ -228,10 +228,10 @@ impl _BootstrapTest {
 }
 
 #[pyclass(subclass, frozen)]
-struct _TwoWayAnovaWithoutReplication(elinor::statistical_tests::TwoWayAnovaWithoutReplication);
+struct TwoWayAnovaWithoutReplication(elinor::statistical_tests::TwoWayAnovaWithoutReplication);
 
 #[pymethods]
-impl _TwoWayAnovaWithoutReplication {
+impl TwoWayAnovaWithoutReplication {
     #[new]
     fn new(tupled_samples: &Bound<'_, PyList>, n_systems: usize) -> PyResult<Self> {
         let tuples = pylist_to_tuples(tupled_samples)?;
@@ -327,10 +327,10 @@ impl _TwoWayAnovaWithoutReplication {
 }
 
 #[pyclass(subclass, frozen)]
-struct _TukeyHsdTest(elinor::statistical_tests::TukeyHsdTest);
+struct TukeyHsdTest(elinor::statistical_tests::TukeyHsdTest);
 
 #[pymethods]
-impl _TukeyHsdTest {
+impl TukeyHsdTest {
     #[new]
     fn new(tupled_samples: &Bound<'_, PyList>, n_systems: usize) -> PyResult<Self> {
         let tuples = pylist_to_tuples(tupled_samples)?;
@@ -367,10 +367,10 @@ impl _TukeyHsdTest {
 }
 
 #[pyclass(subclass, frozen)]
-struct _RandomizedTukeyHsdTest(elinor::statistical_tests::RandomizedTukeyHsdTest);
+struct RandomizedTukeyHsdTest(elinor::statistical_tests::RandomizedTukeyHsdTest);
 
 #[pymethods]
-impl _RandomizedTukeyHsdTest {
+impl RandomizedTukeyHsdTest {
     #[new]
     #[pyo3(signature = (tupled_samples, n_systems, n_iters=10000, random_state=None))]
     fn new(
@@ -440,11 +440,11 @@ impl _RandomizedTukeyHsdTest {
 /// A Python module implemented in Rust.
 #[pymodule(name = "_lowlevel")]
 fn elinor_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(_evaluate, m)?)?;
-    m.add_class::<_StudentTTest>()?;
-    m.add_class::<_BootstrapTest>()?;
-    m.add_class::<_TwoWayAnovaWithoutReplication>()?;
-    m.add_class::<_TukeyHsdTest>()?;
-    m.add_class::<_RandomizedTukeyHsdTest>()?;
+    m.add_function(wrap_pyfunction!(evaluate, m)?)?;
+    m.add_class::<StudentTTest>()?;
+    m.add_class::<BootstrapTest>()?;
+    m.add_class::<TwoWayAnovaWithoutReplication>()?;
+    m.add_class::<TukeyHsdTest>()?;
+    m.add_class::<RandomizedTukeyHsdTest>()?;
     Ok(())
 }
