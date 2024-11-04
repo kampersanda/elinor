@@ -20,9 +20,7 @@ class PredRecord(BaseModel, frozen=True):
 class Evaluation(BaseModel, frozen=True):
     metric: str
     scores: dict[str, float]
-
-    def mean(self) -> float:
-        return statistics.mean(self.scores.values())
+    mean: float
 
 
 def evaluate(
@@ -40,4 +38,8 @@ def evaluate(
     true_rels = [record.model_dump() for record in true_records]
     pred_rels = [record.model_dump() for record in pred_records]
     scores = _lowlevel.evaluate(true_rels, pred_rels, metric)
-    return Evaluation(metric=metric, scores=scores)
+    return Evaluation(
+        metric=metric,
+        scores=scores,
+        mean=statistics.mean(scores.values()),
+    )
