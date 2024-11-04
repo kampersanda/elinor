@@ -34,10 +34,8 @@ def test_student_t_test() -> None:
     assert result.effect_size() == pytest.approx(0.473, abs=1e-3)
     assert result.t_stat() == pytest.approx(2.116, abs=1e-3)
     assert result.p_value() == pytest.approx(0.048, abs=1e-3)
-
     moe95 = result.margin_of_error(0.05)
     assert moe95 == pytest.approx(0.0742, abs=1e-4)
-
     mean = result.mean()
     ci95 = result.confidence_interval(0.05)
     assert ci95 == pytest.approx((mean - moe95, mean + moe95), abs=1e-4)

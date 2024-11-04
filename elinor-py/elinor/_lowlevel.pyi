@@ -65,7 +65,7 @@ class TwoWayAnovaWithoutReplication:
     def margin_of_error(self, significance_level: float) -> float: ...
 
 class TukeyHsdTest:
-    def __init(
+    def __init__(
         self,
         tupled_samples: list[list[float]],
         n_systems: int,
@@ -77,7 +77,7 @@ class TukeyHsdTest:
     def effect_sizes(self) -> list[list[float]]: ...
 
 class RandomizedTukeyHsdTest:
-    def __init(
+    def __init__(
         self,
         tupled_samples: list[list[float]],
         n_systems: int,
